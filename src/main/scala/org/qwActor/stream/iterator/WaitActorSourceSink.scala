@@ -47,6 +47,7 @@ class WaitActorSourceSink[A](it:Source[A], nodes:util.Queue[ActorRef])(fn:Consum
             a << End
           }else{
             a << Next(elem.get)
+
             elem = it.next()
             if(elem.isEmpty) ended = true
           }
