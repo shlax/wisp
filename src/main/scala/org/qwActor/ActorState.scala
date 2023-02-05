@@ -52,7 +52,7 @@ class ActorState(system:Executor, fn: ActorContext => Actor) extends ActorContex
           case am : AskMessage =>
             am.callBack.completeExceptionally(exc)
           case _ =>
-            logger.error("actor process("+m+") failed " + exc.getMessage, exc)
+            if(logger.isErrorEnabled) logger.error("actor process("+m+") failed " + exc.getMessage, exc)
         }
     }
 

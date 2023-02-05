@@ -38,7 +38,7 @@ class RemoteClient extends AbstractConnection, ClientBinding, ChannelGroup, Obje
       }
 
       override def failed(exc: Throwable, attachment: Void): Unit = {
-        logger.error("socket channel accept failed: " + exc.getMessage, exc)
+        if(logger.isErrorEnabled) logger.error("socket channel accept failed: " + exc.getMessage, exc)
         connected.completeExceptionally(exc)
       }
     })

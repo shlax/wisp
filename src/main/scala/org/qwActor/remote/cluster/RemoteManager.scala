@@ -34,7 +34,7 @@ class RemoteManager(system: ClusterSystem) extends ClusterContext, AutoCloseable
     if(id == null) throw new NullPointerException("id is null")
 
     val old = connectedMap.put(id, c)
-    if(old != null) logger.warn("replacing node ["+id+"] "+old)
+    if(old != null && logger.isWarnEnabled) logger.warn("replacing node ["+id+"] "+old)
 
     for(l <- system.listener) l.added(id, c)
   }
@@ -45,7 +45,7 @@ class RemoteManager(system: ClusterSystem) extends ClusterContext, AutoCloseable
     val old = connectedMap.remove(id)
     if (old != null){
       for(l <- system.listener) l.closed(id, old)
-    }else{
+    }else if(logger.isWarnEnabled){
       logger.warn("already removed "+id)
     }
   }
@@ -54,7 +54,7 @@ class RemoteManager(system: ClusterSystem) extends ClusterContext, AutoCloseable
     val c = createClient(address)
     c.connect(address).whenComplete{ (uuid, exc) =>
       if(exc != null){
-        logger.error("cluster client connection failed "+exc.getMessage, exc)
+        if(logger.isErrorEnabled) logger.error("cluster client connection failed "+exc.getMessage, exc)
         c.close()
       }else add(uuid, c)
     }
@@ -66,9 +66,11 @@ class RemoteManager(system: ClusterSystem) extends ClusterContext, AutoCloseable
 
   override def close(): Unit = {
     connectedMap.forEach { (k, v) =>
-      logger.warn("closing connected client "+k)
+      if(logger.isWarnEnabled) logger.warn("closing connected client "+k)
       try{ v.close()
-      }catch { case NonFatal(exc) => logger.error("remote client close "+k+" failed " + exc.getMessage, exc) }
+      }catch { case NonFatal(exc) =>
+        if(logger.isErrorEnabled) logger.error("remote client close "+k+" failed " + exc.getMessage, exc)
+      }
     }
   }
 

@@ -80,11 +80,11 @@ class ClusterSystem(context:ActorRuntime, val listener: Option[ClusterEventListe
 
     // close outgoing
     remoteManager.disconnect().whenComplete{ (_, ex) =>
-      if (ex != null) logger.error("cluster manager close failed " + ex.getMessage, ex)
+      if (ex != null && logger.isErrorEnabled) logger.error("cluster manager close failed " + ex.getMessage, ex)
 
       // close ingoing
       super.shutdown().whenComplete { (_, exc) =>
-        if (exc != null) logger.error("cluster client close failed " + exc.getMessage, exc)
+        if (exc != null && logger.isErrorEnabled) logger.error("cluster client close failed " + exc.getMessage, exc)
 
         if(ex != null && exc != null) {
           exc.addSuppressed(ex)

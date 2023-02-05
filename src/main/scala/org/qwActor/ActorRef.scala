@@ -1,12 +1,19 @@
 package org.qwActor
 
+import org.qwActor.jfr.UndeliverableMessage
+
 import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
 import scala.annotation.targetName
 
 object ActorRef{
   val nil: ActorRef = m => {
-    logger.warn("ignored message: "+m)
+    val e = new UndeliverableMessage
+    if (e.isEnabled && e.shouldCommit) {
+      e.message = m.toString
+      e.commit()
+    }
+    if(logger.isWarnEnabled) logger.warn("ignored message: "+m)
   }
 }
 

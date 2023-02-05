@@ -46,7 +46,7 @@ class RemoteSystem(context:ActorRuntime) extends RemoteActorRuntime, CompletionH
 
   def close(c:ClientConnection):Unit = {
     val v = connected.remove(c)
-    if(v == null) logger.warn("closing removed "+c)
+    if(v == null && logger.isWarnEnabled) logger.warn("closing removed "+c)
   }
 
   override def completed(client: AsynchronousSocketChannel, attachment: Void): Unit = {
@@ -64,7 +64,7 @@ class RemoteSystem(context:ActorRuntime) extends RemoteActorRuntime, CompletionH
       case _ : AsynchronousCloseException =>
         logger.debug("socket channel accept failed: " + exc.getMessage, exc)
       case _ =>
-        logger.error("socket channel accept failed: " + exc.getMessage, exc)
+        if(logger.isErrorEnabled) logger.error("socket channel accept failed: " + exc.getMessage, exc)
     }
   }
 
@@ -98,13 +98,16 @@ class RemoteSystem(context:ActorRuntime) extends RemoteActorRuntime, CompletionH
 
   override def close(): Unit = {
     connected.forEach{ (k, _) =>
-      logger.warn("closing connected client "+k)
+      if(logger.isWarnEnabled) logger.warn("closing connected client "+k)
       try { k.close()
-      }catch { case NonFatal(exc) => logger.error("client channel close "+k+" failed " + exc.getMessage, exc) }
+      }catch { case NonFatal(exc) =>
+        if(logger.isErrorEnabled)logger.error("client channel close "+k+" failed " + exc.getMessage, exc) }
     }
 
     try { serverChannel.close()
-    }catch { case NonFatal(exc) => logger.error("socket channel close "+serverChannel+" failed " + exc.getMessage, exc) }
+    }catch { case NonFatal(exc) =>
+      if(logger.isErrorEnabled) logger.error("socket channel close "+serverChannel+" failed " + exc.getMessage, exc)
+    }
 
     super.close()
   }

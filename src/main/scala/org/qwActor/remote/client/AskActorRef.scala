@@ -1,5 +1,6 @@
 package org.qwActor.remote.client
 
+import org.qwActor.jfr.UndeliverableMessage
 import org.qwActor.remote.{Connection, RemoteContext}
 import org.qwActor.remote.codec.{RemoteMessage, RemoteResponse}
 import org.qwActor.{ActorMessage, ActorRef, AskMessage, logger}
@@ -16,7 +17,12 @@ object AskActorRef{
           case Some(r) =>
             conn.send(RemoteResponse(r, msg.value))
           case None =>
-            logger.warn("dropped message " + msg)
+            val e = new UndeliverableMessage
+            if (e.isEnabled && e.shouldCommit) {
+              e.message = msg.toString
+              e.commit()
+            }
+            if(logger.isWarnEnabled) logger.warn("dropped message " + msg)
         }
       }, value))
   }
@@ -35,11 +41,13 @@ class AskActorRef(val path: Any, context:ClientBinding) extends ActorRef {
         val old = bm.put(id, SenderPath(path, msg.sender, cf))
         cf.whenComplete{ (v, exc) =>
           if(bm.remove(id) == null){
-            if(exc != null) logger.error("nothing to remove "+id+" "+v, exc)
-            else logger.error("nothing to remove "+id+" "+v)
+            if(logger.isErrorEnabled) {
+              if (exc != null) logger.error("nothing to remove " + id + " " + v, exc)
+              else logger.error("nothing to remove " + id + " " + v)
+            }
           }
         }
-        if(old != null) logger.error("replacing "+id+" -> "+old)
+        if(old != null && logger.isErrorEnabled) logger.error("replacing "+id+" -> "+old)
 
         context.send(RemoteMessage(path, msg.value, Some(id)))
       case _ =>

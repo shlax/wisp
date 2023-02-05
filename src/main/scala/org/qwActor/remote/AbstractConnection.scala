@@ -1,5 +1,6 @@
 package org.qwActor.remote
 
+import org.qwActor.jfr.UndeliverableMessage
 import org.qwActor.{MessageQueue, logger}
 import org.qwActor.remote.codec.{ByteArrayDecoder, ByteArrayEncoder, Decoder, Disconnect, Encoder}
 
@@ -17,7 +18,7 @@ object AbstractConnection {
     val l = new mutable.ArrayBuffer[CompletableFuture[Void]](map.size())
     map.forEach { (k, v) =>
       l += v.disconnect().whenComplete { (_, exc) =>
-        if (exc != null) logger.error("connection " + k + " close failed " + exc.getMessage, exc)
+        if (exc != null && logger.isErrorEnabled) logger.error("connection " + k + " close failed " + exc.getMessage, exc)
       }
     }
 
@@ -86,7 +87,12 @@ abstract class AbstractConnection extends Connection, CompletionHandler[Integer,
     if(sentDisconnect){
       var tmp = queue.poll()
       while (tmp != null) {
-        logger.warn("discarded message " + tmp)
+        val e = new UndeliverableMessage
+        if (e.isEnabled && e.shouldCommit) {
+          e.message = tmp.toString
+          e.commit()
+        }
+        if(logger.isWarnEnabled) logger.warn("discarded message " + tmp)
         tmp = queue.poll()
       }
       condition.signalAll()
@@ -131,7 +137,7 @@ abstract class AbstractConnection extends Connection, CompletionHandler[Integer,
       process.apply(t)
     } catch {
       case NonFatal(exc) =>
-        logger.error("socket channel " + chanel + " accept failed " + exc.getMessage, exc)
+        if(logger.isErrorEnabled) logger.error("socket channel " + chanel + " accept failed " + exc.getMessage, exc)
     }
   }
 
@@ -139,7 +145,7 @@ abstract class AbstractConnection extends Connection, CompletionHandler[Integer,
   protected val readDisconnect = new CompletableFuture[Void]()
 
   protected val disconnected = CompletableFuture.allOf(readDisconnect, writeDisconnect).whenComplete{ (_, exc) =>
-    if(exc != null) logger.error("socket channel " + chanel + " disconnect failed " + exc.getMessage, exc)
+    if(exc != null && logger.isErrorEnabled) logger.error("socket channel " + chanel + " disconnect failed " + exc.getMessage, exc)
     close()
   }
 
@@ -152,7 +158,8 @@ abstract class AbstractConnection extends Connection, CompletionHandler[Integer,
     try {
       chanel.close()
     }catch{
-      case NonFatal(e) => logger.error("chanel close : " + e.getMessage, e)
+      case NonFatal(e) =>
+        if(logger.isErrorEnabled) logger.error("chanel close : " + e.getMessage, e)
     }finally {
       readDisconnect.completeExceptionally(new AsynchronousCloseException)
       writeDisconnect.completeExceptionally(new AsynchronousCloseException)
@@ -194,7 +201,7 @@ abstract class AbstractConnection extends Connection, CompletionHandler[Integer,
   }
 
   override def failed(exc: Throwable, attachment: Attachment): Unit = {
-    logger.error("socket channel " + chanel + " " + attachment + " failed " + exc.getMessage, exc)
+    if(logger.isErrorEnabled) logger.error("socket channel " + chanel + " " + attachment + " failed " + exc.getMessage, exc)
     close()
   }
 

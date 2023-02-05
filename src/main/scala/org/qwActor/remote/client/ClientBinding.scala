@@ -1,5 +1,6 @@
 package org.qwActor.remote.client
 
+import org.qwActor.jfr.UndeliverableMessage
 import org.qwActor.{ActorMessage, ActorRef, logger}
 import org.qwActor.remote.Connection
 import org.qwActor.remote.codec.{RemoteMessage, RemoteResponse}
@@ -7,7 +8,6 @@ import org.qwActor.remote.{AbstractConnection, ObjectId, ObjectIdFactory, Remote
 
 import java.nio.channels.AsynchronousCloseException
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentMap}
-
 import scala.jdk.CollectionConverters.*
 
 object ClientBinding{
@@ -35,7 +35,12 @@ trait ClientBinding extends RemoteContext, Connection{
     if (r != null) {
       r.sender.accept(get(r.path), msg.value)
     } else {
-      logger.warn("dropped message " + msg)
+      val e = new UndeliverableMessage
+      if (e.isEnabled && e.shouldCommit) {
+        e.message = msg.toString
+        e.commit()
+      }
+      if(logger.isWarnEnabled) logger.warn("dropped message " + msg)
     }
   }
 
