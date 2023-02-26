@@ -92,7 +92,7 @@ Using(new ActorSystem) { system =>
     println("start: "+Thread.currentThread())
     
     val cf = sink.start() // start pulling data
-    source.run() // iterate over range, will block current until all elements are not send
+    source.run() // iterate over range, will block current thread until all elements are not send
     cf.get() // wait for all messages to propagate
 }.get
 ```
