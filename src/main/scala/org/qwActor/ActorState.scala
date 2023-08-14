@@ -74,8 +74,15 @@ class ActorState(system:Executor, fn: ActorContext => Actor) extends ActorContex
     try{
       lock.lock()
       if(running){
-        while(!queue.put(msg)){
-          condition.await()
+        val h = msg.handler
+        if(h.isDefined){
+          if (!queue.put(msg)) {
+            h.get.accept(msg.value)
+          }
+        }else{
+          while (!queue.put(msg)) {
+            condition.await()
+          }
         }
       }else{
         running = true

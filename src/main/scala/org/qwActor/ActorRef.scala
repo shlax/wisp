@@ -25,16 +25,20 @@ trait ActorRef extends Consumer[ActorMessage]{
     accept(ActorRef.nil, value)
   }
 
-  def accept(r:ActorRef, m:Any): Unit = {
-    accept(ActorMessage(r, m))
-  }
-
   def ask(value: Any): CompletableFuture[ActorMessage] = {
     val f = new CompletableFuture[ActorMessage]
     accept(AskMessage((msg: ActorMessage) => {
       f.complete(msg)
     }, value, f))
     f
+  }
+
+  def accept(r: ActorRef, m: Any): Unit = {
+    accept(ActorMessage(r, m))
+  }
+
+  def add(r: ActorRef, m: Any)(handler: Consumer[Any]): Unit = {
+    accept(ActorMessage(r, m, Some(handler)))
   }
 
 }
