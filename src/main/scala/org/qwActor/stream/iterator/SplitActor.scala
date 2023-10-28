@@ -44,6 +44,7 @@ class SplitActor(prev:ActorRef) extends ActorRef{
 
     def process(v:IteratorMessage): Unit = {
       requested.get.accept(this, v)
+      requested = None
     }
 
   }
