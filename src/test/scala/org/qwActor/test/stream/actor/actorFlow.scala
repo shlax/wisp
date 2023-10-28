@@ -13,21 +13,14 @@ case object End
 
 class StringSource(it:Iterator[String]) extends ActorRef {
 
-  val lock = new ReentrantLock
-
   override def accept(t: ActorMessage): Unit = {
     t.value match {
       case HasNext =>
-        try {
-          lock.lock()
-          if (it.hasNext) {
-            val n = it.next()
-            t.sender << Next(n)
-          } else {
-            t.sender << End
-          }
-        }finally {
-          lock.unlock()
+        if (it.hasNext) {
+          val n = it.next()
+          t.sender << Next(n)
+        } else {
+          t.sender << End
         }
     }
   }

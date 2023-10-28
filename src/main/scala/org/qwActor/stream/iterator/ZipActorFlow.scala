@@ -11,18 +11,25 @@ import java.util.concurrent.locks.ReentrantLock
 object ZipActorFlow{
 
   def apply(prev: ForEach[ActorRef], context: ActorContext): ZipActorFlow = {
-    new ZipActorFlow(prev, context, new util.LinkedList[ActorRef](), new util.LinkedList[Any]())
+    new ZipActorFlow(prev, context, new util.LinkedList[ActorRef](), new util.LinkedList[ZipActorFlow#NodeRefValue]())
   }
 
-  def apply(prev: ForEach[ActorRef], context: ActorContext, nodes: util.Queue[ActorRef], values:util.Queue[Any]): ZipActorFlow = {
+  def apply(prev: ForEach[ActorRef], context: ActorContext, nodes: util.Queue[ActorRef], values:util.Queue[ZipActorFlow#NodeRefValue]): ZipActorFlow = {
     new ZipActorFlow(prev, context, nodes, values)
   }
 
 }
 
-class ZipActorFlow(prev:ForEach[ActorRef], context: ActorContext, nodes:util.Queue[ActorRef], values:util.Queue[Any]) extends Actor(context){
+class ZipActorFlow(prev:ForEach[ActorRef], context: ActorContext, nodes:util.Queue[ActorRef], values:util.Queue[ZipActorFlow#NodeRefValue]) extends Actor(context){
 
   private val lock = new ReentrantLock()
+
+  class NodeRefValue(n:NodeRef, v: Any) {
+    def apply(): Any = {
+      n.next()
+      v
+    }
+  }
 
   class NodeRef(ref:ActorRef) extends ActorRef {
     private var ended:Boolean = false
@@ -39,12 +46,11 @@ class ZipActorFlow(prev:ForEach[ActorRef], context: ActorContext, nodes:util.Que
           case Next(v) =>
             val n = nodes.poll()
             if (n == null) {
-              values.add(v)
+              values.add(new NodeRefValue(this, v))
             } else {
+              next()
               n << Next(v)
             }
-
-            next()
 
           case End =>
             ended = true
@@ -92,7 +98,7 @@ class ZipActorFlow(prev:ForEach[ActorRef], context: ActorContext, nodes:util.Que
           if (v == null) {
             nodes.add(sender)
           } else {
-            sender << Next(v)
+            sender << Next(v.apply())
           }
         }
       } finally {
