@@ -3,7 +3,7 @@ package org.qwActor
 import java.util.function.Consumer
 
 object ActorMessage{
-  def apply(sender:ActorRef, value:Any, handler:Option[Consumer[Any]] = None) = new ActorMessage(sender, value)
+  def apply(sender:ActorRef, value:Any, handler:Option[Consumer[Any]] = None) = new ActorMessage(sender, value, handler)
 
   def unapply(m: ActorMessage): Some[(ActorRef, Any, Option[Consumer[Any]])] = Some((m.sender, m.value, m.handler))
 

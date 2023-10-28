@@ -37,7 +37,7 @@ trait ActorRef extends Consumer[ActorMessage]{
     accept(ActorMessage(r, m))
   }
 
-  def add(r: ActorRef, m: Any)(handler: Consumer[Any]): Unit = {
+  def acceptOr(r: ActorRef, m: Any)(handler: Consumer[Any]): Unit = {
     accept(ActorMessage(r, m, Some(handler)))
   }
 
