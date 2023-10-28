@@ -1,6 +1,6 @@
 package org.qwActor.stream.iterator
 
-import org.qwActor.stream.iterator.messages.{End, HasNext, Next}
+import org.qwActor.stream.iterator.messages.{End, HasNext, IteratorMessage, Next}
 import org.qwActor.{Actor, ActorContext, ActorMessage, ActorRef}
 
 import java.util.concurrent.locks.ReentrantLock
@@ -15,10 +15,11 @@ object SplitActor {
 
 class SplitActor(prev:ActorRef) extends ActorRef{
   private val lock = new ReentrantLock()
+  private var n: List[SplitActorRef] = Nil
   private var ended = false
-  
-  class SplitActorRef extends ActorRef{
-    var requested:Option[ActorRef] = None
+
+  private class SplitActorRef extends ActorRef{
+    private var requested:Option[ActorRef] = None
 
     override def accept(t: ActorMessage): Unit = {
       lock.lock()
@@ -38,12 +39,14 @@ class SplitActor(prev:ActorRef) extends ActorRef{
         }
       } finally {
         lock.unlock()
-      }    
+      }
+    }
+
+    def process(v:IteratorMessage): Unit = {
+      requested.get.accept(this, v)
     }
 
   }
-
-  var n:List[SplitActorRef] = Nil
 
   def add(): ActorRef = {
     lock.lock()
@@ -61,11 +64,11 @@ class SplitActor(prev:ActorRef) extends ActorRef{
     try {
       t.value match {
         case v: Next =>
-          for (i <- n) i.requested.get.accept(i, v)
+          for (i <- n) i.process(v)
 
         case End =>
           ended = true
-          for (i <- n) i.requested.get.accept(i, End)
+          for (i <- n) i.process(End)
 
       }
     }finally {
