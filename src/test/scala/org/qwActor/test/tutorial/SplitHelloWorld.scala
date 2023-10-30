@@ -9,27 +9,24 @@ import scala.util.Using
 class SplitHelloWorld extends AnyFunSuite{
 
   test("splitHelloWorld"){
-    Using(new ActorSystem) { system =>
-      val range = (1 to 10).iterator
+    val range = (1 to 10).iterator
 
-      val source = ActorSource[Int](range) // Iterator will be called from multiple threads
-      val split = SplitActor.apply(source)
+    val source = ActorSource[Int](range) // Iterator will be called from multiple threads
+    val split = SplitActor.apply(source)
 
-      val sink1 = ActorSink(split.add()) { r =>
-        println("1:" + r)
-      }
+    val sink1 = ActorSink(split.add()) { r =>
+      println("1:" + r)
+    }
 
-      val sink2 = ActorSink(split.add()) { r =>
-        println("2:" + r)
-      }
+    val sink2 = ActorSink(split.add()) { r =>
+      println("2:" + r)
+    }
 
-      val c1 = sink1.start()
-      val c2 = sink2.start()
+    val c1 = sink1.start()
+    val c2 = sink2.start()
 
-      c1.get()
-      c2.get()
-
-    }.get
+    c1.get()
+    c2.get()
   }
 
 }

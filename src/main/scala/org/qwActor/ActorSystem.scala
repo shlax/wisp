@@ -22,7 +22,7 @@ class ActorSystem extends ActorRuntime, Executor, AutoCloseable{
   }
 
   override def close(): Unit = {
-    if(!executor.isTerminated) executor.shutdown()
+    if(!executor.isShutdown) executor.shutdown()
   }
 
 }
