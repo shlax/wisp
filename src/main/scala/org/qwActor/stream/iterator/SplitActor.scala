@@ -32,7 +32,7 @@ class SplitActor(prev:ActorRef) extends ActorRef{
               if (requested.isDefined) throw new IllegalStateException("multiple requests")
               requested = Some(t.sender)
 
-              if (n.forall(_.requested.isDefined)) {
+              if ( n.forall(_.requested.isDefined) ) {
                 prev.accept(SplitActor.this, HasNext)
               }
             }
@@ -42,9 +42,10 @@ class SplitActor(prev:ActorRef) extends ActorRef{
       }
     }
 
-    def process(v:IteratorMessage): Unit = {
-      requested.get.accept(this, v)
+    def process(): IteratorMessage => Unit = {
+      val r = requested.get
       requested = None
+      { (m:IteratorMessage) => r.accept(this, m)  }
     }
 
   }
@@ -65,11 +66,13 @@ class SplitActor(prev:ActorRef) extends ActorRef{
     try {
       t.value match {
         case v: Next =>
-          for (i <- n) i.process(v)
+          val t = n.map(_.process())
+          for(i <- t) i.apply(v)
 
         case End =>
           ended = true
-          for (i <- n) i.process(End)
+          val t = n.map(_.process())
+          for (i <- t) i.apply(End)
 
       }
     }finally {
