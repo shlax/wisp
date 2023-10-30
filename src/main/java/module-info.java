@@ -3,7 +3,6 @@ module org.qwActor {
     requires scala.library;
     requires org.slf4j;
     requires jdk.jfr;
-
     exports org.qwActor;
     exports org.qwActor.jfr;
     exports org.qwActor.remote;
