@@ -9,9 +9,9 @@ repositories {
 
 
 dependencies {
-    implementation group: 'org.scala-lang', name: 'scala3-library_3', version: '3.2.1'
-    implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.6'
+    implementation group: 'org.scala-lang', name: 'scala3-library_3', version: '3.3.1'
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.9'
 
-    testImplementation group: 'org.scalatest', name: 'scalatest_3', version: '3.2.14'
-    testImplementation group: 'org.slf4j', name: 'slf4j-simple', version: '2.0.6'
+    testImplementation group: 'org.scalatest', name: 'scalatest_3', version: '3.2.17'
+    testImplementation group: 'org.slf4j', name: 'slf4j-simple', version: '2.0.9'
 }
