@@ -33,7 +33,7 @@ class WaitSourceSink[A](it:Source[A], nodes:util.Queue[ActorRef])(fn:Consumer[An
 
     try {
       lock.lock()
-      prev.accept(this, HasNext) // get first
+      prev.ask(HasNext).thenAccept(this ) // get first
 
       var elem:Option[A] = it.next()
       if(elem.isEmpty) ended = true
@@ -61,7 +61,7 @@ class WaitSourceSink[A](it:Source[A], nodes:util.Queue[ActorRef])(fn:Consumer[An
           fn.accept(v)
 
           value = None
-          prev.accept(this, HasNext)
+          prev.ask(HasNext).thenAccept(this )
         }
 
         condition.await()

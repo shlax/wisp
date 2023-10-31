@@ -36,7 +36,7 @@ class StreamFlow[T](prev:ActorRef, context: ActorContext, nodes:util.Queue[Actor
         sender << End
       }else{
         nodes.add(sender)
-        prev.accept(this, HasNext)
+        prev.ask(HasNext).thenAccept(this)
       }
 
     case End =>

@@ -44,7 +44,7 @@ class WaitSink(prev:ActorRef)(fn:Consumer[Any]) extends ActorRef , Runnable {
   }
 
   private def next(): Unit = {
-    prev.accept(this, HasNext)
+    prev.ask(HasNext).thenAccept(this )
   }
 
   override def accept(t: ActorMessage): Unit = {

@@ -33,7 +33,7 @@ class SplitStream(prev:ActorRef) extends ActorRef{
               requested = Some(t.sender)
 
               if ( n.forall(_.requested.isDefined) ) {
-                prev.accept(SplitStream.this, HasNext)
+                prev.ask(HasNext).thenAccept(SplitStream.this)
               }
             }
         }

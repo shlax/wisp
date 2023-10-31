@@ -35,7 +35,7 @@ class ZipStream(prev:ForEach[ActorRef], context: ActorContext, nodes:util.Queue[
     private var ended:Boolean = false
 
     def next():Unit = {
-      ref.accept(this, HasNext)
+      ref.ask(HasNext).thenAccept(this)
     }
 
     override def accept(t: ActorMessage): Unit = {

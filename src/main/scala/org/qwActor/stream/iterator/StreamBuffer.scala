@@ -25,7 +25,7 @@ class StreamBuffer(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorR
   private def next(): Unit = {
     if (!ended && queue.size() + requested < size) {
       requested += 1
-      prev.accept(this, HasNext)
+      prev.ask(HasNext).thenAccept(this)
     }
   }
 

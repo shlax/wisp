@@ -21,7 +21,7 @@ class StreamSink(prev:ActorRef)(fn:Consumer[Any]) extends ActorRef {
   }
 
   private def next():Unit = {
-    prev.accept(this, HasNext)
+    prev.ask(HasNext).thenAccept(this )
   }
 
   override def accept(t: ActorMessage): Unit = {
