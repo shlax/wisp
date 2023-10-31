@@ -9,6 +9,7 @@ import java.net.InetSocketAddress
 import java.util
 import java.util.concurrent.CompletableFuture
 import scala.collection.mutable
+import scala.util.Random
 import scala.util.control.NonFatal
 
 class PaxosTest extends AnyFunSuite{
@@ -61,18 +62,20 @@ class PaxosTest extends AnyFunSuite{
       Thread.sleep(10)
     }
 
-    val p1 = createProposer(1, n1._2, ids, "cat", learner)
-    val p2 = createProposer(2, n2._2, ids, "dog", learner)
-    val p3 = createProposer(3, n3._2, ids, "mouse", learner)
+    val p1 = createProposer(1, n1._2, Random.shuffle(ids), "cat", learner)
+    val p2 = createProposer(2, n2._2, Random.shuffle(ids), "dog", learner)
+    val p3 = createProposer(3, n3._2, Random.shuffle(ids), "mouse", learner)
 
-    p3 << TryRun(None)
-    p2 << TryRun(None)
     p1 << TryRun(None)
+    p2 << TryRun(None)
+    p3 << TryRun(None)
 
-    println(learner.get())
+    val res = learner.get()
 
     // wait for messages to stop
-     Thread.sleep(500)
+    Thread.sleep(1000)
+
+    println(res)
 
     n1._2.shutdown().get()
     n2._2.shutdown().get()
