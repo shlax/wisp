@@ -88,7 +88,7 @@ class ByteArrayDecoder(consumer: Consumer[Any]) extends Decoder {
     val pos = to.position()
     val off = from.position()
 
-    val len = Math.min(from.limit(), to.remaining())
+    val len = Math.min(from.remaining(), to.remaining())
 
     to.put(pos, from, off, len)
 
