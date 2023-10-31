@@ -5,19 +5,19 @@ import org.qwActor.{Actor, ActorContext, ActorRef}
 
 import java.util
 
-object BufferActor{
+object StreamBuffer{
 
-  def apply(prev: ActorRef, context: ActorContext, nodes:util.Queue[ActorRef], queue: util.Queue[Any], size:Int): BufferActor = {
-    new BufferActor(prev, context, nodes, queue, size)
+  def apply(prev: ActorRef, context: ActorContext, nodes:util.Queue[ActorRef], queue: util.Queue[Any], size:Int): StreamBuffer = {
+    new StreamBuffer(prev, context, nodes, queue, size)
   }
 
-  def apply(prev: ActorRef, context: ActorContext, size: Int): BufferActor = {
-    new BufferActor(prev, context, new util.LinkedList[ActorRef](), new util.LinkedList[Any](), size)
+  def apply(prev: ActorRef, context: ActorContext, size: Int): StreamBuffer = {
+    new StreamBuffer(prev, context, new util.LinkedList[ActorRef](), new util.LinkedList[Any](), size)
   }
 
 }
 
-class BufferActor(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef], queue: util.Queue[Any], size:Int) extends Actor(context){
+class StreamBuffer(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef], queue: util.Queue[Any], size:Int) extends Actor(context){
 
   private var ended = false
   private var requested = 0

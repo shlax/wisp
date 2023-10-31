@@ -8,19 +8,19 @@ import scala.collection.mutable
 import java.util
 import java.util.concurrent.locks.ReentrantLock
 
-object ZipActorFlow{
+object ZipStream{
 
-  def apply(prev: ForEach[ActorRef], context: ActorContext): ZipActorFlow = {
-    new ZipActorFlow(prev, context, new util.LinkedList[ActorRef](), new util.LinkedList[ZipActorFlow#NodeRefValue]())
+  def apply(prev: ForEach[ActorRef], context: ActorContext): ZipStream = {
+    new ZipStream(prev, context, new util.LinkedList[ActorRef](), new util.LinkedList[ZipStream#NodeRefValue]())
   }
 
-  def apply(prev: ForEach[ActorRef], context: ActorContext, nodes: util.Queue[ActorRef], values:util.Queue[ZipActorFlow#NodeRefValue]): ZipActorFlow = {
-    new ZipActorFlow(prev, context, nodes, values)
+  def apply(prev: ForEach[ActorRef], context: ActorContext, nodes: util.Queue[ActorRef], values:util.Queue[ZipStream#NodeRefValue]): ZipStream = {
+    new ZipStream(prev, context, nodes, values)
   }
 
 }
 
-class ZipActorFlow(prev:ForEach[ActorRef], context: ActorContext, nodes:util.Queue[ActorRef], values:util.Queue[ZipActorFlow#NodeRefValue]) extends Actor(context){
+class ZipStream(prev:ForEach[ActorRef], context: ActorContext, nodes:util.Queue[ActorRef], values:util.Queue[ZipStream#NodeRefValue]) extends Actor(context){
 
   private val lock = new ReentrantLock()
 

@@ -1,7 +1,7 @@
 package org.qwActor.test.tutorial
 
 import org.qwActor.{Actor, ActorContext, ActorRef, ActorSystem}
-import org.qwActor.stream.iterator.{ActorSink, ActorSource, BufferActor}
+import org.qwActor.stream.iterator.{StreamSink, StreamSource, StreamBuffer}
 import org.qwActor.stream.iterator.messages.{HasNext, Next, End}
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -30,9 +30,9 @@ class BufferActorHelloWorld extends AnyFunSuite{
   test("bufferActorHelloWorld"){
     Using(new ActorSystem) { system =>
       val range = (1 to 20).iterator
-      val source = ActorSource[Int](range)
+      val source = StreamSource[Int](range)
 
-      val buffer = system.create(c => BufferActor(source, c, 10))
+      val buffer = system.create(c => StreamBuffer(source, c, 10))
 
       val cd = new CountDownLatch(1)
       val w = system.create(c => new Worker(buffer, cd, c))

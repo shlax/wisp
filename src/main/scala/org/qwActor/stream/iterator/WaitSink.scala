@@ -7,13 +7,13 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
 
-object WaitActorSink{
+object WaitSink{
 
-  def apply(prev:ActorRef)(fn:Consumer[Any]):WaitActorSink = new WaitActorSink(prev)(fn)
+  def apply(prev:ActorRef)(fn:Consumer[Any]):WaitSink = new WaitSink(prev)(fn)
 
 }
 
-class WaitActorSink(prev:ActorRef)(fn:Consumer[Any]) extends ActorRef , Runnable {
+class WaitSink(prev:ActorRef)(fn:Consumer[Any]) extends ActorRef , Runnable {
 
   private val lock = new ReentrantLock()
   private val condition = lock.newCondition()

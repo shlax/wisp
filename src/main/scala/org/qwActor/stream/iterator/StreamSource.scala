@@ -4,14 +4,14 @@ import org.qwActor.{ActorMessage, ActorRef}
 import org.qwActor.stream.iterator.messages.{End, HasNext, Next, IteratorMessage}
 import java.util.concurrent.locks.ReentrantLock
 
-object ActorSource{
+object StreamSource{
 
-  def apply[A](it:Source[A]):ActorSource[A] = new ActorSource(it)
+  def apply[A](it:Source[A]):StreamSource[A] = new StreamSource(it)
 
 }
 
 /** Iterator will be called from multiple threads */
-class ActorSource[A](it:Source[A]) extends ActorRef {
+class StreamSource[A](it:Source[A]) extends ActorRef {
 
   private val lock = new ReentrantLock
 

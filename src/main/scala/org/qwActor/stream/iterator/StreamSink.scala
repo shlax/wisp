@@ -6,13 +6,13 @@ import org.qwActor.{ActorMessage, ActorRef}
 import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
 
-object ActorSink{
+object StreamSink{
 
-  def apply(prev:ActorRef)(fn:Consumer[Any]):ActorSink = new ActorSink(prev)(fn)
+  def apply(prev:ActorRef)(fn:Consumer[Any]):StreamSink = new StreamSink(prev)(fn)
 
 }
 
-class ActorSink(prev:ActorRef)(fn:Consumer[Any]) extends ActorRef {
+class StreamSink(prev:ActorRef)(fn:Consumer[Any]) extends ActorRef {
   private val cf = new CompletableFuture[Void]
 
   def start():CompletableFuture[Void] = {

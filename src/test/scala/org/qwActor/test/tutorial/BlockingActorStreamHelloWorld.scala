@@ -2,7 +2,7 @@ package org.qwActor.test.tutorial
 
 import org.qwActor.ActorSystem
 import org.qwActor.stream.ForEach
-import org.qwActor.stream.iterator.{ActorFlow, ActorSink, ForEachSource, Source}
+import org.qwActor.stream.iterator.{StreamFlow, StreamSink, ForEachSource, Source}
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.util.function.Consumer
@@ -15,10 +15,10 @@ class BlockingActorStreamHelloWorld extends  AnyFunSuite {
       val range = (1 to 10).iterator
 
       val source = ForEachSource[Int](range) // Iterator will be called from current thread
-      val flow = system.create(c => ActorFlow[String](source, c)({
+      val flow = system.create(c => StreamFlow[String](source, c)({
         case i : Int => "\t"+Thread.currentThread()+">"+i
       }))
-      val sink = ActorSink(flow)(println)
+      val sink = StreamSink(flow)(println)
 
       println("start: "+Thread.currentThread())
 

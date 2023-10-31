@@ -7,19 +7,19 @@ import java.util
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
 
-object WaitActorSourceSink {
+object WaitSourceSink {
 
-  def apply[A](it:Source[A])(fn:Consumer[Any]):WaitActorSourceSink[A] = {
-    new WaitActorSourceSink(it, new util.LinkedList[ActorRef]())(fn)
+  def apply[A](it:Source[A])(fn:Consumer[Any]):WaitSourceSink[A] = {
+    new WaitSourceSink(it, new util.LinkedList[ActorRef]())(fn)
   }
 
-  def apply[A](it:Source[A], nodes:util.Queue[ActorRef])(fn:Consumer[Any]):WaitActorSourceSink[A] = {
-    new WaitActorSourceSink(it, nodes)(fn)
+  def apply[A](it:Source[A], nodes:util.Queue[ActorRef])(fn:Consumer[Any]):WaitSourceSink[A] = {
+    new WaitSourceSink(it, nodes)(fn)
   }
 
 }
 
-class WaitActorSourceSink[A](it:Source[A], nodes:util.Queue[ActorRef])(fn:Consumer[Any]) extends ActorRef {
+class WaitSourceSink[A](it:Source[A], nodes:util.Queue[ActorRef])(fn:Consumer[Any]) extends ActorRef {
 
   private val lock = new ReentrantLock
   private val condition = lock.newCondition()

@@ -5,19 +5,19 @@ import org.qwActor.{Actor, ActorContext, ActorMessage, ActorRef}
 
 import java.util
 
-object ActorFlow{
+object StreamFlow{
 
-  def apply[T](prev: ActorRef, context: ActorContext)(fn: PartialFunction[Any, T]): ActorFlow[T] = {
-    new ActorFlow(prev, context, new util.LinkedList[ActorRef]())(fn)
+  def apply[T](prev: ActorRef, context: ActorContext)(fn: PartialFunction[Any, T]): StreamFlow[T] = {
+    new StreamFlow(prev, context, new util.LinkedList[ActorRef]())(fn)
   }
 
-  def apply[T](prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: PartialFunction[Any, T]) : ActorFlow[T] = {
-    new ActorFlow(prev, context, nodes)(fn)
+  def apply[T](prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: PartialFunction[Any, T]) : StreamFlow[T] = {
+    new StreamFlow(prev, context, nodes)(fn)
   }
 
 }
 
-class ActorFlow[T](prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: PartialFunction[Any, T]) extends Actor(context){
+class StreamFlow[T](prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: PartialFunction[Any, T]) extends Actor(context){
 
   private var ended = false
 

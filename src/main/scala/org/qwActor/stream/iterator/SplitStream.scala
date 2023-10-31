@@ -5,15 +5,15 @@ import org.qwActor.{Actor, ActorContext, ActorMessage, ActorRef}
 
 import java.util.concurrent.locks.ReentrantLock
 
-object SplitActor {
+object SplitStream {
 
-  def apply(prev: ActorRef): SplitActor = {
-    new SplitActor(prev)
+  def apply(prev: ActorRef): SplitStream = {
+    new SplitStream(prev)
   }
 
 }
 
-class SplitActor(prev:ActorRef) extends ActorRef{
+class SplitStream(prev:ActorRef) extends ActorRef{
   private val lock = new ReentrantLock()
   private var n: List[SplitActorRef] = Nil
   private var ended = false
@@ -33,7 +33,7 @@ class SplitActor(prev:ActorRef) extends ActorRef{
               requested = Some(t.sender)
 
               if ( n.forall(_.requested.isDefined) ) {
-                prev.accept(SplitActor.this, HasNext)
+                prev.accept(SplitStream.this, HasNext)
               }
             }
         }
