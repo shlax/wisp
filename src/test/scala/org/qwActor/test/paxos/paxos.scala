@@ -49,6 +49,7 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorRef], learner: 
       }
 
       if(n.isEmpty || n.get.seq == seq) { // check if is for current run
+        current = None
         promiseCount = 0
         acceptedCount = 0
 
@@ -59,6 +60,8 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorRef], learner: 
       }
 
     case Promise(n, lastValue) =>
+      //println("Proposer("+nodeId+"):Promise("+n+","+lastValue+"):"+current)
+
       if(n.nodeId != nodeId) throw new IllegalStateException("message:nodeId != nodeId")
 
       if(n.seq == seq) { // check if is for current run
@@ -81,6 +84,8 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorRef], learner: 
       }
 
     case Accepted(n) =>
+      //println("Proposer("+nodeId+"):Accepted("+n+"):"+current)
+
       if(n.nodeId != nodeId) throw new IllegalStateException("message:nodeId != nodeId")
 
       if(n.seq == seq) { // check if is for current run
@@ -109,13 +114,14 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorRef], learner: 
 }
 
 
-class Acceptor(context: ActorContext) extends Actor(context) {
+class Acceptor(id:Int, context: ActorContext) extends Actor(context) {
 
   var promised:Option[GenerationNumber] = None
   var lastValue:Option[GenerationValue] = None
 
   override def process(sender: ActorRef): PartialFunction[Any, Unit] = {
     case Prepare(n) =>
+      //println("Acceptor("+id+"):Prepare("+n+"):"+promised+"|"+lastValue)
 
       if(promised.isEmpty){
         promised = Some(n)
@@ -132,9 +138,10 @@ class Acceptor(context: ActorContext) extends Actor(context) {
       }
 
     case Accept(n, v) =>
+      //println("Acceptor("+id+"):Accept("+n+","+v+"):"+promised+"|"+lastValue)
 
       val act = promised.get
-      if (n < act) {
+      if (n != act) {
         // ignore
         sender << Ignore(n)
       } else {
