@@ -99,7 +99,7 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorRef], learner: 
 
         if (acceptedCount >= quorum) {
           val av = n.value
-          println(">>Proposer["+nodeId+"]<<"+from+":Accepted("+n+"):"+current+"/"+av)
+          println(">>Proposer["+nodeId+"]<<"+from+":Accepted("+n+"):"+current)
 
           val lv = learner.getNow(av)
           if (av != lv) {
