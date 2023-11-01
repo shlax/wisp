@@ -84,7 +84,10 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorRef], learner: 
 
         if (promiseCount == quorum) {
           val av = Accept("Proposer["+nodeId+"]", n, current.map(_.value).getOrElse(value))
-          for (a <- acceptors) a.ask(av).thenAccept(this)
+          for (a <- Random.shuffle(acceptors)){
+            Thread.sleep(Random.between(0, 100))
+            a.ask(av).thenAccept(this)
+          }
         }
       }
 
