@@ -73,7 +73,7 @@ class PaxosTest extends AnyFunSuite{
     val res = learner.get()
 
     // wait for messages to stop
-    Thread.sleep(1000)
+    Thread.sleep(5000)
 
     println(res)
 
