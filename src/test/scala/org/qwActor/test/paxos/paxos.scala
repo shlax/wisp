@@ -56,7 +56,7 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorRef], learner: 
         seq += 1
 
         val genId = Prepare("Proposer["+nodeId+"]",GenerationNumber(seq, nodeId))
-        for (a <- acceptors){
+        for (a <- Random.shuffle(acceptors)){
           Thread.sleep(Random.between(0, 10))
           a.ask(genId).thenAccept(this)
         }
