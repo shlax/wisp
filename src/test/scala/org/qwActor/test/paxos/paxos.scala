@@ -22,7 +22,7 @@ case class GenerationValue(n: GenerationNumber, value: Value) extends Ordered[Ge
 
 case class Prepare(from:String, n: GenerationNumber)
 case class Promise(from:String, n: GenerationNumber, lastAccepted: Option[GenerationValue])
-case class Accept(from:String, n: GenerationNumber, value: Value)
+case class Accept(from:String, n: GenerationValue)
 case class Accepted(from:String, n: GenerationValue)
 
 case class Ignore(n: GenerationNumber)
@@ -46,7 +46,7 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorRef], learner: 
   override def process(sender: ActorRef): PartialFunction[Any, Unit] = {
     case TryRun(n) =>
       if(n.nonEmpty){
-        if(n.get.nodeId != nodeId) throw new IllegalStateException("message:nodeId != nodeId")
+        if(n.get.nodeId != nodeId) throw new IllegalStateException("message:nodeId != nodeId "+n.get.nodeId+"/"+nodeId)
       }
 
       if(n.isEmpty || n.get.seq == seq) { // check if is for current run
@@ -66,7 +66,7 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorRef], learner: 
       println("Proposer["+nodeId+"]<|"+from+":Promise("+n+","+lastValue+")|>"+current+"|"+seq+"|"+acceptedCount+"|"+promiseCount)
       Thread.sleep(Random.between(0, 100))
 
-      if(n.nodeId != nodeId) throw new IllegalStateException("message:nodeId != nodeId")
+      if(n.nodeId != nodeId) throw new IllegalStateException("message:nodeId != nodeId "+n.nodeId+"/"+nodeId)
 
       if(n.seq == seq) { // check if is for current run
         promiseCount += 1
@@ -83,7 +83,7 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorRef], learner: 
         }
 
         if (promiseCount == quorum) {
-          val av = Accept("Proposer["+nodeId+"]", n, current.map(_.value).getOrElse(value))
+          val av = Accept("Proposer["+nodeId+"]", GenerationValue(n, current.map(_.value).getOrElse(value)))
           for (a <- Random.shuffle(acceptors)){
             Thread.sleep(Random.between(0, 100))
             a.ask(av).thenAccept(this)
@@ -91,29 +91,29 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorRef], learner: 
         }
       }
 
-    case Accepted(from, n) =>
-      println("Proposer["+nodeId+"]<|"+from+":Accepted("+n+")|>"+current+"|"+seq+"|"+acceptedCount+"|"+promiseCount)
+    case Accepted(from, gv) =>
+      println("Proposer["+nodeId+"]<|"+from+":Accepted("+gv+")|>"+current+"|"+seq+"|"+acceptedCount+"|"+promiseCount)
       Thread.sleep(Random.between(0, 100))
 
-      if(n.n.nodeId != nodeId) throw new IllegalStateException("message:nodeId != nodeId")
+      if(gv.n.nodeId != nodeId) throw new IllegalStateException("message:nodeId != nodeId "+gv.n.nodeId+"/"+nodeId)
 
-      if(n.n.seq == seq) { // check if is for current run
+      if(gv.n.seq == seq) { // check if is for current run
         acceptedCount += 1
 
         if (acceptedCount >= quorum) {
-          val av = n.value
-          println(">>Proposer["+nodeId+"]<|"+from+":Accepted("+n+")|>"+current+"|"+seq+"|"+acceptedCount+"|"+promiseCount)
+          val av = gv.value
+          println(">>Proposer["+nodeId+"]<|"+from+":Accepted("+gv+")|>"+current+"|"+seq+"|"+acceptedCount+"|"+promiseCount)
 
           val lv = learner.getNow(av)
           if (av != lv) {
-            throw new IllegalStateException("" + System.nanoTime() + ": Proposer[" + nodeId + "] : " + lv + " != " + av + " " + n)
+            throw new IllegalStateException("Proposer[" + nodeId + "] : " + lv + " != " + av + " " + gv)
           }
           learner.complete(av)
         }
       }
 
     case Ignore(n) =>
-      if(n.nodeId != nodeId) throw new IllegalStateException("message:nodeId != nodeId")
+      if(n.nodeId != nodeId) throw new IllegalStateException("message:nodeId != nodeId "+n.nodeId+"/"+nodeId)
 
       if(n.seq == seq) { // check if is for current run
         this << TryRun(Some(n))
@@ -139,8 +139,7 @@ class Acceptor(id:Int, context: ActorContext) extends Actor(context) {
         sender << Promise("Acceptor["+id+"]", n, lastValue)
       }else{
         val act = promised.get
-        if(n < act){
-          // ignore
+        if(n < act){ // ignore
           sender << Ignore(n)
         }else{
           promised = Some(n)
@@ -148,19 +147,23 @@ class Acceptor(id:Int, context: ActorContext) extends Actor(context) {
         }
       }
 
-    case Accept(from, n, v) =>
-      println("Acceptor["+id+"]<|"+from+":Accept("+n+","+v+")|>"+promised+"|"+lastValue)
+    case Accept(from, gv) =>
+      println("Acceptor["+id+"]<|"+from+":Accept("+gv+")|>"+promised+"|"+lastValue)
       Thread.sleep(Random.between(0, 100))
 
-      val act = promised.get
-      if (n < act) {
-        // ignore
-        sender << Ignore(n)
-      } else {
-        promised = Some(n)
-        val gv = GenerationValue(n, v)
+      if(promised.isEmpty){
+        promised = Some(gv.n)
         lastValue = Some(gv)
-        sender << Accepted("Acceptor["+id+"]", gv)
+        sender << Accepted("Acceptor[" + id + "]", gv)
+      }else {
+        val act = promised.get
+        if (gv.n < act) { // ignore
+          sender << Ignore(gv.n)
+        } else {
+          promised = Some(gv.n)
+          lastValue = Some(gv)
+          sender << Accepted("Acceptor[" + id + "]", gv)
+        }
       }
 
   }
