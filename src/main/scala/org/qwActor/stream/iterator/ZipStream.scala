@@ -39,9 +39,8 @@ class ZipStream(prev:ForEach[ActorRef], nodes:util.Queue[ActorRef], values:util.
     }
 
     override def accept(t: ActorMessage): Unit = {
+      lock.lock()
       try {
-        lock.lock()
-
         t.value match {
           case Next(v) =>
             val n = nodes.poll()
@@ -84,11 +83,10 @@ class ZipStream(prev:ForEach[ActorRef], nodes:util.Queue[ActorRef], values:util.
 
 
   override def accept(t: ActorMessage): Unit = {
+    lock.lock()
     try {
       t.value match {
         case HasNext =>
-
-          lock.lock()
           if (!started) {
             started = true
             for (q <- queues) q.next()
