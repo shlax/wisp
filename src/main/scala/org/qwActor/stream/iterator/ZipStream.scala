@@ -10,17 +10,17 @@ import java.util.concurrent.locks.ReentrantLock
 
 object ZipStream{
 
-  def apply(prev: ForEach[ActorRef], context: ActorContext): ZipStream = {
-    new ZipStream(prev, context, new util.LinkedList[ActorRef](), new util.LinkedList[ZipStream#NodeRefValue]())
+  def apply(prev: ForEach[ActorRef]): ZipStream = {
+    new ZipStream(prev, new util.LinkedList[ActorRef](), new util.LinkedList[ZipStream#NodeRefValue]())
   }
 
-  def apply(prev: ForEach[ActorRef], context: ActorContext, nodes: util.Queue[ActorRef], values:util.Queue[ZipStream#NodeRefValue]): ZipStream = {
-    new ZipStream(prev, context, nodes, values)
+  def apply(prev: ForEach[ActorRef], nodes: util.Queue[ActorRef], values:util.Queue[ZipStream#NodeRefValue]): ZipStream = {
+    new ZipStream(prev, nodes, values)
   }
 
 }
 
-class ZipStream(prev:ForEach[ActorRef], context: ActorContext, nodes:util.Queue[ActorRef], values:util.Queue[ZipStream#NodeRefValue]) extends Actor(context){
+class ZipStream(prev:ForEach[ActorRef], nodes:util.Queue[ActorRef], values:util.Queue[ZipStream#NodeRefValue]) extends ActorRef{
 
   private val lock = new ReentrantLock()
 
@@ -82,29 +82,32 @@ class ZipStream(prev:ForEach[ActorRef], context: ActorContext, nodes:util.Queue[
   private var started = false
   private var allEnded = false
 
-  override def process(sender: ActorRef): PartialFunction[Any, Unit] = {
-    case HasNext =>
-      try {
-        lock.lock()
-        if(!started){
-          started = true
-          for(q <- queues) q.next()
-        }
 
-        if(allEnded) {
-          sender << End
-        }else{
-          val v = values.poll()
-          if (v == null) {
-            nodes.add(sender)
-          } else {
-            sender << Next(v.apply())
+  override def accept(t: ActorMessage): Unit = {
+    try {
+      t.value match {
+        case HasNext =>
+
+          lock.lock()
+          if (!started) {
+            started = true
+            for (q <- queues) q.next()
           }
-        }
-      } finally {
-        lock.unlock()
-      }
 
+          if (allEnded) {
+            t.sender << End
+          } else {
+            val v = values.poll()
+            if (v == null) {
+              nodes.add(t.sender)
+            } else {
+              t.sender << Next(v.apply())
+            }
+          }
+      }
+    }finally{
+      lock.unlock()
+    }
   }
 
 }
