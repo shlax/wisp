@@ -144,7 +144,7 @@ abstract class AbstractConnection extends Connection, CompletionHandler[Integer,
   protected val writeDisconnect = new CompletableFuture[Void]()
   protected val readDisconnect = new CompletableFuture[Void]()
 
-  protected val disconnected = CompletableFuture.allOf(readDisconnect, writeDisconnect).whenComplete{ (_, exc) =>
+  protected val disconnected : CompletableFuture[Void] = CompletableFuture.allOf(readDisconnect, writeDisconnect).whenComplete{ (_, exc) =>
     if(exc != null && logger.isErrorEnabled) logger.error("socket channel " + chanel + " disconnect failed " + exc.getMessage, exc)
     close()
   }
