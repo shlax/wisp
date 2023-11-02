@@ -32,7 +32,7 @@ class BufferActorHelloWorld extends AnyFunSuite{
       val range = (1 to 20).iterator
       val source = StreamSource[Int](range)
 
-      val buffer = system.create(c => StreamBuffer(source, c, 10))
+      val buffer = StreamBuffer(source, 10)
 
       val cd = new CountDownLatch(1)
       val w = system.create(c => new Worker(buffer, cd, c))

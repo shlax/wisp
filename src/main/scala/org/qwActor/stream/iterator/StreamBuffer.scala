@@ -1,23 +1,25 @@
 package org.qwActor.stream.iterator
 
-import org.qwActor.stream.iterator.messages.{Next, End, HasNext}
-import org.qwActor.{Actor, ActorContext, ActorRef}
+import org.qwActor.stream.iterator.messages.{End, HasNext, Next}
+import org.qwActor.{Actor, ActorContext, ActorMessage, ActorRef}
 
 import java.util
+import java.util.concurrent.locks.ReentrantLock
 
 object StreamBuffer{
 
-  def apply(prev: ActorRef, context: ActorContext, nodes:util.Queue[ActorRef], queue: util.Queue[Any], size:Int): StreamBuffer = {
-    new StreamBuffer(prev, context, nodes, queue, size)
+  def apply(prev: ActorRef, nodes:util.Queue[ActorRef], queue: util.Queue[Any], size:Int): StreamBuffer = {
+    new StreamBuffer(prev, nodes, queue, size)
   }
 
-  def apply(prev: ActorRef, context: ActorContext, size: Int): StreamBuffer = {
-    new StreamBuffer(prev, context, new util.LinkedList[ActorRef](), new util.LinkedList[Any](), size)
+  def apply(prev: ActorRef, size: Int): StreamBuffer = {
+    new StreamBuffer(prev, new util.LinkedList[ActorRef](), new util.LinkedList[Any](), size)
   }
 
 }
 
-class StreamBuffer(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef], queue: util.Queue[Any], size:Int) extends Actor(context){
+class StreamBuffer(prev:ActorRef, nodes:util.Queue[ActorRef], queue: util.Queue[Any], size:Int) extends ActorRef{
+  private val lock = new ReentrantLock()
 
   private var ended = false
   private var requested = 0
@@ -29,46 +31,53 @@ class StreamBuffer(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorR
     }
   }
 
-  override def process(sender: ActorRef): PartialFunction[Any, Unit] = {
 
-    case HasNext =>
-      val e = queue.poll()
-      if(e == null){
-        if(ended){
-          sender << End
-        }else {
-          nodes.add(sender)
+  override def accept(t: ActorMessage): Unit = {
+    lock.lock()
+    try {
+      t.value match {
+
+        case HasNext =>
+          val e = queue.poll()
+          if (e == null) {
+            if (ended) {
+              t.sender << End
+            } else {
+              nodes.add(t.sender)
+              next()
+            }
+          } else {
+            t.sender << Next(e)
+            next()
+          }
+
+        case Next(v) =>
+          requested -= 1
+
+          val n = nodes.poll()
+          if (n == null) {
+            queue.add(v)
+          } else {
+            n << Next(v)
+          }
+
           next()
-        }
-      }else{
-        sender << Next(e)
-        next()
+
+        case End =>
+          requested -= 1
+          ended = true
+
+          if (queue.isEmpty) {
+            var a = nodes.poll()
+            while (a != null) {
+              a << End
+              a = nodes.poll()
+            }
+          }
       }
-
-    case Next(v) =>
-      requested -= 1
-
-      val n = nodes.poll()
-      if(n == null){
-        queue.add(v)
-      }else{
-        n << Next(v)
-      }
-
-      next()
-
-    case End =>
-      requested -= 1
-      ended = true
-
-      if(queue.isEmpty){
-        var a = nodes.poll()
-        while (a != null) {
-          a << End
-          a = nodes.poll()
-        }
-      }
-
+    }finally {
+      lock.unlock()
+    }
   }
 
 }
