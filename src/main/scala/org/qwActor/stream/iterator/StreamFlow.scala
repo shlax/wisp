@@ -1,7 +1,7 @@
 package org.qwActor.stream.iterator
 
 import org.qwActor.stream.iterator.messages.{End, HasNext, Next}
-import org.qwActor.{Actor, ActorContext, ActorMessage, ActorRef}
+import org.qwActor.{Actor, ActorContext, ActorRef}
 
 import java.util
 

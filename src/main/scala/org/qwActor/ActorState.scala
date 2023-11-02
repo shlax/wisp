@@ -1,9 +1,6 @@
 package org.qwActor
 
-import org.qwActor.{Actor, ActorContext, ActorMessage, ActorRef}
-
 import java.util.concurrent.Executor
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import scala.annotation.targetName
 import scala.util.control.NonFatal

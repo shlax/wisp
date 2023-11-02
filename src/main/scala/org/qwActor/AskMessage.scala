@@ -1,7 +1,5 @@
 package org.qwActor
 
-import org.qwActor.{ActorMessage, ActorRef}
-
 import java.util.concurrent.CompletableFuture
 
 object AskMessage{

@@ -1,10 +1,5 @@
 package org.qwActor.remote
 
-import org.qwActor.{ActorMessage, ActorRef}
-
-import java.util.Comparator
-import java.util.concurrent.atomic.AtomicLong
-
 object ObjectId extends Ordering[ObjectId]{
 
   def apply(seriesId:Long, time:Long, seq:Long, random:Long) = new ObjectId(seriesId, time, seq, random)

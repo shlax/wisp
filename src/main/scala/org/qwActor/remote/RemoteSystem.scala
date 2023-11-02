@@ -1,15 +1,10 @@
 package org.qwActor.remote
 
 import org.qwActor.{Actor, ActorContext, ActorRef, ActorRuntime, ActorSystem, logger}
-import org.slf4j.LoggerFactory
 
 import java.net.InetSocketAddress
 import java.nio.channels.{AsynchronousChannelGroup, AsynchronousCloseException, AsynchronousServerSocketChannel, AsynchronousSocketChannel, CompletionHandler}
-import java.nio.channels.spi.AsynchronousChannelProvider
-import java.util.UUID
-import java.util.concurrent.atomic.AtomicLong
-import java.util.concurrent.{Callable, CompletableFuture, ConcurrentHashMap, ConcurrentMap, ExecutorService, Executors, ForkJoinPool}
-import scala.collection.mutable
+import java.util.concurrent.{Callable, CompletableFuture, ConcurrentHashMap, ConcurrentMap}
 import scala.util.control.NonFatal
 
 object RemoteSystem{
@@ -31,7 +26,7 @@ class RemoteSystem(context:ActorRuntime) extends RemoteActorRuntime, CompletionH
   override val objectIdFactory:Callable[ObjectId] = createObjectIdFactory()
   val id: ObjectId = objectIdFactory.call()
 
-  override val channelGroup = getChannelGroup()
+  override val channelGroup: AsynchronousChannelGroup = createChannelGroup()
   private val serverChannel = AsynchronousServerSocketChannel.open(channelGroup)
 
   def bind(adr: InetSocketAddress): Unit = {
@@ -42,7 +37,7 @@ class RemoteSystem(context:ActorRuntime) extends RemoteActorRuntime, CompletionH
   def createClientConnection(client: AsynchronousSocketChannel): ClientConnection = new ClientConnection(this, client)
 
   protected def createConnectedSet() : ConcurrentMap[ClientConnection, ClientConnection] = new ConcurrentHashMap[ClientConnection, ClientConnection]()
-  val connected = createConnectedSet()
+  val connected: ConcurrentMap[ClientConnection, ClientConnection] = createConnectedSet()
 
   def close(c:ClientConnection):Unit = {
     val v = connected.remove(c)

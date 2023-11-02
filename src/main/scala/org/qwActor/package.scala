@@ -1,7 +1,7 @@
 package org
 
-import org.slf4j.LoggerFactory
+import org.slf4j.{Logger, LoggerFactory}
 
 package object qwActor {
-  val logger = LoggerFactory.getLogger("org.qwActor")
+  val logger: Logger = LoggerFactory.getLogger("org.qwActor")
 }

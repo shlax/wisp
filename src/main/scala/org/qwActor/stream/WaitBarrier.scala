@@ -1,7 +1,5 @@
 package org.qwActor.stream
 
-import org.qwActor.ActorRef
-
 import java.util
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer

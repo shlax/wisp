@@ -13,7 +13,7 @@ object ChannelGroup {
 
 trait ChannelGroup extends AutoCloseable{
 
-  protected def getChannelGroup(): AsynchronousChannelGroup = ChannelGroup.newSingleThreadChannelGroup()
+  protected def createChannelGroup(): AsynchronousChannelGroup = ChannelGroup.newSingleThreadChannelGroup()
   protected def channelGroup : AsynchronousChannelGroup
   
   protected def shutdownChannelGroup(): Boolean = true

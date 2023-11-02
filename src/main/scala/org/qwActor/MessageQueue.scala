@@ -1,7 +1,6 @@
 package org.qwActor
 
 import java.util
-import java.util.concurrent.BlockingQueue
 
 object MessageQueue{
 

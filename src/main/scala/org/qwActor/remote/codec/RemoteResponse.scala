@@ -3,7 +3,6 @@ package org.qwActor.remote.codec
 import org.qwActor.remote.ObjectId
 
 import java.io.{ObjectInputStream, ObjectOutputStream}
-import java.util.UUID
 
 object RemoteResponse extends Deserializer[RemoteResponse]{
 

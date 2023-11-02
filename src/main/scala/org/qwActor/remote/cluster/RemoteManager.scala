@@ -1,14 +1,12 @@
 package org.qwActor.remote.cluster
 
 import org.qwActor.logger
-import org.qwActor.remote.{ChannelGroup, ObjectId, ObjectIdFactory, RemoteContext, AbstractConnection}
+import org.qwActor.remote.{ObjectId, RemoteContext, AbstractConnection}
 import org.qwActor.remote.client.RemoteClient
 
 import java.net.InetSocketAddress
-import java.nio.channels.{AsynchronousChannelGroup, AsynchronousSocketChannel}
-import java.util.concurrent.{Callable, CompletableFuture, ConcurrentHashMap, ConcurrentMap}
+import java.util.concurrent.{CompletableFuture, ConcurrentHashMap, ConcurrentMap}
 import java.util.function.BiConsumer
-import scala.collection.mutable
 import scala.util.control.NonFatal
 
 class RemoteManager(system: ClusterSystem) extends ClusterContext, AutoCloseable{

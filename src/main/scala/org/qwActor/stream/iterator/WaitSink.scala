@@ -3,7 +3,6 @@ package org.qwActor.stream.iterator
 import org.qwActor.{ActorMessage, ActorRef}
 import org.qwActor.stream.iterator.messages.{End, HasNext, Next}
 
-import java.util.concurrent.CompletableFuture
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
 

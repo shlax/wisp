@@ -5,8 +5,6 @@ import org.qwActor.remote.{Connection, RemoteContext}
 import org.qwActor.remote.codec.{RemoteMessage, RemoteResponse}
 import org.qwActor.{ActorMessage, ActorRef, AskMessage, logger}
 
-import java.util.concurrent.CompletableFuture
-
 object AskActorRef{
 
   def process(system: RemoteContext, conn:Connection): PartialFunction[Any, Unit] = {

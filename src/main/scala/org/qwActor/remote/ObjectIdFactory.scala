@@ -1,6 +1,6 @@
 package org.qwActor.remote
 
-import java.net.{InetAddress, NetworkInterface}
+import java.net.NetworkInterface
 import java.security.SecureRandom
 import java.util.concurrent.Callable
 import java.util.concurrent.atomic.AtomicLong

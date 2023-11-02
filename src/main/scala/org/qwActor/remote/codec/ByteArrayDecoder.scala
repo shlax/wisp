@@ -1,7 +1,6 @@
 package org.qwActor.remote.codec
 
-import org.qwActor.remote.codec.{Decoder, RemoteMessage}
-import org.qwActor.remote.{ClientConnection, ObjectId, RemoteSystem}
+import org.qwActor.remote.ObjectId
 
 import java.io.{ByteArrayInputStream, ObjectInputStream}
 import java.nio.ByteBuffer
@@ -16,8 +15,8 @@ class ByteArrayDecoder(consumer: Consumer[Any]) extends Decoder {
   private var body: Option[ByteBuffer] =  None
 
   protected def read[T](b:ByteBuffer, d:Deserializer[T]): T = {
-    val bais = new ByteArrayInputStream(b.array())
-    Using(new ObjectInputStream(bais)) { is =>
+    val baIs = new ByteArrayInputStream(b.array())
+    Using(new ObjectInputStream(baIs)) { is =>
       d.readFrom(is)
     }.get
   }

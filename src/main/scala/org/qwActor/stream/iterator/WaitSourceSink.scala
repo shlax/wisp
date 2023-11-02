@@ -1,7 +1,7 @@
 package org.qwActor.stream.iterator
 
 import org.qwActor.{ActorMessage, ActorRef}
-import org.qwActor.stream.iterator.messages.{End, HasNext, IteratorMessage, Next}
+import org.qwActor.stream.iterator.messages.{End, HasNext, Next}
 
 import java.util
 import java.util.concurrent.locks.ReentrantLock

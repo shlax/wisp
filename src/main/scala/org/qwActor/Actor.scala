@@ -1,6 +1,5 @@
 package org.qwActor
 
-import java.util.concurrent.{BlockingQueue, ConcurrentLinkedQueue, LinkedBlockingQueue}
 import scala.annotation.targetName
 
 object Actor{

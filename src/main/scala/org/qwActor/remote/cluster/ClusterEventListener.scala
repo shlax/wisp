@@ -1,6 +1,6 @@
 package org.qwActor.remote.cluster
 
-import org.qwActor.remote.{ClientConnection, ObjectId, RemoteContext}
+import org.qwActor.remote.{ObjectId, RemoteContext}
 
 trait ClusterEventListener {
 
