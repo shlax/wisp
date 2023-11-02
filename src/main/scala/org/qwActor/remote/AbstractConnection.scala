@@ -178,8 +178,8 @@ abstract class AbstractConnection extends Connection, CompletionHandler[Integer,
             chanel.read(readBuffer, Attachment.Read, this)
           }else{
             readDisconnect.complete(null)
+            lock.lock()
             try {
-              lock.lock()
               if(!sentDisconnect) sendWithLock(Disconnect)
             }finally {
               lock.unlock()
@@ -187,10 +187,9 @@ abstract class AbstractConnection extends Connection, CompletionHandler[Integer,
           }
         }
       case Attachment.Write =>
+        lock.lock()
         try{
-          lock.lock()
           if(sentDisconnect) writeDisconnect.complete(null)
-
           writeBuffer.clear()
           writing = false
           startWrite()
