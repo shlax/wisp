@@ -3,6 +3,16 @@ package org.qwActor
 import java.util.concurrent.{BlockingQueue, ConcurrentLinkedQueue, LinkedBlockingQueue}
 import scala.annotation.targetName
 
+object Actor{
+
+  def apply(ref: ActorRef, context: ActorContext): Actor = new Actor(context) {
+    override def process(sender: ActorRef): PartialFunction[Any, Unit] = {
+      case v => ref.accept(new ActorMessage(sender, v))
+    }
+  }
+  
+}
+
 abstract class Actor(context: ActorContext) extends ActorRef {
 
   def createQueue() : MessageQueue[ActorMessage] = MessageQueue()
