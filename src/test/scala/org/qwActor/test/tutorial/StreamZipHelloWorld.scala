@@ -13,13 +13,13 @@ class StreamZipHelloWorld extends AnyFunSuite {
       val range = (1 to 10).iterator
 
       val source = StreamSource[Int](range) // Iterator will be called from multiple threads
-      val flow1 = system.create(c => StreamFlow[String](source, c)({
+      val flow1 = system.create(c => StreamFlow(source, c)({
         case i: Int =>
           println("1 << "+i)
           Thread.sleep(250)
           " < 1: " + Thread.currentThread() + ">" + i
       }))
-      val flow2 = system.create(c => StreamFlow[String](source, c)({
+      val flow2 = system.create(c => StreamFlow(source, c)({
         case i: Int =>
           println("2 << "+i)
           Thread.sleep(250)

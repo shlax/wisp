@@ -7,17 +7,17 @@ import java.util
 
 object StreamFlow{
 
-  def apply[T](prev: ActorRef, context: ActorContext)(fn: PartialFunction[Any, T]): StreamFlow[T] = {
+  def apply(prev: ActorRef, context: ActorContext)(fn: PartialFunction[Any, Any]): StreamFlow = {
     new StreamFlow(prev, context, new util.LinkedList[ActorRef]())(fn)
   }
 
-  def apply[T](prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: PartialFunction[Any, T]) : StreamFlow[T] = {
+  def apply(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: PartialFunction[Any, Any]) : StreamFlow = {
     new StreamFlow(prev, context, nodes)(fn)
   }
 
 }
 
-class StreamFlow[T](prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: PartialFunction[Any, T]) extends Actor(context){
+class StreamFlow(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: PartialFunction[Any, Any]) extends Actor(context){
 
   private var ended = false
 

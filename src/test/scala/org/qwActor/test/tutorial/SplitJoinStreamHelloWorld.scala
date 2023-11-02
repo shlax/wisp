@@ -20,7 +20,7 @@ class SplitJoinStreamHelloWorld extends  AnyFunSuite {
         println("<" + Thread.currentThread() + ":" + v)
       })
 
-      val flow = system.create(c => StreamFlow[String](source, c)({
+      val flow = system.create(c => StreamFlow(source, c)({
         case i: Int =>
           Thread.sleep(50)
           "" + Thread.currentThread() + ">" + i

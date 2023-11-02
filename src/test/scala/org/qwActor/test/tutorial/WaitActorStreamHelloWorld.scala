@@ -13,7 +13,7 @@ class WaitActorStreamHelloWorld extends  AnyFunSuite {
       val range = (1 to 10).iterator
 
       val source = StreamSource[Int](range) // Iterator will be called from multiple threads
-      val flow = system.create(c => StreamFlow[String](source, c)({
+      val flow = system.create(c => StreamFlow(source, c)({
         case i: Int => "" + Thread.currentThread() + ">" + i
       }))
       val sink = WaitSink(flow){ i =>

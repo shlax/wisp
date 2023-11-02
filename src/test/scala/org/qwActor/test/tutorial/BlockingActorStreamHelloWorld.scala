@@ -15,7 +15,7 @@ class BlockingActorStreamHelloWorld extends  AnyFunSuite {
       val range = (1 to 10).iterator
 
       val source = ForEachSource[Int](range) // Iterator will be called from current thread
-      val flow = system.create(c => StreamFlow[String](source, c)({
+      val flow = system.create(c => StreamFlow(source, c)({
         case i : Int => "\t"+Thread.currentThread()+">"+i
       }))
       val sink = StreamSink(flow)(println)
