@@ -3,7 +3,7 @@ package org.qwActor.test.tutorial
 import org.qwActor.ActorSystem
 import org.qwActor.stream.iterator.{StreamFlow, StreamSink, StreamSource, ZipStream}
 import org.scalatest.funsuite.AnyFunSuite
-
+import org.qwActor.stream.iterator.Source.*
 import scala.util.Using
 
 class StreamZipHelloWorld extends AnyFunSuite {
@@ -12,7 +12,7 @@ class StreamZipHelloWorld extends AnyFunSuite {
     Using(new ActorSystem) { system =>
       val range = (1 to 10).iterator
 
-      val source = StreamSource[Int](range) // Iterator will be called from multiple threads
+      val source = StreamSource(range.asSource) // Iterator will be called from multiple threads
       val flow1 = system.create(c => StreamFlow(source, c)({
         case i: Int =>
           println("1 << "+i)

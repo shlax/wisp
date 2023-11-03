@@ -3,14 +3,14 @@ package org.qwActor.test.tutorial
 import org.qwActor.ActorSystem
 import org.qwActor.stream.iterator.{StreamFlow, WaitSourceSink, Source}
 import org.scalatest.funsuite.AnyFunSuite
-
+import org.qwActor.stream.iterator.Source.*
 import scala.util.Using
 
 class SplitJoinStreamHelloWorld extends  AnyFunSuite {
 
   test("splitJoinStreamHelloWorld") {
     Using(new ActorSystem) { system =>
-      val range:Source[Int] = (1 to 10).iterator
+      val range:Source[Int] = (1 to 10).iterator.asSource
 
       val source = WaitSourceSink[Int](() => {
         val e = range.next()

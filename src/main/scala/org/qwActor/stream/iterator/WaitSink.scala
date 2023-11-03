@@ -21,22 +21,19 @@ class WaitSink(prev:ActorRef)(fn:Consumer[Any]) extends ActorRef , Runnable {
   private var end = false
 
   override def run() : Unit = {
+    lock.lock()
     try {
-      lock.lock()
-
       next() // get first
-      while (!end){
-        if (value.isDefined){
+      while (!end) {
+        while (value.isDefined) {
           val v = value.get
           fn.accept(v)
 
           value = None
           next()
         }
-
         condition.await()
       }
-
     } finally {
       lock.unlock()
     }
@@ -47,11 +44,11 @@ class WaitSink(prev:ActorRef)(fn:Consumer[Any]) extends ActorRef , Runnable {
   }
 
   override def accept(t: ActorMessage): Unit = {
+    lock.lock()
     try {
-      lock.lock()
       t.value match {
         case Next(v) =>
-          if(value.isDefined){
+          if (value.isDefined) {
             throw new IllegalStateException("value.isDefined")
           }
           value = Some(v)

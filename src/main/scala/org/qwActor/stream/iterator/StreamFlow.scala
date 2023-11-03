@@ -2,22 +2,22 @@ package org.qwActor.stream.iterator
 
 import org.qwActor.stream.iterator.messages.{End, HasNext, Next}
 import org.qwActor.{Actor, ActorContext, ActorRef}
-
+import java.util.function
 import java.util
 
 object StreamFlow{
 
-  def apply(prev: ActorRef, context: ActorContext)(fn: PartialFunction[Any, Any]): StreamFlow = {
+  def apply(prev: ActorRef, context: ActorContext)(fn: function.Function[Any, Any]): StreamFlow = {
     new StreamFlow(prev, context, new util.LinkedList[ActorRef]())(fn)
   }
 
-  def apply(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: PartialFunction[Any, Any]) : StreamFlow = {
+  def apply(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: function.Function[Any, Any]) : StreamFlow = {
     new StreamFlow(prev, context, nodes)(fn)
   }
 
 }
 
-class StreamFlow(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: PartialFunction[Any, Any]) extends Actor(context){
+class StreamFlow(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: function.Function[Any, Any]) extends Actor(context){
 
   private var ended = false
 

@@ -4,6 +4,7 @@ import org.qwActor.{Actor, ActorContext, ActorRef, ActorSystem}
 import org.qwActor.stream.iterator.{StreamSink, StreamSource, StreamBuffer}
 import org.qwActor.stream.iterator.messages.{HasNext, Next, End}
 import org.scalatest.funsuite.AnyFunSuite
+import org.qwActor.stream.iterator.Source.*
 
 import java.util.concurrent.{CompletableFuture, CountDownLatch}
 import scala.util.Using
@@ -30,7 +31,7 @@ class BufferActorHelloWorld extends AnyFunSuite{
   test("bufferActorHelloWorld"){
     Using(new ActorSystem) { system =>
       val range = (1 to 20).iterator
-      val source = StreamSource[Int](range)
+      val source = StreamSource(range.asSource)
 
       val buffer = StreamBuffer(source, 10)
 
