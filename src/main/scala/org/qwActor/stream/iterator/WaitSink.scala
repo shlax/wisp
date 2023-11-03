@@ -25,7 +25,7 @@ class WaitSink(prev:ActorRef)(fn:Consumer[Any]) extends ActorRef , Runnable {
     try {
       next() // get first
       while (!end) {
-        while (value.isDefined) {
+        while (value.isDefined) { // next() can complete CompletableFuture( ask(HasNext) ) in current thread
           val v = value.get
           fn.accept(v)
 
