@@ -88,10 +88,8 @@ class WaitSourceSink[A](it:Source[A], nodes:util.Queue[ActorRef])(fn:Consumer[An
         // process sink
         case Next(v) =>
           if(sourceEnd) throw new IllegalStateException("sourceEnd")
+          if(value.isDefined) throw new IllegalStateException("value is defined")
 
-          if (value.isDefined) {
-            throw new IllegalStateException("value.isDefined")
-          }
           value = Some(v)
         case End =>
           sourceEnd = true

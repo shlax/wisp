@@ -26,9 +26,7 @@ class MapFlow(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(
       if(ended) throw new IllegalStateException("ended")
 
       val n = nodes.poll()
-      if(n == null){
-        throw new IllegalStateException("no workers found for "+v)
-      }
+      if(n == null) throw new IllegalStateException("no workers found for "+v)
 
       val r = fn.apply(v)
       n << Next(r)

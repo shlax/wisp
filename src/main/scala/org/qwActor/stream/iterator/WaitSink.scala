@@ -49,10 +49,8 @@ class WaitSink(prev:ActorRef)(fn:Consumer[Any]) extends ActorRef , Runnable {
       t.value match {
         case Next(v) =>
           if(ended) throw new IllegalStateException("ended")
-          
-          if (value.isDefined) {
-            throw new IllegalStateException("value.isDefined")
-          }
+          if (value.isDefined) throw new IllegalStateException("value is defined")
+
           value = Some(v)
         case End =>
           ended = true
