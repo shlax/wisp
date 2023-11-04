@@ -2,7 +2,7 @@ implementation of the actor model for jvm with remoting/cluster
 
 ### Usage
 
-#### [Hello World](https://github.com/shlax/qwActor/tree/main/src/test/scala/org/qwActor/test/tutorial/HelloWorld.scala)
+#### [Hello World](https://github.com/shlax/miniActor/tree/main/src/test/scala/org/miniActor/test/tutorial/HelloWorld.scala)
 ```scala
 class HelloActor(context: ActorContext) extends Actor(context) {
   override def process(sender: ActorRef): PartialFunction[Any, Unit] = {
@@ -16,7 +16,7 @@ Using(new ActorSystem) { system =>
 }.get 
 ```
 
-#### [Ask Hello World](https://github.com/shlax/qwActor/tree/main/src/test/scala/org/qwActor/test/tutorial/AskHelloWorld.scala)
+#### [Ask Hello World](https://github.com/shlax/miniActor/tree/main/src/test/scala/org/miniActor/test/tutorial/AskHelloWorld.scala)
 ```scala
 class HelloActor(context: ActorContext) extends Actor(context) {
   override def process(sender: ActorRef): PartialFunction[Any, Unit] = {
@@ -32,7 +32,7 @@ Using(new ActorSystem) { system =>
 }.get
 ```
 
-#### [Stream Hello World](https://github.com/shlax/qwActor/tree/main/src/test/scala/org/qwActor/test/tutorial/StreamHelloWorld.scala)
+#### [Stream Hello World](https://github.com/shlax/miniActor/tree/main/src/test/scala/org/miniActor/test/tutorial/StreamHelloWorld.scala)
 ```scala
 case object GetResult
 
@@ -63,14 +63,14 @@ Using(new ActorSystem) { system =>
 }.get
 ```
 
-#### [Actor Stream Hello World](https://github.com/shlax/qwActor/tree/main/src/test/scala/org/qwActor/test/tutorial/ActorStreamHelloWorld.scala)
+#### [Actor Stream Hello World](https://github.com/shlax/miniActor/tree/main/src/test/scala/org/miniActor/test/tutorial/ActorStreamHelloWorld.scala)
 ```scala
 Using(new ActorSystem) { system =>
     val range = (1 to 10).iterator
     
     val source = ActorSource[Int](range) // Iterator will be called from multiple threads
     val flow = system.create(c => ActorFlow[String](source, c)({
-    case i : Int => ""+Thread.currentThread()+">"+i
+      case i : Int => ""+Thread.currentThread()+">"+i
     }))
     val sink = ActorSink(flow)(println)
     
@@ -78,7 +78,7 @@ Using(new ActorSystem) { system =>
 }.get
 ```
 
-#### [Blocking Actor Stream Hello World](https://github.com/shlax/qwActor/tree/main/src/test/scala/org/qwActor/test/tutorial/BlockingActorStreamHelloWorld.scala)
+#### [Blocking Actor Stream Hello World](https://github.com/shlax/miniActor/tree/main/src/test/scala/org/miniActor/test/tutorial/BlockingActorStreamHelloWorld.scala)
 ```scala
 Using(new ActorSystem) { system =>
     val range = (1 to 10).iterator
@@ -97,7 +97,7 @@ Using(new ActorSystem) { system =>
 }.get
 ```
 
-#### [Remote Client Hello World](https://github.com/shlax/qwActor/tree/main/src/test/scala/org/qwActor/test/tutorial/RemotingHelloWorld.scala)
+#### [Remote Client Hello World](https://github.com/shlax/miniActor/tree/main/src/test/scala/org/miniActor/test/tutorial/RemotingHelloWorld.scala)
 ```scala
 class HelloActor(context: ActorContext) extends Actor(context) {
   override def process(sender: ActorRef): PartialFunction[Any, Unit] = {
@@ -127,7 +127,7 @@ Using(new RemoteClient){ client =>
 }.get
 ```
 
-#### [Cluster Hello World](https://github.com/shlax/qwActor/tree/main/src/test/scala/org/qwActor/test/tutorial/ClusterHelloWorld.scala)
+#### [Cluster Hello World](https://github.com/shlax/miniActor/tree/main/src/test/scala/org/miniActor/test/tutorial/ClusterHelloWorld.scala)
 ```scala
 // create system1
 val system1 = ClusterSystem()
