@@ -7,6 +7,6 @@ case object HasNext extends IteratorMessage
 
 sealed trait IteratorResponseMessage extends IteratorMessage
 
-case class Next(value:Any) extends IteratorResponseMessage
+final case class Next(value:Any) extends IteratorResponseMessage
 
 case object End extends IteratorResponseMessage
