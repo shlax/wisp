@@ -2,22 +2,21 @@ package org.miniActor.stream.iterator
 
 import org.miniActor.stream.iterator.messages.{End, HasNext, Next}
 import org.miniActor.{Actor, ActorContext, ActorRef}
-import java.util.function
 import java.util
 
 object MapFlow{
 
-  def apply(prev: ActorRef, context: ActorContext)(fn: function.Function[Any, Any]): MapFlow = {
+  def apply(prev: ActorRef, context: ActorContext)(fn: Any => Any): MapFlow = {
     new MapFlow(prev, context, new util.LinkedList[ActorRef]())(fn)
   }
 
-  def apply(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: function.Function[Any, Any]) : MapFlow = {
+  def apply(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: Any => Any) : MapFlow = {
     new MapFlow(prev, context, nodes)(fn)
   }
 
 }
 
-class MapFlow(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: function.Function[Any, Any]) extends Actor(context){
+class MapFlow(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: Any => Any) extends Actor(context){
 
   private var ended = false
 

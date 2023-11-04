@@ -2,22 +2,21 @@ package org.miniActor.stream.iterator
 
 import org.miniActor.stream.iterator.messages.{End, HasNext, Next}
 import org.miniActor.{Actor, ActorContext, ActorRef}
-import java.util.function
 import java.util
 
 object FlatMapFlow{
 
-  def apply(prev:ActorRef, context: ActorContext)(fn: function.Function[Any, Source[_]]): FlatMapFlow = {
+  def apply(prev:ActorRef, context: ActorContext)(fn: Any => Source[_]): FlatMapFlow = {
     new FlatMapFlow(prev, context, new util.LinkedList[ActorRef]())(fn)
   }
 
-  def apply(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: function.Function[Any, Source[_]]): FlatMapFlow = {
+  def apply(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: Any => Source[_]): FlatMapFlow = {
     new FlatMapFlow(prev, context, nodes)(fn)
   }
 
 }
 
-class FlatMapFlow(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: function.Function[Any, Source[_]]) extends Actor(context){
+class FlatMapFlow(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: Any => Source[_]) extends Actor(context){
 
   private var current:Option[Source[_]] = None
   private var requested = false
