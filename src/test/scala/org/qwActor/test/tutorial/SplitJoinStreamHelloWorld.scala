@@ -1,7 +1,7 @@
 package org.qwActor.test.tutorial
 
 import org.qwActor.ActorSystem
-import org.qwActor.stream.iterator.{StreamFlow, WaitSourceSink, Source}
+import org.qwActor.stream.iterator.{MapFlow, WaitSourceSink, Source}
 import org.scalatest.funsuite.AnyFunSuite
 import org.qwActor.stream.iterator.Source.*
 import scala.util.Using
@@ -20,7 +20,7 @@ class SplitJoinStreamHelloWorld extends  AnyFunSuite {
         println("<" + Thread.currentThread() + ":" + v)
       })
 
-      val flow = system.create(c => StreamFlow(source, c)({
+      val flow = system.create(c => MapFlow(source, c)({
         case i: Int =>
           Thread.sleep(50)
           "" + Thread.currentThread() + ">" + i

@@ -43,6 +43,8 @@ class ZipStream(prev:ForEach[ActorRef], nodes:util.Queue[ActorRef], values:util.
       try {
         t.value match {
           case Next(v) =>
+            if(ended) throw new IllegalStateException("ended")
+
             val n = nodes.poll()
             if (n == null) {
               values.add(new NodeRefValue(this, v))

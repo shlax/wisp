@@ -27,6 +27,7 @@ class StreamSink(prev:ActorRef)(fn:Consumer[Any]) extends ActorRef {
   override def accept(t: ActorMessage): Unit = {
     t.value match {
       case Next(v) =>
+        if(cf.isDone) throw new IllegalStateException("ended")
         fn.accept(v)
         next()
 

@@ -27,7 +27,7 @@ class WaitSourceSink[A](it:Source[A], nodes:util.Queue[ActorRef])(fn:Consumer[An
   private var ended = false
 
   private var value:Option[Any] = None
-  private var end = false
+  private var sourceEnd = false
 
   def run(prev:ActorRef): Unit = {
 
@@ -38,7 +38,7 @@ class WaitSourceSink[A](it:Source[A], nodes:util.Queue[ActorRef])(fn:Consumer[An
       var elem:Option[A] = it.next()
       if(elem.isEmpty) ended = true
 
-      while ((!ended) || (!end)) {
+      while ((!ended) || (!sourceEnd)) {
 
         // process source
         var a = nodes.poll()
@@ -87,12 +87,14 @@ class WaitSourceSink[A](it:Source[A], nodes:util.Queue[ActorRef])(fn:Consumer[An
 
         // process sink
         case Next(v) =>
+          if(sourceEnd) throw new IllegalStateException("sourceEnd")
+
           if (value.isDefined) {
             throw new IllegalStateException("value.isDefined")
           }
           value = Some(v)
         case End =>
-          end = true
+          sourceEnd = true
       }
       condition.signalAll()
     } finally {

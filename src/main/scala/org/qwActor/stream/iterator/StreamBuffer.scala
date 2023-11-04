@@ -52,6 +52,8 @@ class StreamBuffer(prev:ActorRef, nodes:util.Queue[ActorRef], queue: util.Queue[
           }
 
         case Next(v) =>
+          if(ended) throw new IllegalStateException("ended")
+
           requested -= 1
 
           val n = nodes.poll()

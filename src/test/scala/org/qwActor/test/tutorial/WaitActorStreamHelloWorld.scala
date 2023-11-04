@@ -1,7 +1,7 @@
 package org.qwActor.test.tutorial
 
 import org.qwActor.ActorSystem
-import org.qwActor.stream.iterator.{StreamFlow, StreamSink, StreamSource, ForEachSource, WaitSink}
+import org.qwActor.stream.iterator.{MapFlow, StreamSink, StreamSource, ForEachSource, WaitSink}
 import org.scalatest.funsuite.AnyFunSuite
 import org.qwActor.stream.iterator.Source.*
 import scala.util.Using
@@ -13,7 +13,7 @@ class WaitActorStreamHelloWorld extends  AnyFunSuite {
       val range = (1 to 10).iterator
 
       val source = StreamSource(range.asSource) // Iterator will be called from multiple threads
-      val flow = system.create(c => StreamFlow(source, c)({
+      val flow = system.create(c => MapFlow(source, c)({
         case i: Int => "" + Thread.currentThread() + ">" + i
       }))
       val sink = WaitSink(flow){ i =>

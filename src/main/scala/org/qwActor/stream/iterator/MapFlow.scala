@@ -5,24 +5,26 @@ import org.qwActor.{Actor, ActorContext, ActorRef}
 import java.util.function
 import java.util
 
-object StreamFlow{
+object MapFlow{
 
-  def apply(prev: ActorRef, context: ActorContext)(fn: function.Function[Any, Any]): StreamFlow = {
-    new StreamFlow(prev, context, new util.LinkedList[ActorRef]())(fn)
+  def apply(prev: ActorRef, context: ActorContext)(fn: function.Function[Any, Any]): MapFlow = {
+    new MapFlow(prev, context, new util.LinkedList[ActorRef]())(fn)
   }
 
-  def apply(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: function.Function[Any, Any]) : StreamFlow = {
-    new StreamFlow(prev, context, nodes)(fn)
+  def apply(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: function.Function[Any, Any]) : MapFlow = {
+    new MapFlow(prev, context, nodes)(fn)
   }
 
 }
 
-class StreamFlow(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: function.Function[Any, Any]) extends Actor(context){
+class MapFlow(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: function.Function[Any, Any]) extends Actor(context){
 
   private var ended = false
 
   override def process(sender: ActorRef): PartialFunction[Any, Unit] = {
     case Next(v) =>
+      if(ended) throw new IllegalStateException("ended")
+
       val n = nodes.poll()
       if(n == null){
         throw new IllegalStateException("no workers found for "+v)

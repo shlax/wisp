@@ -66,6 +66,8 @@ class SplitStream(prev:ActorRef) extends ActorRef{
     try {
       t.value match {
         case v: Next =>
+          if(ended) throw new IllegalStateException("ended")
+          
           val t = n.map(_.process())
           for(i <- t) i.apply(v)
 
