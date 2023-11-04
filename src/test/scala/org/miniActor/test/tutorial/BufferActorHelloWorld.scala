@@ -1,8 +1,7 @@
 package org.miniActor.test.tutorial
 
 import org.miniActor.{Actor, ActorContext, ActorRef, ActorSystem}
-import org.miniActor.stream.iterator.{StreamSink, StreamSource, StreamBuffer}
-import org.miniActor.stream.iterator.messages.{HasNext, Next, End}
+import org.miniActor.stream.iterator.{End, HasNext, Next, StreamBuffer, StreamSink, StreamSource}
 import org.scalatest.funsuite.AnyFunSuite
 import org.miniActor.stream.iterator.Source.*
 

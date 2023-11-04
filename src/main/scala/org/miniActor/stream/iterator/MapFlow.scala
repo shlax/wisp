@@ -1,6 +1,5 @@
 package org.miniActor.stream.iterator
 
-import org.miniActor.stream.iterator.messages.{End, HasNext, Next}
 import org.miniActor.{Actor, ActorContext, ActorRef}
 import java.util
 

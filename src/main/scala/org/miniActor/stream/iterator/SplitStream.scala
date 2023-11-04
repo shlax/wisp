@@ -1,6 +1,5 @@
 package org.miniActor.stream.iterator
 
-import org.miniActor.stream.iterator.messages.{End, HasNext, IteratorMessage, Next}
 import org.miniActor.{ActorMessage, ActorRef}
 
 import java.util.concurrent.locks.ReentrantLock

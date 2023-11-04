@@ -2,7 +2,6 @@ package org.miniActor.stream.iterator
 
 import org.miniActor.stream.ForEach
 import org.miniActor.{ActorMessage, ActorRef}
-import org.miniActor.stream.iterator.messages.{End, HasNext, Next}
 
 import scala.collection.mutable
 import java.util
