@@ -1,6 +1,6 @@
-package org.miniActor.test
+package org.wisp.test
 
-import org.miniActor.{Actor, ActorContext, ActorRef, ActorSystem}
+import org.wisp.{Actor, ActorContext, ActorRef, ActorSystem}
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.util.concurrent.CountDownLatch

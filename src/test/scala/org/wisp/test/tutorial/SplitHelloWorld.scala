@@ -1,9 +1,9 @@
-package org.miniActor.test.tutorial
+package org.wisp.test.tutorial
 
-import org.miniActor.ActorSystem
-import org.miniActor.stream.iterator.{StreamSink, StreamSource, SplitStream}
+import org.wisp.ActorSystem
+import org.wisp.stream.iterator.{StreamSink, StreamSource, SplitStream}
 import org.scalatest.funsuite.AnyFunSuite
-import org.miniActor.stream.iterator.Source.*
+import org.wisp.stream.iterator.Source.*
 import scala.util.Using
 
 class SplitHelloWorld extends AnyFunSuite{

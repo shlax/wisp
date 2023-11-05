@@ -1,8 +1,8 @@
-package org.miniActor.test.paxos
+package org.wisp.test.paxos
 
-import org.miniActor.remote.{ObjectId, RemoteContext, RemoteRef}
-import org.miniActor.remote.cluster.{ClusterEventListener, ClusterSystem}
-import org.miniActor.{Actor, ActorContext, ActorRef, ActorSystem}
+import org.wisp.remote.{ObjectId, RemoteContext, RemoteRef}
+import org.wisp.remote.cluster.{ClusterEventListener, ClusterSystem}
+import org.wisp.{Actor, ActorContext, ActorRef, ActorSystem}
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.net.InetSocketAddress

@@ -1,9 +1,9 @@
-package org.miniActor.test.tutorial
+package org.wisp.test.tutorial
 
-import org.miniActor.{Actor, ActorSystem}
-import org.miniActor.stream.iterator.{FlatMapFlow, StreamSink, StreamSource, WaitSink}
+import org.wisp.{Actor, ActorSystem}
+import org.wisp.stream.iterator.{FlatMapFlow, StreamSink, StreamSource, WaitSink}
 import org.scalatest.funsuite.AnyFunSuite
-import org.miniActor.stream.iterator.Source.*
+import org.wisp.stream.iterator.Source.*
 import scala.util.Using
 
 class FlatMapStreamHelloWorld extends AnyFunSuite{

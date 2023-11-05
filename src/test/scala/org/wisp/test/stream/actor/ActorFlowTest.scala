@@ -1,8 +1,8 @@
-package org.miniActor.test.stream.actor
+package org.wisp.test.stream.actor
 
-import org.miniActor.ActorSystem
+import org.wisp.ActorSystem
 import org.scalatest.funsuite.AnyFunSuite
-import org.miniActor.stream.Flow
+import org.wisp.stream.Flow
 
 import scala.util.Using
 

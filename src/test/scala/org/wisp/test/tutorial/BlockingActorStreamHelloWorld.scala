@@ -1,8 +1,8 @@
-package org.miniActor.test.tutorial
+package org.wisp.test.tutorial
 
-import org.miniActor.ActorSystem
-import org.miniActor.stream.ForEach
-import org.miniActor.stream.iterator.{MapFlow, StreamSink, ForEachSource, Source}
+import org.wisp.ActorSystem
+import org.wisp.stream.ForEach
+import org.wisp.stream.iterator.{MapFlow, StreamSink, ForEachSource, Source}
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.util.function.Consumer

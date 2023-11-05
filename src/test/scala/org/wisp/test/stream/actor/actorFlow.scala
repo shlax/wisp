@@ -1,7 +1,7 @@
-package org.miniActor.test.stream.actor
+package org.wisp.test.stream.actor
 
-import org.miniActor.stream.Barrier
-import org.miniActor.{Actor, ActorContext, ActorMessage, ActorRef, MessageQueue}
+import org.wisp.stream.Barrier
+import org.wisp.{Actor, ActorContext, ActorMessage, ActorRef, MessageQueue}
 
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.locks.ReentrantLock

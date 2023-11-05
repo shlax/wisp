@@ -1,6 +1,6 @@
-package org.miniActor.test.paxos
+package org.wisp.test.paxos
 
-import org.miniActor.{Actor, ActorContext, ActorRef}
+import org.wisp.{Actor, ActorContext, ActorRef}
 
 import java.util.concurrent.CompletableFuture
 import scala.util.Random

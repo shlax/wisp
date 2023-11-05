@@ -1,7 +1,7 @@
-package org.miniActor.test.tutorial
+package org.wisp.test.tutorial
 
-import org.miniActor.stream.{WaitBarrier, Flow}
-import org.miniActor.{Actor, ActorContext, ActorRef, ActorSystem}
+import org.wisp.stream.{WaitBarrier, Flow}
+import org.wisp.{Actor, ActorContext, ActorRef, ActorSystem}
 import org.scalatest.funsuite.AnyFunSuite
 
 import scala.util.Using

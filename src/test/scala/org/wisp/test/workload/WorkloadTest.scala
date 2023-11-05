@@ -1,8 +1,8 @@
-package org.miniActor.test.workload
+package org.wisp.test.workload
 
-import org.miniActor.ActorSystem
-import org.miniActor.remote.RemoteSystem
-import org.miniActor.stream.{Flow, WaitBarrier}
+import org.wisp.ActorSystem
+import org.wisp.remote.RemoteSystem
+import org.wisp.stream.{Flow, WaitBarrier}
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.util.concurrent.CountDownLatch

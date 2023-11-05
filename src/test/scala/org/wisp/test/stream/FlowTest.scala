@@ -1,7 +1,7 @@
-package org.miniActor.test.stream
+package org.wisp.test.stream
 
-import org.miniActor.{Actor, ActorContext, ActorMessage, ActorRef, ActorSystem, MessageQueue}
-import org.miniActor.stream.Flow
+import org.wisp.{Actor, ActorContext, ActorMessage, ActorRef, ActorSystem, MessageQueue}
+import org.wisp.stream.Flow
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.util.concurrent.CountDownLatch

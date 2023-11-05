@@ -1,9 +1,9 @@
-package org.miniActor.test.tutorial
+package org.wisp.test.tutorial
 
-import org.miniActor.{Actor, ActorContext, ActorRef, ActorSystem}
-import org.miniActor.stream.iterator.{End, HasNext, Next, StreamBuffer, StreamSink, StreamSource}
+import org.wisp.{Actor, ActorContext, ActorRef, ActorSystem}
+import org.wisp.stream.iterator.{End, HasNext, Next, StreamBuffer, StreamSink, StreamSource}
 import org.scalatest.funsuite.AnyFunSuite
-import org.miniActor.stream.iterator.Source.*
+import org.wisp.stream.iterator.Source.*
 
 import java.util.concurrent.{CompletableFuture, CountDownLatch}
 import scala.util.Using

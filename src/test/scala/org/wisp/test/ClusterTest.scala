@@ -1,8 +1,8 @@
-package org.miniActor.test
+package org.wisp.test
 
-import org.miniActor.remote.{ObjectId, RemoteContext}
-import org.miniActor.remote.cluster.{ClusterEventListener, ClusterSystem}
-import org.miniActor.{Actor, ActorContext, ActorRef, ActorSystem}
+import org.wisp.remote.{ObjectId, RemoteContext}
+import org.wisp.remote.cluster.{ClusterEventListener, ClusterSystem}
+import org.wisp.{Actor, ActorContext, ActorRef, ActorSystem}
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.net.InetSocketAddress

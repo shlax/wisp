@@ -1,7 +1,7 @@
-package org.miniActor.test.workload
+package org.wisp.test.workload
 
-import org.miniActor.stream.WaitBarrier
-import org.miniActor.{Actor, ActorContext, ActorRef, MessageQueue}
+import org.wisp.stream.WaitBarrier
+import org.wisp.{Actor, ActorContext, ActorRef, MessageQueue}
 
 import java.util.concurrent.CountDownLatch
 
