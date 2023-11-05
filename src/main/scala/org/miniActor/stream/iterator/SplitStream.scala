@@ -41,10 +41,10 @@ class SplitStream(prev:ActorRef) extends ActorRef{
       }
     }
 
-    def process(): IteratorMessage => Unit = {
+    def process(): StreamResponseMessage => Unit = {
       val r = requested.get
       requested = None
-      { (m:IteratorMessage) => r.accept(this, m)  }
+      { (m:StreamResponseMessage) => r.accept(this, m)  }
     }
 
   }

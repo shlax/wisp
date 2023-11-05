@@ -17,7 +17,7 @@ class StreamSource(it:Source[_]) extends ActorRef {
   override def accept(t: ActorMessage): Unit = {
     t.value match {
       case HasNext =>
-        val v : IteratorMessage = try {
+        val v : StreamResponseMessage = try {
           lock.lock()
           it.next() match {
             case Some(i) => Next(i)
