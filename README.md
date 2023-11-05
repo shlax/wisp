@@ -37,7 +37,7 @@ Using(new ActorSystem) { system =>
 ![stream](doc/stream.svg)
 
     HasNext message is passed from Sink to Source
-    Next(_)/End messages is passed from Source to sink as answer to HasNext
+    Next(_)/End messages is passed from Source to Sink as answer to HasNext
 
 #### [Stream Hello World](https://github.com/shlax/wisp/tree/main/src/test/scala/org/wisp/test/tutorial/StreamHelloWorld.scala)
 ```scala
