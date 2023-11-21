@@ -14,7 +14,7 @@ class Timer extends AutoCloseable{
   val service : ScheduledExecutorService = createScheduledExecutorService()
 
   private val lock = new ReentrantLock()
-  private val futures = new util.LinkedList[ScheduledFutureRef]()
+  private val futures = new util.HashSet[ScheduledFutureRef]()
 
   private class ScheduledFutureRef extends ScheduledFuture[Void]{
     var future:Option[ScheduledFuture[_]] = None
@@ -22,7 +22,9 @@ class Timer extends AutoCloseable{
     def remove():Unit = {
       lock.lock()
       try {
-        futures.remove(this)
+        if(!futures.remove(this)){
+          throw new IllegalStateException("remove failed")
+        }
       } finally {
         lock.unlock()
       }
