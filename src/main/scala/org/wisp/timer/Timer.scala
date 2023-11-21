@@ -22,7 +22,7 @@ class Timer extends AutoCloseable{
     def remove():Unit = {
       lock.lock()
       try {
-        if(!futures.remove(this)) throw new IllegalStateException("remove failed")
+        futures.remove(this)
       } finally {
         lock.unlock()
       }
@@ -52,7 +52,7 @@ class Timer extends AutoCloseable{
     lock.lock()
     try {
       val ref = new ScheduledFutureRef
-      if(!futures.add(ref)) throw new IllegalStateException("add failed")
+      futures.add(ref)
       val f = service.schedule((() => {
         ref.remove()
         r << msg
@@ -69,7 +69,7 @@ class Timer extends AutoCloseable{
     lock.lock()
     try {
       val ref = new ScheduledFutureRef
-      if(!futures.add(ref)) throw new IllegalStateException("add failed")
+      futures.add(ref)
       val f = service.scheduleAtFixedRate ( ( () => {
         r << msg
       } ) : Runnable,initialDelay.length, period.length, period.unit)
