@@ -48,7 +48,11 @@ class Timer extends AutoCloseable{
     }
   }
 
-  def scheduleOnce(r:ActorRef, msg: () => Any, delay:Duration) : ScheduledFuture[Void] = {
+  def scheduleMessage(r: ActorRef, msg: Any, delay: Duration): ScheduledFuture[Void] = {
+    schedule(r, delay)(() => msg)
+  }
+
+  def schedule(r:ActorRef, delay:Duration)(msg: () => Any) : ScheduledFuture[Void] = {
     lock.lock()
     try {
       val ref = new ScheduledFutureRef
@@ -64,15 +68,18 @@ class Timer extends AutoCloseable{
     }
   }
 
-  def schedule(r:ActorRef, msg: () => Any, initialDelay:Duration, period:Duration): ScheduledFuture[Void] = {
-    if(initialDelay.unit != period.unit) throw new IllegalArgumentException("initialDelay.unit != period.unit")
+  def scheduleMessage(r:ActorRef, msg: Any, initialDelay:Duration, period:Duration): ScheduledFuture[Void] = {
+    schedule(r, initialDelay, period)(() => msg)
+  }
+
+  def schedule(r:ActorRef, initialDelay:Duration, period:Duration)(msg: () => Any): ScheduledFuture[Void] = {
     lock.lock()
     try {
       val ref = new ScheduledFutureRef
       futures.add(ref)
       val f = service.scheduleAtFixedRate ( ( () => {
         r << msg.apply()
-      } ) : Runnable,initialDelay.length, period.length, period.unit)
+      } ) : Runnable,initialDelay.toNanos, period.toNanos, TimeUnit.NANOSECONDS)
       ref.future = Some(f)
       ref
     } finally {
