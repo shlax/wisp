@@ -1,9 +1,7 @@
 package org.wisp.test.workload.steal
 
 import org.wisp.test.workload
-import org.wisp.test.workload.steal.TaskWorker.pull
 import org.wisp.{Actor, ActorContext, ActorRef}
-
 import java.util
 import java.util.concurrent.{CompletableFuture, Executors, LinkedBlockingQueue}
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
@@ -32,7 +30,7 @@ class Task{
 }
 
 case object PullTask
-case class QueueTask(task:Task, State:State)
+case class QueueTask(task:Task, state:State)
 
 case class State(nm:String, size:Int)
 
