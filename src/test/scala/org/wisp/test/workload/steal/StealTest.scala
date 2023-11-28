@@ -5,6 +5,7 @@ import org.wisp.ActorSystem
 
 import scala.util.Using
 
+/** work stealing for actors */
 class StealTest extends AnyFunSuite{
 
   test("steal"){
