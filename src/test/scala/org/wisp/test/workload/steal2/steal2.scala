@@ -40,7 +40,7 @@ case class QueueTask(t: Task,nm: String, size: Int)  // ask
 
 case class EnqueueTask(t: Task) // response
 case object DequeTask // response
-case object StateUpdated // no-op response see: org.wisp.remote.client.AskActorRef.accept
+case object StateUpdated // no-op response to remove ask from network binding map : org.wisp.remote.client.AskActorRef.accept
 
 class TaskBalancer(context: ActorContext) extends Actor(context) {
 
