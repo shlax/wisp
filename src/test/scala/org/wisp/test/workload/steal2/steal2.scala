@@ -35,28 +35,22 @@ class TaskExecutor(worker:ActorRef){
 
 }
 
-case class UpdateState(nm:String, size:Int) // ask
-case class QueueTask(t: Task,nm: String, size: Int)  // ask
-
-case class EnqueueTask(t: Task) // response
-case object DequeTask // response
-case object StateUpdated // no-op response to remove ask from network binding map : org.wisp.remote.client.AskActorRef.accept
+case class UpdateState(nm:String, size:Int)
+case class QueueTask(t:Task, nm:String, size:Int)
+case object PullTask
 
 class TaskBalancer(context: ActorContext) extends Actor(context) {
 
-  case class WorkerRef(ref:ActorRef, size:Int)
+  class WorkerRef(val ref:ActorRef, var size:Int)
 
   val workers = mutable.Map[String, WorkerRef]()
 
   def rebalance():Unit = {
-    if(workers.size > 1){
-      val max = workers.maxBy(_._2.size)
-      if(max._2.size > 2){
-        val min = workers.minBy(_._2.size)
-        if(max._2.size - min._2.size > 2){
-          val x = workers.remove(max._1)
-          x.get.ref << DequeTask
-        }
+    val max = workers.values.maxBy(_.size)
+    if(max.size > 1){
+      val min = workers.values.minBy(_.size)
+      if(max.size - min.size >= 1){
+        max.ref << PullTask
       }
     }
   }
@@ -64,19 +58,12 @@ class TaskBalancer(context: ActorContext) extends Actor(context) {
   override def process(sender: ActorRef): PartialFunction[Any, Unit] = {
 
     case UpdateState(nm, size) =>
-      val x = workers.put(nm, WorkerRef(sender, size) )
-      for(w <- x) w.ref << StateUpdated // discard old state
-
+      workers.update(nm, new WorkerRef(sender, size) )
       rebalance()
 
     case QueueTask(t, nm, size) =>
-      val x = workers.put(nm, WorkerRef(sender, size))
-      for (w <- x) w.ref << StateUpdated // discard old state
-
-      val m = workers.minBy(_._2.size)
-      val w = workers.remove(m._1)
-      w.get.ref << EnqueueTask(t)
-
+      workers.update(nm, new WorkerRef(sender, size))
+      workers.values.minBy(_.size).ref << t
       rebalance()
 
   }
@@ -89,15 +76,12 @@ object TaskWorker {
 
 case object Notify
 
-class TaskWorker(nm:String, balancer:ActorRef, context: ActorContext) extends Actor(context){
+class TaskWorker(nm:String, balancerRef:ActorRef, context: ActorContext) extends Actor(context){
   val running = new AtomicBoolean(false)
   val queue = new java.util.LinkedList[Task]()
 
-  def updateState(): Unit = {
-    balancer.ask(UpdateState(nm, queue.size())).thenAccept(this)
-  }
-
-  updateState()
+  val balancer = wrap(balancerRef)
+  balancer << UpdateState(nm, queue.size()) // register
 
   def runTask(t:Task): Boolean = {
     if ( running.compareAndSet(false, true) ) {
@@ -118,29 +102,22 @@ class TaskWorker(nm:String, balancer:ActorRef, context: ActorContext) extends Ac
   override def process(sender: ActorRef): PartialFunction[Any, Unit] = {
     case t:Task =>
       if(!runTask(t)){
-        updateState()
+        balancer << UpdateState(nm, queue.size())
       }
 
     case Notify =>
       val t = queue.poll()
       if(t != null && runTask(t)){
-        updateState()
+        balancer << UpdateState(nm, queue.size())
       }
 
-    case DequeTask =>
+    case PullTask =>
       val t = queue.poll()
       if(t != null){
-        balancer.ask(QueueTask(t, nm, queue.size())).thenAccept(this)
+        balancer << QueueTask(t, nm, queue.size())
       }else{
-        updateState()
+        balancer << UpdateState(nm, queue.size())
       }
-
-    case EnqueueTask(t) =>
-      runTask(t)
-      updateState()
-
-    case StateUpdated =>
-      // no-op
 
   }
 

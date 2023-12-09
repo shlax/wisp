@@ -28,8 +28,11 @@ trait MessageQueue[E] {
 
   def poll():E
 
+  /** add element */
   def add(e:E):Unit
 
+  /** add or drop element
+   * @return true if added */
   def put(e:E): Boolean
 
   def size():Int
