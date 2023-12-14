@@ -7,7 +7,6 @@ repositories {
     mavenCentral()
 }
 
-
 dependencies {
     implementation group: 'org.scala-lang', name: 'scala3-library_3', version: '3.3.1'
     implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.9'
