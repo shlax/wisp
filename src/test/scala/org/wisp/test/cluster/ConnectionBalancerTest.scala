@@ -1,6 +1,7 @@
 package org.wisp.test.cluster
 
 import org.scalatest.funsuite.AnyFunSuite
+import org.wisp.remote.cluster.topology.ConnectionBalancer
 
 class ConnectionBalancerTest extends AnyFunSuite{
 
@@ -20,8 +21,11 @@ class ConnectionBalancerTest extends AnyFunSuite{
         }
       }
 
-      val g = c.groupBy(_.from).map(_._2.size).toSet
-      assert( g.max - g.min <= 1 )
+      val gf = c.groupBy(_.from).map(_._2.size).toSet
+      assert( gf.max - gf.min <= 1 )
+
+      val gt = c.groupBy(_.to).map(_._2.size).toSet
+      assert(gt.max - gt.min <= 1)
     }
 
   }

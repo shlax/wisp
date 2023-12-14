@@ -1,10 +1,6 @@
-package org.wisp.test.cluster
+package org.wisp.remote.cluster.topology
 
 import scala.collection.mutable
-
-case class Connection[T](from: T, to: T){
-  override def toString: String = "Connection("+from+"=>"+to+")"
-}
 
 object ConnectionBalancer{
 
