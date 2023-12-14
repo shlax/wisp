@@ -9,10 +9,9 @@ case class Connection[T](from: T, to: T){
 object ConnectionBalancer{
 
   def apply [T](nodes:Seq[T]) : List[Connection[T]] = {
-    var step = 1
-
     val ret = mutable.ArrayBuffer[Connection[T]]()
 
+    var step = 1
     var added = true
     while (added){
       added = false
