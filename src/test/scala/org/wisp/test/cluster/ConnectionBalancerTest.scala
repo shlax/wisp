@@ -26,6 +26,9 @@ class ConnectionBalancerTest extends AnyFunSuite{
 
       val gt = c.groupBy(_.to).map(_._2.size).toSet
       assert(gt.max - gt.min <= 1)
+
+      assert( gf.min == gt.min )
+      assert( gf.max == gt.max )
     }
 
   }
