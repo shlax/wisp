@@ -22,9 +22,16 @@ class Cluster extends ClusterEventListener{
     system.bind(adr)
   }
 
-  def connect(self:InetSocketAddress, nodes:Seq[InetSocketAddress]):List[CompletableFuture[ObjectId]] = {
+  def connect(self:InetSocketAddress, nodes:Seq[InetSocketAddress]):List[CompletableFuture[(InetSocketAddress,ObjectId)]] = {
     val c = ConnectionBalancer.apply(nodes)
-    for(i <- c if i.from == self) yield system.addNode(i.to)
+    for(i <- c if i.from == self) yield {
+      val cf = new CompletableFuture[(InetSocketAddress,ObjectId)]()
+      system.addNode(i.to).whenComplete{ (id, ex) =>
+        if(ex != null) cf.completeExceptionally(new ConnectionException(i.to, ex))
+        else cf.complete((i.to, id))
+      }
+      cf
+    }
   }
   
 }
