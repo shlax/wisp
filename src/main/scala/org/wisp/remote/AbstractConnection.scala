@@ -55,6 +55,30 @@ abstract class AbstractConnection extends Connection, CompletionHandler[Integer,
   private var encoder: Option[Encoder] = None
   private var writing: Boolean = false
 
+  def transferQueue(ac:AbstractConnection):Unit = {
+    try {
+      lock.lock()
+
+      var addDisconnect = false
+      var e = queue.poll()
+
+      while (e != null){
+        if(e == Disconnect){
+          addDisconnect = true
+        }else{
+          ac.send(e)
+        }
+        e = queue.poll()
+      }
+
+      if(addDisconnect){
+        queue.add(Disconnect)
+      }
+    } finally {
+      lock.unlock()
+    }
+  }
+
   override def send(msg: Any): Unit = {
     if(disconnected.isDone) throw new AsynchronousCloseException()
 

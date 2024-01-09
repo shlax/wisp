@@ -18,10 +18,7 @@ class RemoteManager(system: ClusterSystem) extends ClusterContext, AutoCloseable
 
   override def get(id: ObjectId): RemoteContext = {
     if(id == null) throw new NullPointerException("id is null")
-
-    val c = connectedMap.get(id)
-    if(c == null) throw new RuntimeException("client "+id+" not found")
-    c
+    connectedMap.get(id)
   }
 
   override def forEach(action: BiConsumer[_ >: ObjectId, _ >: RemoteContext]):Unit = {
@@ -34,7 +31,7 @@ class RemoteManager(system: ClusterSystem) extends ClusterContext, AutoCloseable
     val old = connectedMap.put(id, c)
     if(old != null && logger.isWarnEnabled) logger.warn("replacing node ["+id+"] "+old)
 
-    for(l <- system.listener) l.added(id, c)
+    system.added(id, c)
   }
 
   def remove(id: ObjectId): Unit = {

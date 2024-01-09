@@ -1,5 +1,6 @@
 package org.wisp.remote.cluster
 
+import org.wisp.remote.client.RemoteClient
 import org.wisp.{ActorRuntime, ActorSystem, logger}
 import org.wisp.remote.{ClientConnection, ObjectId, ObjectIdFactory, RemoteContext, RemoteSystem}
 
@@ -35,8 +36,13 @@ class ClusterSystem(context:ActorRuntime, val listener: Option[ClusterEventListe
   override def get(id: ObjectId): RemoteContext = {
     if(id == this.id) this
     else {
-      val rc = connectedMap.get(id)
-      if (rc == null) remoteManager.get(id) else rc
+      val rc = remoteManager.get(id)
+      if (rc != null) rc
+      else{
+        val tmp = connectedMap.get(id)
+        if(tmp == null) throw new RuntimeException("client " + id + " not found")
+        tmp
+      }
     }
   }
 
@@ -56,6 +62,12 @@ class ClusterSystem(context:ActorRuntime, val listener: Option[ClusterEventListe
     for(l <- listener) l.added(uuid, cc)
   }
 
+  def added(id:ObjectId, c:RemoteClient):Unit = {
+    val conn = connectedMap.get(id)
+    if(conn != null) conn.close(c)
+    for (l <- listener) l.added(id, c)
+  }
+
   override def close(c: ClientConnection): Unit = {
     if(c.isInstanceOf[ClusterConnection]){
       val cc = c.asInstanceOf[ClusterConnection]
@@ -66,8 +78,8 @@ class ClusterSystem(context:ActorRuntime, val listener: Option[ClusterEventListe
         if(id != null) {
           connectedMap.remove(id)
           for (l <- listener) l.closed(id, cc)
-        }else logger.debug("closing clustered connected " + c)
-      } else logger.debug("closing not clustered connected " + c)
+        }else logger.debug("closing ClusterConnection["+c+"] without id")
+      } else logger.debug("closing not connected ClusterConnection["+c+"]")
     }
     super.close(c)
   }
