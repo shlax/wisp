@@ -1,6 +1,5 @@
 package org.wisp.remote.cluster.topology
 
-import org.wisp.ActorSystem
 import org.wisp.remote.ObjectId
 import org.wisp.remote.cluster.{ClusterEventListener, ClusterSystem}
 

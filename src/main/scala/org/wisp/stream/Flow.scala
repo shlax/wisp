@@ -98,11 +98,12 @@ class Flow[T] extends Consumer[T] {
     nf
   }
 
-  def add(s: Consumer[_ >: T]):Unit = {
+  def add(s: Consumer[_ >: T]): Flow[T] = {
     next.add(s)
+    this
   }
 
-  def to(fn: T => Unit): Unit = {
+  def to(fn: T => Unit): Flow[T] = {
     add( (i : T) => { fn.apply(i) } )
   }
 
