@@ -74,6 +74,8 @@ class Flow[T] extends Consumer[T] {
       override def flush(): Unit = {
         if(queue.nonEmpty){
           nf.accept(queue.toSeq)
+
+          key = None
           queue = mutable.ArrayBuffer[T]()
         }
         nf.flush()
