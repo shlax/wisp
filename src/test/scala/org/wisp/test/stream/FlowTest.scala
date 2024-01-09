@@ -27,8 +27,8 @@ class FlowTest extends AnyFunSuite{
     val a = s.create( c => new PrintActor(cd, c) )
 
     Flow((1 to 20).asSource){ f =>
-      f.filter( _ % 2 == 0).map( "" + _ + " is even").via{ self =>
-        self.add( (v, next:Flow[String]) => next("     -> "+v) ).to(println)
+      f.filter( _ % 2 == 0).map( "" + _ + " is even").as{ self =>
+        self.map( v => "->"+v ).to(println)
         self >> a
       }
       f.filter( _ % 2 == 1).map( "" + _ + " is odd") >> a

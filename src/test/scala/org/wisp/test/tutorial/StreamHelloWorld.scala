@@ -5,6 +5,7 @@ import org.wisp.{Actor, ActorContext, ActorRef, ActorSystem}
 import org.scalatest.funsuite.AnyFunSuite
 
 import scala.util.Using
+import org.wisp.stream.iterator.Source.*
 
 class StreamHelloWorld extends AnyFunSuite {
 
@@ -30,8 +31,8 @@ class StreamHelloWorld extends AnyFunSuite {
         val backpressure = WaitBarrier[Int]()
         val sumActor = system.create(c => new SumActor(backpressure, c))
 
-        Flow(1 to 11) { f =>
-          f.filter(n => n % 2 == 1).to(backpressure)
+        Flow((1 to 11).asSource) { f =>
+          f.filter(n => n % 2 == 1).add(backpressure)
         }
 
         // messages from same thread will be processed in order

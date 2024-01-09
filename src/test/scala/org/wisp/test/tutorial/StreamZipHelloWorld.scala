@@ -25,7 +25,7 @@ class StreamZipHelloWorld extends AnyFunSuite {
           Thread.sleep(250)
           " < 2: " + Thread.currentThread() + ">" + i
       }))
-      val zip = ZipStream(Seq(flow1, flow2))
+      val zip = ZipStream(Seq(flow1, flow2).asSource)
       val sink = StreamSink(zip){ r =>
         println(""+Thread.currentThread()+r)
       }

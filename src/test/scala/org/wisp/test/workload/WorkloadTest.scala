@@ -7,6 +7,7 @@ import org.scalatest.funsuite.AnyFunSuite
 
 import java.util.concurrent.CountDownLatch
 import scala.util.Using
+import org.wisp.stream.iterator.Source.*
 
 class WorkloadTest extends AnyFunSuite{
 
@@ -19,7 +20,7 @@ class WorkloadTest extends AnyFunSuite{
       as.create(c => new Worker(balancer, "w2", c))
 
       val cd = new CountDownLatch(10)
-      Flow(1 to 10) { f => f.map(i => DoWork(cd, i)).to(barrier) }
+      Flow((1 to 10).asSource) { f => f.map(i => DoWork(cd, i)).add(barrier) }
       cd.await()
 
     }
