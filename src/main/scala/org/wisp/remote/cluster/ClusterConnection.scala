@@ -22,11 +22,11 @@ class ClusterConnection(system:ClusterSystem, chanel: AsynchronousSocketChannel)
 
   override def process: PartialFunction[Any, Unit] = super.process.orElse(ClientBinding.process(this))
 
-  private var remoteClient:Option[RemoteClient] = None
+  protected var replacedBy:Option[RemoteClient] = None
 
   override protected def doSend(msg: Any): Unit = {
-    if (remoteClient.isDefined) {
-      remoteClient.get.send(msg)
+    if (replacedBy.isDefined) {
+      replacedBy.get.send(msg)
     } else {
       super.doSend(msg)
     }
@@ -37,12 +37,12 @@ class ClusterConnection(system:ClusterSystem, chanel: AsynchronousSocketChannel)
 
     lock.lock()
     try{
-      if(remoteClient.isDefined){
-        throw new IllegalStateException("already disconnected by "+remoteClient.get)
+      if(replacedBy.isDefined){
+        throw new IllegalStateException("already disconnected by "+replacedBy.get)
       }
 
       super.doSend(Disconnect)
-      remoteClient = Some(c)
+      replacedBy = Some(c)
     }finally {
       lock.unlock()
     }
