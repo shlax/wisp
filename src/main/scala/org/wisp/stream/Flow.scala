@@ -62,15 +62,15 @@ class Flow[T] extends Consumer[T] {
     s
   }
 
-  def as(fn: Consumer[Flow[T]]): Flow[T] = {
+  def via(fn: Consumer[Flow[T]]): Flow[T] = {
     fn.accept(this)
     this
   }
-
+  
   def to(sink: Consumer[_ >: T]): Unit = {
     next.add(sink)
   }
-
+  
   @targetName("sendTo")
   def >> (ref:ActorRef): Unit = {
     to( (e: T) => { ref << e } )

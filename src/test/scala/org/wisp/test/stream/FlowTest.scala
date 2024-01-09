@@ -3,6 +3,7 @@ package org.wisp.test.stream
 import org.wisp.{Actor, ActorContext, ActorMessage, ActorRef, ActorSystem, MessageQueue}
 import org.wisp.stream.Flow
 import org.scalatest.funsuite.AnyFunSuite
+import org.wisp.stream.iterator.Source.*
 
 import java.util.concurrent.CountDownLatch
 
@@ -25,8 +26,8 @@ class FlowTest extends AnyFunSuite{
 
     val a = s.create( c => new PrintActor(cd, c) )
 
-    Flow(1 to 20){ f =>
-      f.filter( _ % 2 == 0).map( "" + _ + " is even").as{ self =>
+    Flow((1 to 20).asSource){ f =>
+      f.filter( _ % 2 == 0).map( "" + _ + " is even").via{ self =>
         self.add( (v, next:Flow[String]) => next("     -> "+v) ).to(println)
         self >> a
       }
