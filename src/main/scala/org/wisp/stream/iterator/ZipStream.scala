@@ -1,6 +1,5 @@
 package org.wisp.stream.iterator
 
-import org.wisp.stream.ForEach
 import org.wisp.{ActorMessage, ActorRef}
 
 import scala.collection.mutable
@@ -9,17 +8,17 @@ import java.util.concurrent.locks.ReentrantLock
 
 object ZipStream{
 
-  def apply(prev: ForEach[ActorRef]): ZipStream = {
+  def apply(prev: Source[ActorRef]): ZipStream = {
     new ZipStream(prev, new util.LinkedList[ActorRef](), new util.LinkedList[ZipStream#NodeRefValue]())
   }
 
-  def apply(prev: ForEach[ActorRef], nodes: util.Queue[ActorRef], values:util.Queue[ZipStream#NodeRefValue]): ZipStream = {
+  def apply(prev: Source[ActorRef], nodes: util.Queue[ActorRef], values:util.Queue[ZipStream#NodeRefValue]): ZipStream = {
     new ZipStream(prev, nodes, values)
   }
 
 }
 
-class ZipStream(prev:ForEach[ActorRef], nodes:util.Queue[ActorRef], values:util.Queue[ZipStream#NodeRefValue]) extends ActorRef{
+class ZipStream(prev:Source[ActorRef], nodes:util.Queue[ActorRef], values:util.Queue[ZipStream#NodeRefValue]) extends ActorRef{
 
   private val lock = new ReentrantLock()
 

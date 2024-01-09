@@ -1,6 +1,7 @@
 package org.wisp.stream
 
 import org.wisp.ActorRef
+import org.wisp.stream.iterator.Source
 
 import java.util
 import java.util.function.{BiConsumer, Consumer, Function, Predicate}
@@ -15,7 +16,7 @@ object Flow {
     f
   }
 
-  def apply[T](fe: ForEach[T])(fn: Consumer[Flow[T]]): Flow[T] = {
+  def apply[T](fe: Source[T])(fn: Consumer[Flow[T]]): Flow[T] = {
     val f = apply(fn)
     fe.forEach(f)
     f
@@ -38,7 +39,7 @@ class Flow[T] extends Consumer[T] {
     nf
   }
 
-  def flatMap[R](fn: Function[_ >: T, ForEach[R]]) : Flow[R] = {
+  def flatMap[R](fn: Function[_ >: T, Source[R]]) : Flow[R] = {
     val nf = new Flow[R]
     to( (e: T) => { fn.apply(e).forEach(nf) } )
     nf

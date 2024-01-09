@@ -1,6 +1,5 @@
 package org.wisp.stream.iterator
 
-import org.wisp.stream.ForEach
 import org.wisp.{ActorMessage, ActorRef}
 
 import java.util
@@ -8,13 +7,13 @@ import java.util.concurrent.locks.ReentrantLock
 
 object ForEachSource{
 
-  def apply[T](it:ForEach[T]):ForEachSource[T] = new ForEachSource(it, new util.LinkedList[ActorRef]())
+  def apply[T](it:Source[T]):ForEachSource[T] = new ForEachSource(it, new util.LinkedList[ActorRef]())
 
-  def apply[T](it:ForEach[T], nodes:util.Queue[ActorRef]):ForEachSource[T] = new ForEachSource(it, nodes)
+  def apply[T](it:Source[T], nodes:util.Queue[ActorRef]):ForEachSource[T] = new ForEachSource(it, nodes)
 
 }
 
-class ForEachSource[T](it:ForEach[T], nodes:util.Queue[ActorRef]) extends ActorRef, Runnable {
+class ForEachSource[T](it:Source[T], nodes:util.Queue[ActorRef]) extends ActorRef, Runnable {
 
   private val lock = new ReentrantLock()
   private val condition = lock.newCondition()

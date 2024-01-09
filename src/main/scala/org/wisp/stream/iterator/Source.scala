@@ -2,6 +2,7 @@ package org.wisp.stream.iterator
 
 import java.lang
 import java.util
+import java.util.function.Consumer
 
 object Source{
 
@@ -45,5 +46,13 @@ trait Source[T] {
 
   /** {{{if(hasNext) Some(next()) else None}}} */
   def next():Option[T]
+
+  def forEach(c: Consumer[_ >: T]):Unit = {
+    var v = next()
+    while (v.isDefined){
+      c.accept(v.get)
+      v = next()
+    }
+  }
 
 }
