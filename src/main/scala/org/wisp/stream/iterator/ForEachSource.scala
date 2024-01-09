@@ -22,8 +22,8 @@ class ForEachSource[T](it:Source[T], nodes:util.Queue[ActorRef]) extends ActorRe
 
   override def run():Unit = {
     it.forEach { e =>
+      lock.lock()
       try {
-        lock.lock()
         var a = nodes.poll()
         while (a == null){
           condition.await()
@@ -35,8 +35,8 @@ class ForEachSource[T](it:Source[T], nodes:util.Queue[ActorRef]) extends ActorRe
       }
     }
 
+    lock.lock()
     try {
-      lock.lock()
       ended = true
       var a = nodes.poll()
       while (a != null) {
@@ -51,8 +51,8 @@ class ForEachSource[T](it:Source[T], nodes:util.Queue[ActorRef]) extends ActorRe
   override def accept(t: ActorMessage): Unit = {
     t.value match {
       case HasNext =>
+        lock.lock()
         try {
-          lock.lock()
           if(ended){
             t.sender << End
           }else {

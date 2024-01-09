@@ -23,8 +23,8 @@ class WaitBarrier[T](nodes:util.Queue[Consumer[T]]) extends Barrier[T] {
   private val condition = lock.newCondition()
 
   override def nextTo(r:Consumer[T]):Unit = {
+    lock.lock()
     try{
-      lock.lock()
       nodes.add(r)
       condition.signalAll()
     }finally {
@@ -34,8 +34,8 @@ class WaitBarrier[T](nodes:util.Queue[Consumer[T]]) extends Barrier[T] {
 
   override def accept(t: T): Unit = {
     var n: Consumer[T] = null
+    lock.lock()
     try{
-      lock.lock()
       n = nodes.poll()
       while(n == null){
         condition.await()

@@ -47,8 +47,8 @@ abstract class AbstractConnection extends Connection, CompletionHandler[Integer,
   private val decoder = createDecoder()
 
 
-  private val lock = new ReentrantLock()
-  private val condition = lock.newCondition()
+  protected val lock = new ReentrantLock()
+  protected val condition = lock.newCondition()
 
   private var sentDisconnect: Boolean = false
 
@@ -58,16 +58,21 @@ abstract class AbstractConnection extends Connection, CompletionHandler[Integer,
   override def send(msg: Any): Unit = {
     if(disconnected.isDone) throw new AsynchronousCloseException()
 
+    lock.lock()
     try {
-      lock.lock()
-      sendWithLock(msg)
+      doSend(msg)
     }finally {
       lock.unlock()
     }
   }
 
   /** call inside lock/condition */
-  private def sendWithLock(msg: Any): Unit = {
+  protected def doSend(msg: Any): Unit = {
+    addToQueue(msg)
+  }
+
+  /** call inside lock/condition */
+  private def addToQueue(msg: Any): Unit = {
     if (msg == Disconnect || msg.isInstanceOf[ObjectId]) {
       queue.add(msg)
     } else {
@@ -180,7 +185,7 @@ abstract class AbstractConnection extends Connection, CompletionHandler[Integer,
             readDisconnect.complete(null)
             lock.lock()
             try {
-              if(!sentDisconnect) sendWithLock(Disconnect)
+              if(!sentDisconnect) addToQueue(Disconnect)
             }finally {
               lock.unlock()
             }

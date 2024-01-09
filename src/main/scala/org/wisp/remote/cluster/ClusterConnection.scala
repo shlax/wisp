@@ -1,6 +1,7 @@
 package org.wisp.remote.cluster
 
 import org.wisp.remote.client.{ClientBinding, RemoteClient, SenderPath}
+import org.wisp.remote.codec.Disconnect
 import org.wisp.remote.{ClientConnection, ObjectId}
 
 import java.nio.channels.{AsynchronousCloseException, AsynchronousSocketChannel}
@@ -21,21 +22,30 @@ class ClusterConnection(system:ClusterSystem, chanel: AsynchronousSocketChannel)
 
   override def process: PartialFunction[Any, Unit] = super.process.orElse(ClientBinding.process(this))
 
-  @volatile
   private var remoteClient:Option[RemoteClient] = None
 
-  override def send(msg: Any): Unit = {
-    val rc = remoteClient
-    if(rc.isDefined){
-      rc.get.send(msg)
-    }else {
-      super.send(msg)
+  override protected def doSend(msg: Any): Unit = {
+    if (remoteClient.isDefined) {
+      remoteClient.get.send(msg)
+    } else {
+      super.doSend(msg)
     }
   }
 
-  def disconnect(c:RemoteClient): CompletableFuture[Void] = {
-    remoteClient = Some(c)
-    disconnect()
+  def replaceBy(c:RemoteClient):Unit = {
+    if(disconnected.isDone) throw new AsynchronousCloseException()
+
+    lock.lock()
+    try{
+      if(remoteClient.isDefined){
+        throw new IllegalStateException("already disconnected by "+remoteClient.get)
+      }
+
+      super.doSend(Disconnect)
+      remoteClient = Some(c)
+    }finally {
+      lock.unlock()
+    }
   }
 
   override def close(): Unit = {

@@ -30,8 +30,8 @@ class WaitSourceSink[A](it:Source[A], nodes:util.Queue[ActorRef])(fn:Consumer[An
 
   def run(prev:ActorRef): Unit = {
 
+    lock.lock()
     try {
-      lock.lock()
       prev.ask(HasNext).thenAccept(this ) // get first
 
       var elem:Option[A] = it.next()
@@ -73,8 +73,8 @@ class WaitSourceSink[A](it:Source[A], nodes:util.Queue[ActorRef])(fn:Consumer[An
   }
 
   override def accept(t: ActorMessage): Unit = {
+    lock.lock()
     try {
-      lock.lock()
       t.value match {
         // process source
         case HasNext =>

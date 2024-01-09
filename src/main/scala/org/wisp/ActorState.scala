@@ -27,8 +27,8 @@ class ActorState(system:Executor, fn: ActorContext => Actor) extends ActorContex
   //val actorLock = new Object
 
   override def messageQueueSize(): Int = {
+    lock.lock()
     try {
-      lock.lock()
       queue.size()
     } finally {
       lock.unlock()
@@ -53,8 +53,8 @@ class ActorState(system:Executor, fn: ActorContext => Actor) extends ActorContex
         }
     }
 
+    lock.lock()
     try {
-      lock.lock()
       val e = queue.poll()
       condition.signalAll()
       if(e == null){
@@ -68,8 +68,8 @@ class ActorState(system:Executor, fn: ActorContext => Actor) extends ActorContex
   }
 
   override def accept(msg: ActorMessage): Unit = {
+    lock.lock()
     try{
-      lock.lock()
       if(running){
         while (!queue.put(msg)) {
           condition.await()
