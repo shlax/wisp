@@ -64,7 +64,7 @@ class ClusterSystem(context:ActorRuntime, val listener: Option[ClusterEventListe
 
   def added(id:ObjectId, c:RemoteClient):Unit = {
     val conn = connectedMap.get(id)
-    if(conn != null) conn.close(c)
+    if(conn != null) conn.disconnect()
     for (l <- listener) l.added(id, c)
   }
 

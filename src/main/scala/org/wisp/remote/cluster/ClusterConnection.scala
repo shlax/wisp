@@ -1,6 +1,6 @@
 package org.wisp.remote.cluster
 
-import org.wisp.remote.client.{ClientBinding, RemoteClient, SenderPath}
+import org.wisp.remote.client.{ClientBinding, SenderPath}
 import org.wisp.remote.{ClientConnection, ObjectId}
 
 import java.nio.channels.{AsynchronousCloseException, AsynchronousSocketChannel}
@@ -20,11 +20,6 @@ class ClusterConnection(system:ClusterSystem, chanel: AsynchronousSocketChannel)
   override def newBindId(): ObjectId = system.newObjectId()
 
   override def process: PartialFunction[Any, Unit] = super.process.orElse(ClientBinding.process(this))
-
-  def close(c:RemoteClient):Unit = {
-    c.transferQueue(this)
-    close()
-  }
 
   override def close(): Unit = {
     super[ClientConnection].close()
