@@ -21,7 +21,7 @@ object RemoteSystem{
 
 }
 
-class RemoteSystem(context:ActorRuntime) extends RemoteActorRuntime, CompletionHandler[AsynchronousSocketChannel,Void], ChannelGroup, ObjectIdFactory {
+class RemoteSystem(context:ActorRuntime) extends RemoteActorRuntime, CompletionHandler[AsynchronousSocketChannel,Void], ChannelGroup, ObjectIdFactory, AutoCloseable {
 
   override val objectIdFactory:Callable[ObjectId] = createObjectIdFactory()
   val id: ObjectId = objectIdFactory.call()
@@ -57,14 +57,14 @@ class RemoteSystem(context:ActorRuntime) extends RemoteActorRuntime, CompletionH
   override def failed(exc: Throwable, attachment: Void): Unit = {
     exc match {
       case _ : AsynchronousCloseException =>
-        logger.debug("socket channel accept failed: " + exc.getMessage, exc)
+        if(logger.isTraceEnabled) logger.trace("socket channel accept failed: " + exc.getMessage, exc)
       case _ =>
         if(logger.isErrorEnabled) logger.error("socket channel accept failed: " + exc.getMessage, exc)
     }
   }
 
   protected def createBindMap(): ConcurrentMap[Any, ActorRef] = new ConcurrentHashMap[Any, ActorRef]()
-  private val bindMap = createBindMap()
+  val bindMap = createBindMap()
 
   override def create(fn: ActorContext => Actor): RemoteRef = {
     val ref = context.create(fn)
@@ -104,6 +104,6 @@ class RemoteSystem(context:ActorRuntime) extends RemoteActorRuntime, CompletionH
       if(logger.isErrorEnabled) logger.error("socket channel close "+serverChannel+" failed " + exc.getMessage, exc)
     }
 
-    super.close()
+    shutdownChannelGroup()
   }
 }

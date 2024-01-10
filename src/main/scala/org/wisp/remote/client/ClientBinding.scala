@@ -19,6 +19,20 @@ object ClientBinding{
       cb.processRemoteResponse(m)
   }
 
+  def close(bindMap : ConcurrentMap[ObjectId, SenderPath]):Unit = {
+    var ex: Option[AsynchronousCloseException] = None
+    for (e <- bindMap.values().asScala) {
+      val exc = ex match {
+        case Some(v) => v
+        case None =>
+          val n = new AsynchronousCloseException
+          ex = Some(n)
+          n
+      }
+      e.callBack.completeExceptionally(exc)
+    }
+  }
+
 }
 
 trait ClientBinding extends RemoteContext, Connection{
@@ -48,18 +62,8 @@ trait ClientBinding extends RemoteContext, Connection{
     new AskActorRef(path, this)
   }
 
-  override def close(): Unit = {
-    var ex : Option[AsynchronousCloseException] = None
-    for (e <- bindMap.values().asScala){
-      val exc = ex match {
-        case Some(v) => v
-        case None =>
-          val n = new AsynchronousCloseException
-          ex = Some(n)
-          n
-      }
-      e.callBack.completeExceptionally(exc)
-    }
+  protected def clearClientBinding(): Unit = {
+    ClientBinding.close(bindMap)
   }
 
 }

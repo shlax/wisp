@@ -40,9 +40,11 @@ class RemoteClient extends AbstractConnection, ClientBinding, ChannelGroup, Obje
   }
 
   override def close(): Unit = {
+    clearClientBinding()
+
     super[AbstractConnection].close()
-    super[ChannelGroup].close()
-    super[ClientBinding].close()
+    shutdownChannelGroup()
+
     connected.completeExceptionally(new AsynchronousCloseException)
   }
 

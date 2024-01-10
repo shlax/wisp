@@ -11,14 +11,13 @@ object ChannelGroup {
 
 }
 
-trait ChannelGroup extends AutoCloseable{
+trait ChannelGroup {
 
   protected def createChannelGroup(): AsynchronousChannelGroup = ChannelGroup.newSingleThreadChannelGroup()
   protected def channelGroup : AsynchronousChannelGroup
   
-  protected def shutdownChannelGroup(): Boolean = true
-
-  override def close(): Unit = {
-    if(shutdownChannelGroup()) channelGroup.shutdown()
+  protected def shutdownChannelGroup(): Unit = {
+    channelGroup.shutdown()
   }
+
 }

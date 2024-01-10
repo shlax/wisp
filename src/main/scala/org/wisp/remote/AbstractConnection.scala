@@ -56,8 +56,6 @@ abstract class AbstractConnection extends Connection, CompletionHandler[Integer,
   private var writing: Boolean = false
 
   override def send(msg: Any): Unit = {
-    if(disconnected.isDone) throw new AsynchronousCloseException()
-
     lock.lock()
     try {
       doSend(msg)
@@ -68,6 +66,7 @@ abstract class AbstractConnection extends Connection, CompletionHandler[Integer,
 
   /** call inside lock/condition */
   protected def doSend(msg: Any): Unit = {
+    if(disconnected.isDone) throw new AsynchronousCloseException()
     addToQueue(msg)
   }
 

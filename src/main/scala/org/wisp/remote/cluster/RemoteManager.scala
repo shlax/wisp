@@ -11,12 +11,12 @@ import scala.util.control.NonFatal
 
 class RemoteManager(system: ClusterSystem) extends ClusterContext, AutoCloseable{
 
-  protected def createConnectedMap(): ConcurrentMap[ObjectId, RemoteClient] = new ConcurrentHashMap[ObjectId, RemoteClient]()
+  protected def createConnectedMap(): ConcurrentMap[ObjectId, ClusterClient] = new ConcurrentHashMap[ObjectId, ClusterClient]()
   private val connectedMap = createConnectedMap()
 
-  protected def createClient(address:InetSocketAddress): RemoteClient = new ClusterClient(system, this)
+  protected def createClient(address:InetSocketAddress): ClusterClient = new ClusterClient(system, this)
 
-  override def get(id: ObjectId): RemoteContext = {
+  override def get(id: ObjectId): ClusterClient = {
     if(id == null) throw new NullPointerException("id is null")
     connectedMap.get(id)
   }
@@ -25,7 +25,7 @@ class RemoteManager(system: ClusterSystem) extends ClusterContext, AutoCloseable
     connectedMap.forEach(action)
   }
 
-  def add(id:ObjectId, c:RemoteClient):Unit = {
+  def add(id:ObjectId, c:ClusterClient):Unit = {
     if(id == null) throw new NullPointerException("id is null")
 
     val old = connectedMap.put(id, c)

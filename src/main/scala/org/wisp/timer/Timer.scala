@@ -1,12 +1,12 @@
 package org.wisp.timer
 
-import org.wisp.ActorRef
-
+import org.wisp.{ActorRef, logger}
 import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.{Delayed, Executors, ScheduledExecutorService, ScheduledFuture, TimeUnit}
 import scala.concurrent.duration.Duration
 import java.util
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
+import scala.util.control.NonFatal
 
 class Timer extends AutoCloseable{
 
@@ -58,8 +58,13 @@ class Timer extends AutoCloseable{
       val ref = new ScheduledFutureRef
       futures.add(ref)
       val f = service.schedule((() => {
-        ref.remove()
-        r << msg.apply()
+        try {
+          ref.remove()
+          r << msg.apply()
+        } catch {
+          case NonFatal(e) =>
+            if(logger.isErrorEnabled) logger.error("timer[" + r + "|" + delay + "]:" + e.getMessage, e)
+        }
       }): Runnable, delay.length, delay.unit)
       ref.future = Some(f)
       ref
@@ -78,7 +83,13 @@ class Timer extends AutoCloseable{
       val ref = new ScheduledFutureRef
       futures.add(ref)
       val f = service.scheduleAtFixedRate ( ( () => {
-        r << msg.apply()
+        try {
+          ref.remove()
+          r << msg.apply()
+        }catch{
+          case NonFatal(e) =>
+            if(logger.isErrorEnabled)  logger.error("timer["+r+"|"+initialDelay+"|"+period+"]:"+e.getMessage, e)
+        }
       } ) : Runnable,initialDelay.toNanos, period.toNanos, TimeUnit.NANOSECONDS)
       ref.future = Some(f)
       ref

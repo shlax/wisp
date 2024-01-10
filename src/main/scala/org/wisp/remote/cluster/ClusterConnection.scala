@@ -17,7 +17,7 @@ class ClusterConnection(system:ClusterSystem, chanel: AsynchronousSocketChannel)
     connected.complete(uuid)
   }
 
-  override val bindMap: ConcurrentMap[ObjectId, SenderPath] = createBindMap()
+  override val bindMap: ConcurrentMap[ObjectId, SenderPath] = system.massageBindMap
   override def newBindId(): ObjectId = system.newObjectId()
 
   override def process: PartialFunction[Any, Unit] = super.process.orElse(ClientBinding.process(this))
@@ -33,8 +33,6 @@ class ClusterConnection(system:ClusterSystem, chanel: AsynchronousSocketChannel)
   }
 
   def replaceBy(c:RemoteClient):Unit = {
-    if(disconnected.isDone) throw new AsynchronousCloseException()
-
     lock.lock()
     try{
       if(replacedBy.isDefined){
@@ -50,7 +48,7 @@ class ClusterConnection(system:ClusterSystem, chanel: AsynchronousSocketChannel)
 
   override def close(): Unit = {
     super[ClientConnection].close()
-    super[ClientBinding].close()
+    //super[ClientBinding].close() dont clean
     connected.completeExceptionally(new AsynchronousCloseException)
   }
 }

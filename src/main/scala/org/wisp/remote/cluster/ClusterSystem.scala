@@ -1,6 +1,6 @@
 package org.wisp.remote.cluster
 
-import org.wisp.remote.client.RemoteClient
+import org.wisp.remote.client.{ClientBinding, RemoteClient, SenderPath}
 import org.wisp.{ActorRuntime, ActorSystem, logger}
 import org.wisp.remote.{ClientConnection, ObjectId, ObjectIdFactory, RemoteContext, RemoteSystem}
 
@@ -25,8 +25,10 @@ object ClusterSystem{
 
 class ClusterSystem(context:ActorRuntime, val listener: Option[ClusterEventListener] = None) extends RemoteSystem(context), ClusterContext, RemoteContext, ObjectIdFactory {
 
-  protected def createRemoteManager(): RemoteManager = new RemoteManager(this)
+  protected def createMassageBindMap(): ConcurrentMap[ObjectId, SenderPath] = new ConcurrentHashMap[ObjectId, SenderPath]()
+  val massageBindMap: ConcurrentMap[ObjectId, SenderPath] = createMassageBindMap()
 
+  protected def createRemoteManager(): RemoteManager = new RemoteManager(this)
   private val remoteManager = createRemoteManager()
 
   def addNode(address:InetSocketAddress): CompletableFuture[ObjectId] = {
@@ -59,6 +61,9 @@ class ClusterSystem(context:ActorRuntime, val listener: Option[ClusterEventListe
 
   def add(uuid:ObjectId, cc:ClusterConnection):Unit = {
     connectedMap.put(uuid, cc)
+    val con = remoteManager.get(uuid)
+    if(con != null) con.replaceBy(cc)
+
     for(l <- listener) l.added(uuid, cc)
   }
 
@@ -112,6 +117,7 @@ class ClusterSystem(context:ActorRuntime, val listener: Option[ClusterEventListe
   }
 
   override def close(): Unit = {
+    ClientBinding.close(massageBindMap)
     remoteManager.close()
     super.close()
   }
