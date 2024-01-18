@@ -32,7 +32,7 @@ class FlowTest extends AnyFunSuite{
         self >> a
       }
       f.filter( _ % 2 == 1).map( "" + _ + " is odd") >> a
-    }
+    }.close()
 
     cd.await()
     s.close()

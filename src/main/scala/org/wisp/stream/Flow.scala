@@ -25,16 +25,16 @@ object Flow {
 
 }
 
-class Flow[T] extends Consumer[T] {
+class Flow[T] extends Consumer[T] with AutoCloseable {
   private val next = new util.LinkedList[Consumer[_ >: T]]
 
   override def accept(t: T): Unit = {
     for (i <- next.asScala) i.accept(t)
   }
 
-  def flush(): Unit = {
+  def close(): Unit = {
     for (i <- next.asScala) i match {
-      case f: Flow[_] => f.flush()
+      case f: AutoCloseable => f.close()
       case _ =>
     }
   }
@@ -71,15 +71,15 @@ class Flow[T] extends Consumer[T] {
         super.accept(t)
       }
 
-      override def flush(): Unit = {
+      override def close(): Unit = {
         if(queue.nonEmpty){
           nf.accept(queue.toSeq)
 
           key = None
           queue = mutable.ArrayBuffer[T]()
         }
-        nf.flush()
-        super.flush()
+        nf.close()
+        super.close()
       }
 
     })
@@ -103,8 +103,8 @@ class Flow[T] extends Consumer[T] {
     this
   }
 
-  def to(fn: T => Unit): Flow[T] = {
-    add( (i : T) => { fn.apply(i) } )
+  def to(fn: Consumer[T]): Flow[T] = {
+    add(fn)
   }
 
   def as(fn: Consumer[Flow[T]]): Flow[T] = {

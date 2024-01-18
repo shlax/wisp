@@ -20,7 +20,9 @@ class WorkloadTest extends AnyFunSuite{
       as.create(c => new Worker(balancer, "w2", c))
 
       val cd = new CountDownLatch(10)
-      Flow((1 to 10).asSource) { f => f.map(i => DoWork(cd, i)).add(barrier) }
+      Flow((1 to 10).asSource) { f => 
+        f.map(i => DoWork(cd, i)).add(barrier) 
+      }.close()
       cd.await()
 
     }
