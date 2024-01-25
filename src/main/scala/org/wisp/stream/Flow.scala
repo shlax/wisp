@@ -4,10 +4,11 @@ import org.wisp.ActorRef
 import org.wisp.stream.iterator.Source
 
 import java.util
-import java.util.function.{BiConsumer, Consumer, Function, Predicate}
+import java.util.function.{Consumer, Function, Predicate}
 import scala.annotation.targetName
 import scala.collection.mutable
 import scala.jdk.CollectionConverters.*
+import scala.util.control.NonFatal
 
 object Flow {
 
@@ -17,10 +18,13 @@ object Flow {
     f
   }
 
-  def apply[T](fe: Source[T])(fn: Consumer[Flow[T]]): Flow[T] = {
+  def apply[T](fe: Source[T])(fn: Consumer[Flow[T]]): Unit = {
     val f = apply(fn)
-    fe.forEach(f)
-    f
+    try {
+      fe.forEach(f)
+    }finally {
+      f.close()
+    }
   }
 
 }
@@ -33,9 +37,20 @@ class Flow[T] extends Consumer[T] with AutoCloseable {
   }
 
   def close(): Unit = {
+    var e:Option[Throwable] = None
     for (i <- next.asScala) i match {
-      case f: AutoCloseable => f.close()
+      case f: AutoCloseable =>
+        try {
+          f.close()
+        }catch {
+          case NonFatal(ex) =>
+            if(e.isDefined) ex.addSuppressed(e.get)
+            e = Some(ex)
+        }
       case _ =>
+    }
+    if(e.isDefined){
+      throw e.get
     }
   }
 

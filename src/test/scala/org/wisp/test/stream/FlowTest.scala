@@ -34,7 +34,7 @@ class FlowTest extends AnyFunSuite{
       f.collect{
         case i if i % 2 == 1 => i
       }.map( "" + _ + " is odd") >> a
-    }.close()
+    }
 
     cd.await()
     s.close()
@@ -46,7 +46,7 @@ class FlowTest extends AnyFunSuite{
         c.accept("A"+v)
         c.accept("B"+v)
       } }.to(println)
-    }.close()
+    }
 
   }
 
