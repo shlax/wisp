@@ -32,7 +32,7 @@ class StreamHelloWorld extends AnyFunSuite {
         val sumActor = system.create(c => new SumActor(backpressure, c))
 
         Flow((1 to 11).asSource) { f =>
-          f.filter(n => n % 2 == 1).add(backpressure)
+          f.filter(n => n % 2 == 1).to(backpressure)
         }.close()
 
         // messages from same thread will be processed in order

@@ -39,21 +39,21 @@ class Flow[T] extends Consumer[T] with AutoCloseable {
     }
   }
 
-  def map[R](fn: Function[_ >: T, R]) : Flow[R] = {
+  def map[R, V >: T](fn: Function[V, R]) : Flow[R] = {
     val nf = new Flow[R]
-    add( (e: T) => { nf.accept(fn.apply(e)) } )
+    to( (e: T) => { nf.accept(fn.apply(e)) } )
     nf
   }
 
-  def flatMap[R](fn: Function[_ >: T, Source[R]]) : Flow[R] = {
+  def flatMap[R, V >: T](fn: Function[V, Source[R]]) : Flow[R] = {
     val nf = new Flow[R]
-    add( (e: T) => { fn.apply(e).forEach(nf) } )
+    to( (e: T) => { fn.apply(e).forEach(nf) } )
     nf
   }
 
-  def groupBy[K](keyFn:Function[_ >: T, K]): Flow[Seq[T]] = {
+  def groupBy[K, V >: T](keyFn:Function[V, K]): Flow[Seq[T]] = {
     val nf = new Flow[Seq[T]]
-    add(new Flow[T]{
+    to(new Flow[T]{
       private var queue: mutable.ArrayBuffer[T] = mutable.ArrayBuffer[T]()
       private var key: Option[K] = None
 
@@ -86,25 +86,23 @@ class Flow[T] extends Consumer[T] with AutoCloseable {
     nf
   }
 
-  def filter(fn: Predicate[T]): Flow[T] = {
+  def filter[V >: T](fn: Predicate[V]): Flow[T] = {
     val nf = new Flow[T]
-    add( (e: T) => { if(fn.test(e)) nf.accept(e) } )
+    to( (e: T) => { if(fn.test(e)) nf.accept(e) } )
     nf
   }
 
-  def add[R](fn:BiConsumer[T, Flow[R]]): Flow[R] = {
-    val nf = new Flow[R]
-    add( (e: T) => { fn.accept(e, nf) } )
-    nf
-  }
-
-  def add(s: Consumer[_ >: T]): Flow[T] = {
+  def to[V >: T](s: Consumer[V]): Flow[T] = {
     next.add(s)
     this
   }
 
-  def to(fn: Consumer[T]): Flow[T] = {
-    add(fn)
+  def collect[R, V >: T](pf: PartialFunction[V, R]): Flow[R] = {
+    val nf = new Flow[R]
+    to((e: T) => {
+      if (pf.isDefinedAt(e)) nf.accept(pf.apply(e))
+    })
+    nf
   }
 
   def as(fn: Consumer[Flow[T]]): Flow[T] = {
@@ -113,8 +111,8 @@ class Flow[T] extends Consumer[T] with AutoCloseable {
   }
 
   @targetName("sendTo")
-  def >> (ref:ActorRef): Unit = {
-    add( (e: T) => { ref << e } )
+  def >> (ref:ActorRef): Flow[T] = {
+    to( (e: T) => { ref << e } )
   }
 
 }

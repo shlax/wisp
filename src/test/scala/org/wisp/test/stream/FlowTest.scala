@@ -31,7 +31,9 @@ class FlowTest extends AnyFunSuite{
         self.map( v => "->"+v ).to(println)
         self >> a
       }
-      f.filter( _ % 2 == 1).map( "" + _ + " is odd") >> a
+      f.collect{
+        case i if i % 2 == 1 => i
+      }.map( "" + _ + " is odd") >> a
     }.close()
 
     cd.await()
