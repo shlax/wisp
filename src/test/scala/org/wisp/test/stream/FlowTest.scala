@@ -40,4 +40,14 @@ class FlowTest extends AnyFunSuite{
     s.close()
   }
 
+  test("flatMap") {
+    Flow((1 to 5).asSource) { f =>
+      f.flatMap{ c => { v =>
+        c.accept("A"+v)
+        c.accept("B"+v)
+      } }.to(println)
+    }.close()
+
+  }
+
 }

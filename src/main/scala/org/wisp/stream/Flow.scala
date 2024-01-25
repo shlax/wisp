@@ -45,13 +45,13 @@ class Flow[T] extends Consumer[T] with AutoCloseable {
     nf
   }
 
-  def flatMap[R, V >: T](fn: Function[V, Source[R]]) : Flow[R] = {
+  def flatMap[R, V >: T](fn: Function[Consumer[R], Consumer[V]]) : Flow[R] = {
     val nf = new Flow[R]
-    to( (e: T) => { fn.apply(e).forEach(nf) } )
+    to( (e: T) => { fn.apply(nf).accept(e) } )
     nf
   }
 
-  def groupBy[K, V >: T](keyFn:Function[V, K]): Flow[Seq[T]] = {
+  def groupBy[K, V >: T](keyFn: Function[V, K]): Flow[Seq[T]] = {
     val nf = new Flow[Seq[T]]
     to(new Flow[T]{
       private var queue: mutable.ArrayBuffer[T] = mutable.ArrayBuffer[T]()
