@@ -34,8 +34,6 @@ Using(new ActorSystem) { system =>
 
 ## Streams
 
-![stream](doc/stream.svg)
-
     HasNext message is passed from Sink to Source
     Next(_)/End messages is passed from Source to Sink as answer to HasNext
 
