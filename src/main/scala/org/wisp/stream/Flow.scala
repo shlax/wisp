@@ -30,7 +30,7 @@ object Flow {
 }
 
 class Flow[T] extends Consumer[T] with AutoCloseable {
-  private val next = new util.LinkedList[Consumer[_ >: T]]
+  private val next = new util.LinkedList[Consumer[? >: T]]
 
   override def accept(t: T): Unit = {
     for (i <- next.asScala) i.accept(t)

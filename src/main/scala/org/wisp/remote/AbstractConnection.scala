@@ -14,7 +14,7 @@ import scala.util.control.NonFatal
 
 object AbstractConnection {
 
-  def disconnect(map: java.util.Map[_, _ <: AbstractConnection]): CompletableFuture[Void] = {
+  def disconnect(map: java.util.Map[?, ? <: AbstractConnection]): CompletableFuture[Void] = {
     val l = new mutable.ArrayBuffer[CompletableFuture[Void]](map.size())
     map.forEach { (k, v) =>
       l += v.disconnect().whenComplete { (_, exc) =>
@@ -22,8 +22,8 @@ object AbstractConnection {
       }
     }
 
-    val a = l.toArray[CompletableFuture[_]]
-    CompletableFuture.allOf(a: _*)
+    val a = l.toArray[CompletableFuture[?]]
+    CompletableFuture.allOf(a*)
   }
 
 }

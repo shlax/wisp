@@ -5,12 +5,12 @@ import java.util.concurrent.locks.ReentrantLock
 
 object StreamSource{
 
-  def apply(it:Source[_]):StreamSource = new StreamSource(it)
+  def apply(it:Source[?]):StreamSource = new StreamSource(it)
 
 }
 
 /** Iterator will be called from multiple threads */
-class StreamSource(it:Source[_]) extends ActorRef {
+class StreamSource(it:Source[?]) extends ActorRef {
 
   private val lock = new ReentrantLock
 

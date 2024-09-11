@@ -5,19 +5,19 @@ import java.util
 
 object FlatMapFlow{
 
-  def apply(prev:ActorRef, context: ActorContext)(fn: Any => Source[_]): FlatMapFlow = {
+  def apply(prev:ActorRef, context: ActorContext)(fn: Any => Source[?]): FlatMapFlow = {
     new FlatMapFlow(prev, context, new util.LinkedList[ActorRef]())(fn)
   }
 
-  def apply(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: Any => Source[_]): FlatMapFlow = {
+  def apply(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: Any => Source[?]): FlatMapFlow = {
     new FlatMapFlow(prev, context, nodes)(fn)
   }
 
 }
 
-class FlatMapFlow(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: Any => Source[_]) extends Actor(context){
+class FlatMapFlow(prev:ActorRef, context: ActorContext, nodes:util.Queue[ActorRef])(fn: Any => Source[?]) extends Actor(context){
 
-  private var current:Option[Source[_]] = None
+  private var current:Option[Source[?]] = None
   private var requested = false
   private var ended = false
 

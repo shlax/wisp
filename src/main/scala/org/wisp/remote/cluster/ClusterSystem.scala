@@ -48,7 +48,7 @@ class ClusterSystem(context:ActorRuntime, val listener: Option[ClusterEventListe
     }
   }
 
-  override def forEach(action: BiConsumer[_ >: ObjectId, _ >: RemoteContext]): Unit = {
+  override def forEach(action: BiConsumer[? >: ObjectId, ? >: RemoteContext]): Unit = {
     action.accept(this.id, this)
     connectedMap.forEach(action)
     remoteManager.forEach(action)

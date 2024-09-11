@@ -8,5 +8,5 @@ trait ClusterContext {
 
   def get(id: ObjectId): RemoteContext
 
-  def forEach(action: BiConsumer[_ >: ObjectId, _ >: RemoteContext]): Unit
+  def forEach(action: BiConsumer[? >: ObjectId, ? >: RemoteContext]): Unit
 }

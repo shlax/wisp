@@ -17,7 +17,7 @@ class Timer extends AutoCloseable{
   private val futures = new util.HashSet[ScheduledFutureRef]()
 
   private class ScheduledFutureRef extends ScheduledFuture[Void]{
-    var future:Option[ScheduledFuture[_]] = None
+    var future:Option[ScheduledFuture[?]] = None
 
     def remove():Unit = {
       lock.lock()

@@ -21,7 +21,7 @@ class RemoteManager(system: ClusterSystem) extends ClusterContext, AutoCloseable
     connectedMap.get(id)
   }
 
-  override def forEach(action: BiConsumer[_ >: ObjectId, _ >: RemoteContext]):Unit = {
+  override def forEach(action: BiConsumer[? >: ObjectId, ? >: RemoteContext]):Unit = {
     connectedMap.forEach(action)
   }
 

@@ -2,15 +2,11 @@ package org.wisp
 
 import java.util.concurrent.*
 
-object ActorSystem{
-  def apply():ActorSystem = new ActorSystem
-}
-
-class ActorSystem extends ActorRuntime, Executor, AutoCloseable{
+class ActorSystem(virtual:Boolean = true) extends ActorRuntime, Executor, AutoCloseable{
 
   override def create(fn: ActorContext => Actor): ActorRef = new ActorState(this, fn)
 
-  protected def createExecutor(): ExecutorService = Executors.newWorkStealingPool()
+  protected def createExecutor(): ExecutorService = if(virtual) Executors.newVirtualThreadPerTaskExecutor() else Executors.newWorkStealingPool()
   private val executor = createExecutor()
 
   override def execute(actorState: Runnable): Unit = {
