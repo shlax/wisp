@@ -6,8 +6,8 @@ class ActorSystem(virtual:Boolean = true) extends ActorRuntime, Executor, AutoCl
 
   override def create(fn: ActorContext => Actor): ActorRef = new ActorState(this, fn)
 
-  protected def createExecutor(): ExecutorService = if(virtual) Executors.newVirtualThreadPerTaskExecutor() else Executors.newWorkStealingPool()
-  private val executor = createExecutor()
+  protected def createExecutor(virtual:Boolean): ExecutorService = if(virtual) Executors.newVirtualThreadPerTaskExecutor() else Executors.newWorkStealingPool()
+  private val executor = createExecutor(virtual)
 
   override def execute(actorState: Runnable): Unit = {
     executor.execute(actorState)
