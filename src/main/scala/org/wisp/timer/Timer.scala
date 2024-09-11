@@ -105,8 +105,8 @@ class Timer extends AutoCloseable{
       for(f <- futures.asScala) f.cancel(false)
     }finally {
       lock.unlock()
+      service.close()
     }
-    service.close()
   }
 
 }
