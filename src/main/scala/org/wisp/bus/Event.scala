@@ -1,3 +1,7 @@
 package org.wisp.bus
 
-trait Event 
+trait Event{
+
+  def stackTrace:Option[Throwable] = None
+
+}

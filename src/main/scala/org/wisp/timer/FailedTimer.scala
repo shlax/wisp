@@ -11,4 +11,8 @@ object FailedTimer{
 
 }
 
-abstract class FailedTimer(val timer:Timer, val actorRef: ActorRef, val exception: Throwable) extends Event
+abstract class FailedTimer(val timer:Timer, val actorRef: ActorRef, val exception: Throwable) extends Event{
+
+  override def stackTrace: Option[Throwable] = Some(exception)
+
+}

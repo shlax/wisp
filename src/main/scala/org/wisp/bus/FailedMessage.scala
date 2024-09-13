@@ -8,6 +8,7 @@ object FailedMessage{
 }
 
 class FailedMessage(val actor: Actor, val message: ActorMessage, val exception: Throwable)extends Event{
-
+  override def stackTrace: Option[Throwable] = Some(exception)
+  
   override def toString = s"FailedMessage($actor, $message, $exception)"
 }

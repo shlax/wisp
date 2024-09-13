@@ -9,6 +9,7 @@ object FailedRemoteClientConnect{
 }
 
 class FailedRemoteClientConnect(val remoteClient: RemoteClient, val exception: Throwable) extends Event{
-
+  override def stackTrace: Option[Throwable] = Some(exception)
+  
   override def toString = s"FailedRemoteClientConnect($remoteClient, $exception)"
 }

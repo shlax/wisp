@@ -11,6 +11,7 @@ object AlreadyRemoved{
 }
 
 class AlreadyRemoved(val id:ObjectId, val message:ActorMessage, val exception:Option[Throwable]) extends Event {
+  override def stackTrace: Option[Throwable] = exception
 
   override def toString = s"AlreadyRemoved($id, $message, $exception)"
 }

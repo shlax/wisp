@@ -11,6 +11,7 @@ object FailedTimerSchedule {
 }
 
 class FailedTimerSchedule(tim:Timer, ref: ActorRef, val delay:Duration, exc: Throwable) extends FailedTimer(tim, ref, exc){
-
+  override def stackTrace: Option[Throwable] = Some(exception)
+  
   override def toString = s"FailedTimerSchedule($timer, $actorRef, $delay, $exception)"
 }

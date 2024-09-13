@@ -8,6 +8,7 @@ object ClosedConnectedClient{
 }
 
 class ClosedConnectedClient(conn: ClientConnection, val exception: Option[Throwable]) extends ConnectionEvent(conn){
+  override def stackTrace: Option[Throwable] = exception
 
   override def toString = s"ClosedConnectedClient($connection, $exception)"
 }

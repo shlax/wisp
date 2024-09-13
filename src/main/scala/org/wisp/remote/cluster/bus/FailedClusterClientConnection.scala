@@ -10,6 +10,7 @@ object FailedClusterClientConnection{
 }
 
 class FailedClusterClientConnection(val clusterClient:ClusterClient, val exception: Throwable) extends Event{
+  override def stackTrace: Option[Throwable] = Some(exception)
 
   override def toString = s"FailedClusterClientConnection($clusterClient, $exception)"
 }

@@ -8,6 +8,7 @@ object FailedCloseRemoteSystem{
 }
 
 class FailedCloseRemoteSystem(system: RemoteSystem, val exception: Throwable) extends RemoteSystemEvent(system){
+  override def stackTrace: Option[Throwable] = Some(exception)
 
   override def toString = s"FailedCloseRemoteSystem($remoteSystem, $exception)"
 }

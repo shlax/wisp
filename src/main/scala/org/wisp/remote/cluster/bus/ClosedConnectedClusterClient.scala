@@ -10,6 +10,7 @@ object ClosedConnectedClusterClient{
 }
 
 class ClosedConnectedClusterClient(val id:ObjectId, val clusterClient:ClusterClient, val exception: Option[Throwable]) extends Event{
-
+  override def stackTrace: Option[Throwable] = exception
+  
   override def toString = s"ClosedConnectedClusterClient($id, $clusterClient, $exception)"
 }

@@ -8,6 +8,7 @@ object FailedClose{
 }
 
 class FailedClose(conn: AbstractConnection, val exception: Throwable) extends ConnectionEvent(conn){
-
+  override def stackTrace: Option[Throwable] = Some(exception)
+  
   override def toString = s"FailedClose($connection, $exception)"
 }
