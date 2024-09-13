@@ -31,7 +31,7 @@ class ClusterClient(system: ClusterSystem, manager: RemoteManager) extends Remot
     }
   }
 
-  def  replaceBy(cc: ClusterConnection): Unit = {
+  def replaceBy(cc: ClusterConnection): Unit = {
     lock.lock()
     try {
       if (replacedBy.isDefined) {
