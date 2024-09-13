@@ -12,7 +12,7 @@ object Actor{
   
 }
 
-abstract class Actor(context: ActorContext) extends ActorRef {
+abstract class Actor(context: ActorContext) extends ActorRef(context) {
 
   def createQueue() : MessageQueue[ActorMessage] = MessageQueue()
 
@@ -24,7 +24,7 @@ abstract class Actor(context: ActorContext) extends ActorRef {
   override def << (value: Any): Unit = accept(this, value)
 
   /** set sender to this */
-  protected def wrap(r: ActorRef): ActorRef = new ActorRef {
+  protected def wrap(r: ActorRef): ActorRef = new ActorRef(r.eventBus) {
     @targetName("send")
     override def <<(value: Any): Unit = r.accept(Actor.this, value)
 

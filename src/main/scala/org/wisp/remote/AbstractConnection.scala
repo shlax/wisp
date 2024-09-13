@@ -1,7 +1,8 @@
 package org.wisp.remote
 
-import org.wisp.jfr.UndeliverableMessage
-import org.wisp.{MessageQueue, logger}
+import org.wisp.bus.EventBus
+import org.wisp.remote.bus.{FailedClose, FailedConnection, FailedDisconnect, FailedRemoteMessage, UndeliveredRemoteMessage}
+import org.wisp.MessageQueue
 import org.wisp.remote.codec.{ByteArrayDecoder, ByteArrayEncoder, Decoder, Disconnect, Encoder}
 
 import java.nio.ByteBuffer
@@ -16,9 +17,9 @@ object AbstractConnection {
 
   def disconnect(map: java.util.Map[?, ? <: AbstractConnection]): CompletableFuture[Void] = {
     val l = new mutable.ArrayBuffer[CompletableFuture[Void]](map.size())
-    map.forEach { (k, v) =>
+    map.forEach { (_, v) =>
       l += v.disconnect().whenComplete { (_, exc) =>
-        if (exc != null && logger.isErrorEnabled) logger.error("connection " + k + " close failed " + exc.getMessage, exc)
+        if (exc != null) v.publish(new FailedDisconnect(v, exc))
       }
     }
 
@@ -28,7 +29,8 @@ object AbstractConnection {
 
 }
 
-abstract class AbstractConnection extends Connection, CompletionHandler[Integer, Attachment], Consumer[Any] {
+abstract class AbstractConnection(val eventBus: EventBus) extends Connection, CompletionHandler[Integer, Attachment], Consumer[Any] {
+  override def publish(event: Any): Unit = eventBus.publish(event)
 
   protected def chanel: AsynchronousSocketChannel
 
@@ -91,12 +93,7 @@ abstract class AbstractConnection extends Connection, CompletionHandler[Integer,
     if(sentDisconnect){
       var tmp = queue.poll()
       while (tmp != null) {
-        val e = new UndeliverableMessage
-        if (e.isEnabled && e.shouldCommit) {
-          e.message = tmp.toString
-          e.commit()
-        }
-        if(logger.isWarnEnabled) logger.warn("discarded message " + tmp)
+        publish(new UndeliveredRemoteMessage(this, tmp))
         tmp = queue.poll()
       }
       condition.signalAll()
@@ -141,7 +138,7 @@ abstract class AbstractConnection extends Connection, CompletionHandler[Integer,
       process.apply(t)
     } catch {
       case NonFatal(exc) =>
-        if(logger.isErrorEnabled) logger.error("socket channel " + chanel + " accept failed " + exc.getMessage, exc)
+        publish(new FailedRemoteMessage(this, t, exc))
     }
   }
 
@@ -149,7 +146,7 @@ abstract class AbstractConnection extends Connection, CompletionHandler[Integer,
   protected val readDisconnect = new CompletableFuture[Void]()
 
   protected val disconnected : CompletableFuture[Void] = CompletableFuture.allOf(readDisconnect, writeDisconnect).whenComplete{ (_, exc) =>
-    if(exc != null && logger.isErrorEnabled) logger.error("socket channel " + chanel + " disconnect failed " + exc.getMessage, exc)
+    if(exc != null) publish(new FailedDisconnect(AbstractConnection.this, exc))
     close()
   }
 
@@ -163,7 +160,7 @@ abstract class AbstractConnection extends Connection, CompletionHandler[Integer,
       chanel.close()
     }catch{
       case NonFatal(e) =>
-        if(logger.isErrorEnabled) logger.error("chanel close : " + e.getMessage, e)
+        publish(new FailedClose(this, e))
     }finally {
       readDisconnect.completeExceptionally(new AsynchronousCloseException)
       writeDisconnect.completeExceptionally(new AsynchronousCloseException)
@@ -204,8 +201,11 @@ abstract class AbstractConnection extends Connection, CompletionHandler[Integer,
   }
 
   override def failed(exc: Throwable, attachment: Attachment): Unit = {
-    if(logger.isErrorEnabled) logger.error("socket channel " + chanel + " " + attachment + " failed " + exc.getMessage, exc)
-    close()
+    try {
+      close()
+    }finally {
+      publish(new FailedConnection(this, exc))
+    }
   }
 
 }

@@ -1,13 +1,14 @@
 package org.wisp.remote.client
 
-import org.wisp.logger
+import org.wisp.bus.{EventBus, JfrEventBus}
+import org.wisp.remote.client.bus.FailedRemoteClientConnect
 import org.wisp.remote.{AbstractConnection, ChannelGroup, ObjectId, ObjectIdFactory}
 
 import java.net.InetSocketAddress
 import java.nio.channels.{AsynchronousChannelGroup, AsynchronousCloseException, AsynchronousSocketChannel, CompletionHandler}
 import java.util.concurrent.{Callable, CompletableFuture, ConcurrentMap}
 
-class RemoteClient extends AbstractConnection, ClientBinding, ChannelGroup, ObjectIdFactory {
+class RemoteClient(bus:EventBus = new JfrEventBus) extends AbstractConnection(bus), ClientBinding, ChannelGroup, ObjectIdFactory {
 
   override val objectIdFactory:Callable[ObjectId] = createObjectIdFactory()
 
@@ -32,7 +33,7 @@ class RemoteClient extends AbstractConnection, ClientBinding, ChannelGroup, Obje
       }
 
       override def failed(exc: Throwable, attachment: Void): Unit = {
-        if(logger.isErrorEnabled) logger.error("socket channel accept failed: " + exc.getMessage, exc)
+        publish(new FailedRemoteClientConnect(RemoteClient.this, exc))
         connected.completeExceptionally(exc)
       }
     })

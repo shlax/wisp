@@ -11,7 +11,7 @@ class ActorFlowTest extends AnyFunSuite{
   test("actorFlow"){
     Using(ActorSystem()){ s =>
 
-      val strSource = new StringSource((1 to 10).map(_.toString).iterator)
+      val strSource = new StringSource(s, (1 to 10).map(_.toString).iterator)
       val strToInt = s.create(c => new StringToInt(strSource, c))
       val intSink = new IntSink(strToInt)(println)
 

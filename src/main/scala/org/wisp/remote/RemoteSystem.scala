@@ -1,6 +1,7 @@
 package org.wisp.remote
 
-import org.wisp.{Actor, ActorContext, ActorRef, ActorRuntime, ActorSystem, logger}
+import org.wisp.remote.bus.{ClosedConnectedClient, ClosingRemoved, FailedCloseRemoteSystem, FailedRemoteSystem}
+import org.wisp.{Actor, ActorContext, ActorRef, ActorRuntime, ActorSystem}
 
 import java.net.InetSocketAddress
 import java.nio.channels.{AsynchronousChannelGroup, AsynchronousCloseException, AsynchronousServerSocketChannel, AsynchronousSocketChannel, CompletionHandler}
@@ -22,6 +23,8 @@ object RemoteSystem{
 }
 
 class RemoteSystem(context:ActorRuntime) extends RemoteActorRuntime, CompletionHandler[AsynchronousSocketChannel,Void], ChannelGroup, ObjectIdFactory, AutoCloseable {
+  override def execute(command: Runnable): Unit = context.execute(command)
+  override def publish(event: Any): Unit = context.publish(event)
 
   override val objectIdFactory:Callable[ObjectId] = createObjectIdFactory()
   val id: ObjectId = objectIdFactory.call()
@@ -41,7 +44,7 @@ class RemoteSystem(context:ActorRuntime) extends RemoteActorRuntime, CompletionH
 
   def close(c:ClientConnection):Unit = {
     val v = connected.remove(c)
-    if(v == null && logger.isWarnEnabled) logger.warn("closing removed "+c)
+    if(v == null) publish(new ClosingRemoved(v))
   }
 
   override def completed(client: AsynchronousSocketChannel, attachment: Void): Unit = {
@@ -54,17 +57,19 @@ class RemoteSystem(context:ActorRuntime) extends RemoteActorRuntime, CompletionH
     c.startReading()
   }
 
+  protected def handleAsynchronousCloseException(e:AsynchronousCloseException):Unit = { /* ignore */ }
+
   override def failed(exc: Throwable, attachment: Void): Unit = {
     exc match {
-      case _ : AsynchronousCloseException =>
-        if(logger.isTraceEnabled) logger.trace("socket channel accept failed: " + exc.getMessage, exc)
+      case e : AsynchronousCloseException =>
+        handleAsynchronousCloseException(e)
       case _ =>
-        if(logger.isErrorEnabled) logger.error("socket channel accept failed: " + exc.getMessage, exc)
+        publish(new FailedRemoteSystem(this, exc))
     }
   }
 
   protected def createBindMap(): ConcurrentMap[Any, ActorRef] = new ConcurrentHashMap[Any, ActorRef]()
-  val bindMap = createBindMap()
+  val bindMap: ConcurrentMap[Any, ActorRef] = createBindMap()
 
   override def create(fn: ActorContext => Actor): RemoteRef = {
     val ref = context.create(fn)
@@ -93,15 +98,20 @@ class RemoteSystem(context:ActorRuntime) extends RemoteActorRuntime, CompletionH
 
   override def close(): Unit = {
     connected.forEach{ (k, _) =>
-      if(logger.isWarnEnabled) logger.warn("closing connected client "+k)
-      try { k.close()
-      }catch { case NonFatal(exc) =>
-        if(logger.isErrorEnabled)logger.error("client channel close "+k+" failed " + exc.getMessage, exc) }
+
+      try {
+        k.close()
+        publish(new ClosedConnectedClient(k, None))
+      }catch {
+        case NonFatal(exc) =>
+          publish(new ClosedConnectedClient(k, Some(exc)))
+      }
     }
 
-    try { serverChannel.close()
+    try { 
+      serverChannel.close()
     }catch { case NonFatal(exc) =>
-      if(logger.isErrorEnabled) logger.error("socket channel close "+serverChannel+" failed " + exc.getMessage, exc)
+      publish(new FailedCloseRemoteSystem(this, exc))
     }
 
     shutdownChannelGroup()

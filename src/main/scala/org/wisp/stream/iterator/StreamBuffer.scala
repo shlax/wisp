@@ -17,7 +17,7 @@ object StreamBuffer{
 
 }
 
-class StreamBuffer(prev:ActorRef, nodes:util.Queue[ActorRef], queue: util.Queue[Any], size:Int) extends ActorRef{
+class StreamBuffer(prev:ActorRef, nodes:util.Queue[ActorRef], queue: util.Queue[Any], size:Int) extends ActorRef(prev.eventBus){
   private val lock = new ReentrantLock()
 
   private var ended = false

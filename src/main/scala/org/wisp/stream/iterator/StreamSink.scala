@@ -11,7 +11,7 @@ object StreamSink{
 
 }
 
-class StreamSink(prev:ActorRef)(fn:Consumer[Any]) extends ActorRef {
+class StreamSink(prev:ActorRef)(fn:Consumer[Any]) extends ActorRef(prev.eventBus){
   private val cf = new CompletableFuture[Void]
 
   def start():CompletableFuture[Void] = {

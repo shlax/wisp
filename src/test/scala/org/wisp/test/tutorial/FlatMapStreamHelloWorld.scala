@@ -12,7 +12,7 @@ class FlatMapStreamHelloWorld extends AnyFunSuite{
     Using(new ActorSystem) { system =>
       val in = Seq("", "a", "bc", "", "def", "")
 
-      val source = StreamSource(in.asSource)
+      val source = StreamSource(system, in.asSource)
 
       val flow = system.create( c => FlatMapFlow(source, c) { e =>
         val arr = e.toString.toCharArray.map(_.toString)
@@ -33,7 +33,7 @@ class FlatMapStreamHelloWorld extends AnyFunSuite{
 
       val in = Seq("", "a", "bc", "", "def", "")
 
-      val source = StreamSource(in.asSource)
+      val source = StreamSource(system, in.asSource)
 
       val flow = system.create(c => FlatMapFlow(source, c) { e =>
         val arr = e.toString.toCharArray.map(_.toString)
@@ -47,7 +47,6 @@ class FlatMapStreamHelloWorld extends AnyFunSuite{
       sink.run()
 
     }.get
-
   }
 
 }

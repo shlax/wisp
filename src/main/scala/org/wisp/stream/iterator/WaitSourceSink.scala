@@ -1,5 +1,6 @@
 package org.wisp.stream.iterator
 
+import org.wisp.bus.EventBus
 import org.wisp.{ActorMessage, ActorRef}
 
 import java.util
@@ -8,17 +9,17 @@ import java.util.function.Consumer
 
 object WaitSourceSink {
 
-  def apply[A](it:Source[A])(fn:Consumer[Any]):WaitSourceSink[A] = {
-    new WaitSourceSink(it, new util.LinkedList[ActorRef]())(fn)
+  def apply[A](bus:EventBus, it:Source[A])(fn:Consumer[Any]):WaitSourceSink[A] = {
+    new WaitSourceSink(bus, it, new util.LinkedList[ActorRef]())(fn)
   }
 
-  def apply[A](it:Source[A], nodes:util.Queue[ActorRef])(fn:Consumer[Any]):WaitSourceSink[A] = {
-    new WaitSourceSink(it, nodes)(fn)
+  def apply[A](bus:EventBus, it:Source[A], nodes:util.Queue[ActorRef])(fn:Consumer[Any]):WaitSourceSink[A] = {
+    new WaitSourceSink(bus, it, nodes)(fn)
   }
 
 }
 
-class WaitSourceSink[A](it:Source[A], nodes:util.Queue[ActorRef])(fn:Consumer[Any]) extends ActorRef {
+class WaitSourceSink[A](bus:EventBus, it:Source[A], nodes:util.Queue[ActorRef])(fn:Consumer[Any]) extends ActorRef(bus) {
 
   private val lock = new ReentrantLock
   private val condition = lock.newCondition()
@@ -63,7 +64,9 @@ class WaitSourceSink[A](it:Source[A], nodes:util.Queue[ActorRef])(fn:Consumer[An
           prev.ask(HasNext).thenAccept(this )
         }
 
-        condition.await()
+        if((!ended) || (!sourceEnd)){
+          condition.await()
+        }
 
       }
 

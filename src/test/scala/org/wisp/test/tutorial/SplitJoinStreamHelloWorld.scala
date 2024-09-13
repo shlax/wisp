@@ -12,7 +12,7 @@ class SplitJoinStreamHelloWorld extends  AnyFunSuite {
     Using(new ActorSystem) { system =>
       val range:Source[Int] = (1 to 10).iterator.asSource
 
-      val source = WaitSourceSink[Int](() => {
+      val source = WaitSourceSink[Int](system, () => {
         val e = range.next()
         println(">" + Thread.currentThread() + ":" + e)
         e

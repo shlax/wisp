@@ -1,5 +1,6 @@
 package org.wisp.stream.iterator
 
+import org.wisp.bus.EventBus
 import org.wisp.{ActorMessage, ActorRef}
 
 import scala.collection.mutable
@@ -8,17 +9,17 @@ import java.util.concurrent.locks.ReentrantLock
 
 object ZipStream{
 
-  def apply(prev: Source[ActorRef]): ZipStream = {
-    new ZipStream(prev, new util.LinkedList[ActorRef](), new util.LinkedList[ZipStream#NodeRefValue]())
+  def apply(bus:EventBus, prev: Source[ActorRef]): ZipStream = {
+    new ZipStream(bus, prev, new util.LinkedList[ActorRef](), new util.LinkedList[ZipStream#NodeRefValue]())
   }
 
-  def apply(prev: Source[ActorRef], nodes: util.Queue[ActorRef], values:util.Queue[ZipStream#NodeRefValue]): ZipStream = {
-    new ZipStream(prev, nodes, values)
+  def apply(bus:EventBus, prev: Source[ActorRef], nodes: util.Queue[ActorRef], values:util.Queue[ZipStream#NodeRefValue]): ZipStream = {
+    new ZipStream(bus, prev, nodes, values)
   }
 
 }
 
-class ZipStream(prev:Source[ActorRef], nodes:util.Queue[ActorRef], values:util.Queue[ZipStream#NodeRefValue]) extends ActorRef{
+class ZipStream(bus:EventBus, prev:Source[ActorRef], nodes:util.Queue[ActorRef], values:util.Queue[ZipStream#NodeRefValue]) extends ActorRef(bus){
 
   private val lock = new ReentrantLock()
 
@@ -29,7 +30,7 @@ class ZipStream(prev:Source[ActorRef], nodes:util.Queue[ActorRef], values:util.Q
     }
   }
 
-  class NodeRef(ref:ActorRef) extends ActorRef {
+  class NodeRef(ref:ActorRef) extends ActorRef(ref.eventBus) {
     private var ended:Boolean = false
 
     def next():Unit = {

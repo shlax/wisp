@@ -1,33 +1,31 @@
 package org.wisp.remote.client
 
-import org.wisp.jfr.UndeliverableMessage
+import org.wisp.bus.UndeliveredMessage
+import org.wisp.remote.client.bus.{AlreadyRemoved, ReplacingPath}
 import org.wisp.remote.{Connection, RemoteContext}
 import org.wisp.remote.codec.{RemoteMessage, RemoteResponse}
-import org.wisp.{ActorMessage, ActorRef, AskMessage, logger}
+import org.wisp.{ActorMessage, ActorRef, AskMessage}
 
 object AskActorRef{
 
   def process(system: RemoteContext, conn:Connection): PartialFunction[Any, Unit] = {
     case RemoteMessage(path, value, returnTo) =>
       val r = system.get(path)
-      r.accept(ActorMessage((msg: ActorMessage) => {
-        returnTo match {
-          case Some(r) =>
-            conn.send(RemoteResponse(r, msg.value))
-          case None =>
-            val e = new UndeliverableMessage
-            if (e.isEnabled && e.shouldCommit) {
-              e.message = msg.toString
-              e.commit()
+      r.accept(ActorMessage(new ActorRef(system) {
+          override def accept(msg: ActorMessage): Unit = {
+            returnTo match {
+              case Some(r) =>
+                conn.send(RemoteResponse(r, msg.value))
+              case None =>
+                system.publish(new UndeliveredMessage(msg))
             }
-            if(logger.isWarnEnabled) logger.warn("dropped message " + msg)
-        }
-      }, value))
+          }
+        }, value))
   }
 
 }
 
-class AskActorRef(val path: Any, context:ClientBinding) extends ActorRef {
+class AskActorRef(val path: Any, context:ClientBinding) extends ActorRef(context) {
 
   override def accept(msg: ActorMessage): Unit = {
     msg match {
@@ -36,16 +34,13 @@ class AskActorRef(val path: Any, context:ClientBinding) extends ActorRef {
         val cf = message.callBack
 
         val id = context.newBindId()
-        val old = bm.put(id, SenderPath(path, msg.sender, cf))
+        val old = bm.put(id, new SenderPath(path, msg.sender, cf))
         cf.whenComplete{ (v, exc) =>
           if(bm.remove(id) == null){
-            if(logger.isErrorEnabled) {
-              if (exc != null) logger.error("nothing to remove " + id + " " + v, exc)
-              else logger.error("nothing to remove " + id + " " + v)
-            }
+            publish(new AlreadyRemoved(id, v, Option(exc)))
           }
         }
-        if(old != null && logger.isErrorEnabled) logger.error("replacing "+id+" -> "+old)
+        if(old != null) publish(new ReplacingPath(id, old))
 
         context.send(RemoteMessage(path, msg.value, Some(id)))
       case _ =>

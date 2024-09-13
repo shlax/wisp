@@ -13,7 +13,7 @@ class ActorStreamHelloWorld extends AnyFunSuite {
     Using(new ActorSystem) { system =>
       val range = (1 to 10).iterator
 
-      val source = StreamSource(range.asSource) // Iterator will be called from multiple threads
+      val source = StreamSource(system, range.asSource) // Iterator will be called from multiple threads
       val flow = system.create(c => MapFlow(source, c)({
         case i : Int => ""+Thread.currentThread()+">"+i
       }))

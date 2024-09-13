@@ -1,8 +1,11 @@
 package org.wisp
 
+import org.wisp.bus.{EventBus, JfrEventBus}
+
 import java.util.concurrent.*
 
-class ActorSystem(virtual:Boolean = true) extends ActorRuntime, Executor, AutoCloseable{
+class ActorSystem(virtual:Boolean = true, eventBus: EventBus = new JfrEventBus) extends ActorRuntime, AutoCloseable{
+  override def publish(event: Any): Unit = eventBus.publish(event)
 
   override def create(fn: ActorContext => Actor): ActorRef = new ActorState(this, fn)
 

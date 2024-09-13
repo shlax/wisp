@@ -1,7 +1,8 @@
 package org.wisp.remote.cluster
 
 import org.wisp.remote.client.{ClientBinding, RemoteClient, SenderPath}
-import org.wisp.{ActorRuntime, ActorSystem, logger}
+import org.wisp.remote.cluster.bus.{ClosedClusterConnection, FailedToCloseRemoteManager, FailedToCloseRemoteSystem}
+import org.wisp.{ActorRuntime, ActorSystem}
 import org.wisp.remote.{ClientConnection, ObjectId, ObjectIdFactory, RemoteContext, RemoteSystem}
 
 import java.net.InetSocketAddress
@@ -83,8 +84,8 @@ class ClusterSystem(context:ActorRuntime, val listener: Option[ClusterEventListe
         if(id != null) {
           connectedMap.remove(id)
           for (l <- listener) l.closed(id, cc)
-        }else logger.debug("closing ClusterConnection["+c+"] without id")
-      } else logger.debug("closing not connected ClusterConnection["+c+"]")
+        }else publish(new ClosedClusterConnection(c, None))
+      } else publish(new ClosedClusterConnection(c, Some(id)))
     }
     super.close(c)
   }
@@ -94,11 +95,11 @@ class ClusterSystem(context:ActorRuntime, val listener: Option[ClusterEventListe
 
     // close outgoing
     remoteManager.disconnect().whenComplete{ (_, ex) =>
-      if (ex != null && logger.isErrorEnabled) logger.error("cluster manager close failed " + ex.getMessage, ex)
+      if (ex != null) publish(new FailedToCloseRemoteManager(ClusterSystem.this, ex))
 
       // close ingoing
       super.shutdown().whenComplete { (_, exc) =>
-        if (exc != null && logger.isErrorEnabled) logger.error("cluster client close failed " + exc.getMessage, exc)
+        if (exc != null) publish(new FailedToCloseRemoteSystem(ClusterSystem.this, exc))
 
         if(ex != null && exc != null) {
           exc.addSuppressed(ex)

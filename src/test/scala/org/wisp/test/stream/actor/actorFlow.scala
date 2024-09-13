@@ -1,5 +1,6 @@
 package org.wisp.test.stream.actor
 
+import org.wisp.bus.EventBus
 import org.wisp.stream.Barrier
 import org.wisp.{Actor, ActorContext, ActorMessage, ActorRef, MessageQueue}
 
@@ -11,7 +12,7 @@ case object HasNext
 case class Next(v:Any)
 case object End
 
-class StringSource(it:Iterator[String]) extends ActorRef {
+class StringSource(bus:EventBus, it:Iterator[String]) extends ActorRef(bus) {
 
   override def accept(t: ActorMessage): Unit = {
     t.value match {
@@ -56,7 +57,7 @@ class StringToInt(prev:ActorRef, context: ActorContext) extends Actor(context){
   }
 }
 
-class IntSink(prev:ActorRef)(fn: Int => Unit) extends ActorRef {
+class IntSink(prev:ActorRef)(fn: Int => Unit) extends ActorRef(prev.eventBus) {
   val cf = new CompletableFuture[Void]
 
   def start():CompletableFuture[Void] = {

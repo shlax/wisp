@@ -11,7 +11,7 @@ object WaitSink{
 
 }
 
-class WaitSink(prev:ActorRef)(fn:Consumer[Any]) extends ActorRef , Runnable {
+class WaitSink(prev:ActorRef)(fn:Consumer[Any]) extends ActorRef(prev) with Runnable {
 
   private val lock = new ReentrantLock()
   private val condition = lock.newCondition()
@@ -31,7 +31,11 @@ class WaitSink(prev:ActorRef)(fn:Consumer[Any]) extends ActorRef , Runnable {
           value = None
           next()
         }
-        condition.await()
+
+        if(!ended){
+          condition.await()
+        }
+
       }
     } finally {
       lock.unlock()

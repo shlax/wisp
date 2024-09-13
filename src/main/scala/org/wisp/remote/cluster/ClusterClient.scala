@@ -1,13 +1,13 @@
 package org.wisp.remote.cluster
 
-import org.wisp.logger
 import org.wisp.remote.ObjectId
 import org.wisp.remote.client.{AskActorRef, RemoteClient, SenderPath}
+import org.wisp.remote.cluster.bus.ClosedUnconnected
 
 import java.nio.channels.AsynchronousChannelGroup
 import java.util.concurrent.{Callable, ConcurrentMap}
 
-class ClusterClient(system: ClusterSystem, manager: RemoteManager) extends RemoteClient {
+class ClusterClient(system: ClusterSystem, manager: RemoteManager) extends RemoteClient(system) {
 
   override protected def createBindMap(): ConcurrentMap[ObjectId, SenderPath] = system.massageBindMap
   override protected def createObjectIdFactory(): Callable[ObjectId] = system.objectIdFactory
@@ -46,7 +46,7 @@ class ClusterClient(system: ClusterSystem, manager: RemoteManager) extends Remot
   override def close(): Unit = {
     val uid = connected.getNow(null)
     if (uid != null) manager.remove(uid)
-    else logger.debug("shutting down unconnected node " + this)
+    else publish(new ClosedUnconnected(this))
 
     super.close()
   }

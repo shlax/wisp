@@ -1,9 +1,11 @@
 package org.wisp.test.tutorial
 
 import org.wisp.ActorSystem
-import org.wisp.stream.iterator.{StreamSink, StreamSource, SplitStream}
+import org.wisp.stream.iterator.{SplitStream, StreamSink, StreamSource}
 import org.scalatest.funsuite.AnyFunSuite
+import org.wisp.bus.JfrEventBus
 import org.wisp.stream.iterator.Source.*
+
 import scala.util.Using
 
 class SplitHelloWorld extends AnyFunSuite{
@@ -11,7 +13,7 @@ class SplitHelloWorld extends AnyFunSuite{
   test("splitHelloWorld"){
     val range = (1 to 10).iterator
 
-    val source = StreamSource(range.asSource) // Iterator will be called from multiple threads
+    val source = StreamSource(new JfrEventBus, range.asSource) // Iterator will be called from multiple threads
     val split = SplitStream.apply(source)
 
     val sink1 = StreamSink(split.add()) { r =>

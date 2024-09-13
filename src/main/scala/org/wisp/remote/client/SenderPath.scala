@@ -4,4 +4,4 @@ import org.wisp.{ActorMessage, ActorRef}
 
 import java.util.concurrent.CompletableFuture
 
-case class SenderPath(path:Any, sender:ActorRef, callBack:CompletableFuture[ActorMessage])
+class SenderPath(val path:Any, val sender:ActorRef, val callBack:CompletableFuture[ActorMessage])

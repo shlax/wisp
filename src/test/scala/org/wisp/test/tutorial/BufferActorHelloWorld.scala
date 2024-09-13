@@ -30,7 +30,7 @@ class BufferActorHelloWorld extends AnyFunSuite{
   test("bufferActorHelloWorld"){
     Using(new ActorSystem) { system =>
       val range = (1 to 20).iterator
-      val source = StreamSource(range.asSource)
+      val source = StreamSource(system, range.asSource)
 
       val buffer = StreamBuffer(source, 10)
 

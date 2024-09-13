@@ -1,8 +1,8 @@
 package org.wisp.remote.client
 
-import org.wisp.jfr.UndeliverableMessage
-import org.wisp.logger
+import org.wisp.bus.EventBus
 import org.wisp.remote.Connection
+import org.wisp.remote.client.bus.UndeliveredRemoteResponse
 import org.wisp.remote.codec.RemoteResponse
 import org.wisp.remote.{ObjectId, RemoteContext}
 
@@ -35,7 +35,7 @@ object ClientBinding{
 
 }
 
-trait ClientBinding extends RemoteContext, Connection{
+trait ClientBinding extends EventBus, RemoteContext, Connection{
 
   protected def createBindMap(): ConcurrentMap[ObjectId, SenderPath] = new ConcurrentHashMap[ObjectId, SenderPath]()
   def bindMap : ConcurrentMap[ObjectId, SenderPath]
@@ -49,12 +49,7 @@ trait ClientBinding extends RemoteContext, Connection{
     if (r != null) {
       r.sender.accept(get(r.path), msg.value)
     } else {
-      val e = new UndeliverableMessage
-      if (e.isEnabled && e.shouldCommit) {
-        e.message = msg.toString
-        e.commit()
-      }
-      if(logger.isWarnEnabled) logger.warn("dropped message " + msg)
+      publish(new UndeliveredRemoteResponse(msg))
     }
   }
 

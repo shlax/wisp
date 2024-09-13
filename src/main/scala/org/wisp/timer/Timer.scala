@@ -1,6 +1,8 @@
 package org.wisp.timer
 
-import org.wisp.{ActorRef, logger}
+import org.wisp.bus.EventBus
+import org.wisp.ActorRef
+
 import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.{Delayed, Executors, ScheduledExecutorService, ScheduledFuture, TimeUnit}
 import scala.concurrent.duration.Duration
@@ -63,7 +65,7 @@ class Timer extends AutoCloseable{
           r << msg.apply()
         } catch {
           case NonFatal(e) =>
-            if(logger.isErrorEnabled) logger.error("timer[" + r + "|" + delay + "]:" + e.getMessage, e)
+            r.publish(new FailedTimerSchedule(this, r, delay, e))
         }
       }): Runnable, delay.length, delay.unit)
       ref.future = Some(f)
@@ -88,7 +90,7 @@ class Timer extends AutoCloseable{
           r << msg.apply()
         }catch{
           case NonFatal(e) =>
-            if(logger.isErrorEnabled)  logger.error("timer["+r+"|"+initialDelay+"|"+period+"]:"+e.getMessage, e)
+            r.publish(new FailedTimerAtFixedRate(this, r, initialDelay, period, e))
         }
       } ) : Runnable,initialDelay.toNanos, period.toNanos, TimeUnit.NANOSECONDS)
       ref.future = Some(f)

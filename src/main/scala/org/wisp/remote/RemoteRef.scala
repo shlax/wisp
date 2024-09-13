@@ -4,7 +4,7 @@ import org.wisp.{ActorMessage, ActorRef}
 
 import scala.annotation.targetName
 
-abstract class RemoteRef(ref:ActorRef) extends ActorRef{
+abstract class RemoteRef(ref:ActorRef) extends ActorRef(ref.eventBus){
   override def accept(msg: ActorMessage): Unit = ref.accept(msg)
 
   @targetName("send")

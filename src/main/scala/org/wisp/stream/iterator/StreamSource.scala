@@ -1,16 +1,18 @@
 package org.wisp.stream.iterator
 
+import org.wisp.bus.EventBus
 import org.wisp.{ActorMessage, ActorRef}
+
 import java.util.concurrent.locks.ReentrantLock
 
 object StreamSource{
 
-  def apply(it:Source[?]):StreamSource = new StreamSource(it)
+  def apply(bus:EventBus, it:Source[?]):StreamSource = new StreamSource(bus, it)
 
 }
 
 /** Iterator will be called from multiple threads */
-class StreamSource(it:Source[?]) extends ActorRef {
+class StreamSource(bus:EventBus, it:Source[?]) extends ActorRef(bus) {
 
   private val lock = new ReentrantLock
 

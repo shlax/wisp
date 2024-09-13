@@ -12,7 +12,7 @@ class StreamZipHelloWorld extends AnyFunSuite {
     Using(new ActorSystem) { system =>
       val range = (1 to 10).iterator
 
-      val source = StreamSource(range.asSource) // Iterator will be called from multiple threads
+      val source = StreamSource(system, range.asSource) // Iterator will be called from multiple threads
       val flow1 = system.create(c => MapFlow(source, c)({
         case i: Int =>
           println("1 << "+i)
@@ -25,7 +25,7 @@ class StreamZipHelloWorld extends AnyFunSuite {
           Thread.sleep(250)
           " < 2: " + Thread.currentThread() + ">" + i
       }))
-      val zip = ZipStream(Seq(flow1, flow2).asSource)
+      val zip = ZipStream(system, Seq(flow1, flow2).asSource)
       val sink = StreamSink(zip){ r =>
         println(""+Thread.currentThread()+r)
       }

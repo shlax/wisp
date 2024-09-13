@@ -8,13 +8,13 @@ import java.util.function.Consumer
 import scala.util.Using
 import org.wisp.stream.iterator.Source.*
 
-class BlockingActorStreamHelloWorld extends  AnyFunSuite {
+class BlockingActorStreamHelloWorld extends AnyFunSuite {
 
   test("blockingActorStreamHelloWorld") {
     Using(new ActorSystem) { system =>
       val range = (1 to 10).iterator
 
-      val source = ForEachSource[Int](range.asSource) // Iterator will be called from current thread
+      val source = ForEachSource[Int](system, range.asSource) // Iterator will be called from current thread
       val flow = system.create(c => MapFlow(source, c)({
         case i : Int => "\t"+Thread.currentThread()+">"+i
       }))

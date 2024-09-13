@@ -12,12 +12,12 @@ object SplitStream {
 
 }
 
-class SplitStream(prev:ActorRef) extends ActorRef{
+class SplitStream(prev:ActorRef) extends ActorRef(prev.eventBus){
   private val lock = new ReentrantLock()
   private var n: List[SplitActorRef] = Nil
   private var ended = false
 
-  private class SplitActorRef extends ActorRef{
+  private class SplitActorRef extends ActorRef(prev.eventBus){
     private var requested:Option[ActorRef] = None
 
     override def accept(t: ActorMessage): Unit = {
