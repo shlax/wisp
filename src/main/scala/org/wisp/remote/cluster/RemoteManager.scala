@@ -2,8 +2,7 @@ package org.wisp.remote.cluster
 
 import org.wisp.bus.Event
 import org.wisp.remote.{AbstractConnection, ObjectId, RemoteContext}
-import org.wisp.remote.client.RemoteClient
-import org.wisp.remote.cluster.bus.{AlreadyRemovedFromRemoteManager, ClosedConnectedClusterClient, FailedClusterClientConnection, ReplacingClusterClient}
+import org.wisp.remote.cluster.bus.{ClosedConnectedClusterClient, FailedClusterClientConnection, ReplacingClusterClient}
 
 import java.net.InetSocketAddress
 import java.util.concurrent.{CompletableFuture, ConcurrentHashMap, ConcurrentMap}
@@ -36,15 +35,14 @@ class RemoteManager(system: ClusterSystem) extends ClusterContext, AutoCloseable
     system.added(id, c)
   }
 
-  def remove(id: ObjectId): Unit = {
+  def remove(id: ObjectId): Boolean = {
     if(id == null) throw new NullPointerException("id is null")
 
     val old = connectedMap.remove(id)
     if (old != null){
       for(l <- system.listener) l.closed(id, old)
-    }else {
-      publish(new AlreadyRemovedFromRemoteManager(this, id))
-    }
+      true
+    }else false
   }
 
   def connect(address:InetSocketAddress):CompletableFuture[ObjectId] = {

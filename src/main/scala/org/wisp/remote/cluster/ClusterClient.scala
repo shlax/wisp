@@ -2,7 +2,7 @@ package org.wisp.remote.cluster
 
 import org.wisp.remote.ObjectId
 import org.wisp.remote.client.{AskActorRef, RemoteClient, SenderPath}
-import org.wisp.remote.cluster.bus.ClosedUnconnected
+import org.wisp.remote.cluster.bus.{AlreadyRemovedClusterClient, ClosedUnconnected}
 
 import java.nio.channels.AsynchronousChannelGroup
 import java.util.concurrent.{Callable, ConcurrentMap}
@@ -45,10 +45,17 @@ class ClusterClient(system: ClusterSystem, manager: RemoteManager) extends Remot
 
   override def close(): Unit = {
     val uid = connected.getNow(null)
-    if (uid != null) manager.remove(uid)
-    else publish(new ClosedUnconnected(this))
-
-    super.close()
+    try {
+      if (uid != null) {
+        if (!manager.remove(uid)) {
+          publish(new AlreadyRemovedClusterClient(this, uid))
+        }
+      } else {
+        publish(new ClosedUnconnected(this))
+      }
+    }finally {
+      super.close()
+    }
   }
 
   override def onConnected(uuid: ObjectId): Unit = {
