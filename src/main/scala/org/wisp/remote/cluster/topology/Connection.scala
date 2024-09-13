@@ -1,5 +1,5 @@
 package org.wisp.remote.cluster.topology
 
-case class Connection[T](from: T, to: T) {
+class Connection[T](val from: T, val to: T) {
   override def toString: String = "Connection(" + from + "=>" + to + ")"
 }
