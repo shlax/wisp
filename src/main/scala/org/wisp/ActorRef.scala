@@ -1,6 +1,6 @@
 package org.wisp
 
-import org.wisp.bus.{EventBus, UndeliveredMessage}
+import org.wisp.bus.{Event, EventBus, UndeliveredMessage}
 
 import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
@@ -17,7 +17,7 @@ object ActorRef{
 }
 
 abstract class ActorRef(val eventBus:EventBus) extends EventBus, Consumer[ActorMessage]{
-  override def publish(event: Any): Unit = eventBus.publish(event)
+  override def publish(event: Event): Unit = eventBus.publish(event)
   //  override def accept(t: ActorMessage): Unit
 
   @targetName("send")

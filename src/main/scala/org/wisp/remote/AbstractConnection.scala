@@ -1,6 +1,6 @@
 package org.wisp.remote
 
-import org.wisp.bus.EventBus
+import org.wisp.bus.{Event, EventBus}
 import org.wisp.remote.bus.{FailedClose, FailedConnection, FailedDisconnect, FailedRemoteMessage, UndeliveredRemoteMessage}
 import org.wisp.MessageQueue
 import org.wisp.remote.codec.{ByteArrayDecoder, ByteArrayEncoder, Decoder, Disconnect, Encoder}
@@ -30,7 +30,7 @@ object AbstractConnection {
 }
 
 abstract class AbstractConnection(val eventBus: EventBus) extends Connection, CompletionHandler[Integer, Attachment], Consumer[Any] {
-  override def publish(event: Any): Unit = eventBus.publish(event)
+  override def publish(event: Event): Unit = eventBus.publish(event)
 
   protected def chanel: AsynchronousSocketChannel
 

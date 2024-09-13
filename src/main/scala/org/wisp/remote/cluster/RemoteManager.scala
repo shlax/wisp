@@ -1,5 +1,6 @@
 package org.wisp.remote.cluster
 
+import org.wisp.bus.Event
 import org.wisp.remote.{AbstractConnection, ObjectId, RemoteContext}
 import org.wisp.remote.client.RemoteClient
 import org.wisp.remote.cluster.bus.{AlreadyRemovedFromRemoteManager, ClosedConnectedClusterClient, FailedClusterClientConnection, ReplacingClusterClient}
@@ -10,7 +11,7 @@ import java.util.function.BiConsumer
 import scala.util.control.NonFatal
 
 class RemoteManager(system: ClusterSystem) extends ClusterContext, AutoCloseable{
-  override def publish(event: Any): Unit = system.publish(event)
+  override def publish(event: Event): Unit = system.publish(event)
 
   protected def createConnectedMap(): ConcurrentMap[ObjectId, ClusterClient] = new ConcurrentHashMap[ObjectId, ClusterClient]()
   private val connectedMap = createConnectedMap()
@@ -50,10 +51,10 @@ class RemoteManager(system: ClusterSystem) extends ClusterContext, AutoCloseable
     val c = createClient(address)
     c.connect(address).whenComplete{ (uuid, exc) =>
       if(exc != null){
-        try { 
+        try {
           c.close()
-        }finally { 
-          publish(new FailedClusterClientConnection(c, exc)) 
+        }finally {
+          publish(new FailedClusterClientConnection(c, exc))
         }
       }else add(uuid, c)
     }

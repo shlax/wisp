@@ -9,4 +9,7 @@ object UndeliveredMessage{
 
 }
 
-class UndeliveredMessage(val message: ActorMessage)
+class UndeliveredMessage(val message: ActorMessage) extends Event{
+
+  override def toString = s"UndeliveredMessage($message)"
+}

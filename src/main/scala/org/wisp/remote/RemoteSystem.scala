@@ -1,5 +1,6 @@
 package org.wisp.remote
 
+import org.wisp.bus.Event
 import org.wisp.remote.bus.{ClosedConnectedClient, ClosingRemoved, FailedCloseRemoteSystem, FailedRemoteSystem}
 import org.wisp.{Actor, ActorContext, ActorRef, ActorRuntime, ActorSystem}
 
@@ -24,7 +25,7 @@ object RemoteSystem{
 
 class RemoteSystem(context:ActorRuntime) extends RemoteActorRuntime, CompletionHandler[AsynchronousSocketChannel,Void], ChannelGroup, ObjectIdFactory, AutoCloseable {
   override def execute(command: Runnable): Unit = context.execute(command)
-  override def publish(event: Any): Unit = context.publish(event)
+  override def publish(event: Event): Unit = context.publish(event)
 
   override val objectIdFactory:Callable[ObjectId] = createObjectIdFactory()
   val id: ObjectId = objectIdFactory.call()
@@ -108,7 +109,7 @@ class RemoteSystem(context:ActorRuntime) extends RemoteActorRuntime, CompletionH
       }
     }
 
-    try { 
+    try {
       serverChannel.close()
     }catch { case NonFatal(exc) =>
       publish(new FailedCloseRemoteSystem(this, exc))
