@@ -7,4 +7,7 @@ object FailedClose{
   def unapply(m: FailedClose): Some[(AbstractConnection, Throwable)] = Some((m.connection, m.exception))
 }
 
-class FailedClose(connection: AbstractConnection, val exception: Throwable) extends ConnectionEvent(connection)
+class FailedClose(conn: AbstractConnection, val exception: Throwable) extends ConnectionEvent(conn){
+
+  override def toString = s"FailedClose($connection, $exception)"
+}

@@ -7,4 +7,7 @@ object ClosingRemoved{
   def unapply(m: ClosingRemoved): Some[ClientConnection] = Some(m.connection)
 }
 
-class ClosingRemoved(connection: ClientConnection) extends ConnectionEvent(connection)
+class ClosingRemoved(conn: ClientConnection) extends ConnectionEvent(conn){
+
+  override def toString = s"ClosingRemoved($connection)"
+}

@@ -12,4 +12,7 @@ object FailedTimerAtFixedRate{
 
 }
 
-class FailedTimerAtFixedRate(timer:Timer, actorRef: ActorRef, val initialDelay:Duration, val period:Duration, exception: Throwable) extends FailedTimer(timer, actorRef, exception)
+class FailedTimerAtFixedRate(tim:Timer, ref: ActorRef, val initialDelay:Duration, val period:Duration, exc: Throwable) extends FailedTimer(tim, ref, exc){
+
+  override def toString = s"FailedTimerAtFixedRate($timer, $actorRef $initialDelay, $period, $exception)"
+}

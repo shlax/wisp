@@ -1,6 +1,7 @@
 package org.wisp.timer
 
 import org.wisp.ActorRef
+import org.wisp.bus.Event
 
 import scala.concurrent.duration.Duration
 
@@ -10,4 +11,4 @@ object FailedTimer{
 
 }
 
-abstract class FailedTimer(val timer:Timer, val actorRef: ActorRef, val exception: Throwable)
+abstract class FailedTimer(val timer:Timer, val actorRef: ActorRef, val exception: Throwable) extends Event

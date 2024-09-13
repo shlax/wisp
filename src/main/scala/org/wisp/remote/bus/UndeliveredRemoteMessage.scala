@@ -8,4 +8,7 @@ object UndeliveredRemoteMessage{
 
 }
 
-class UndeliveredRemoteMessage(connection: AbstractConnection, val message: Any) extends ConnectionEvent(connection)
+class UndeliveredRemoteMessage(conn: AbstractConnection, val message: Any) extends ConnectionEvent(conn){
+
+  override def toString = s"UndeliveredRemoteMessage($connection, $message)"
+}

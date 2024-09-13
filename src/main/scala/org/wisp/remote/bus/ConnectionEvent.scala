@@ -1,6 +1,7 @@
 package org.wisp.remote.bus
 
 import org.wisp.remote.AbstractConnection
+import org.wisp.bus.Event
 
 object ConnectionEvent{
 
@@ -8,4 +9,4 @@ object ConnectionEvent{
 
 }
 
-class ConnectionEvent[T <: AbstractConnection](val connection: T)
+abstract class ConnectionEvent[T <: AbstractConnection](val connection: T) extends Event

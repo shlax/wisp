@@ -8,4 +8,7 @@ object FailedRemoteMessage{
 
 }
 
-class FailedRemoteMessage(connection: AbstractConnection, val message: Any, val exception: Throwable) extends ConnectionEvent(connection)
+class FailedRemoteMessage(conn: AbstractConnection, val message: Any, val exception: Throwable) extends ConnectionEvent(conn){
+
+  override def toString = s"FailedRemoteMessage($connection, $message, $exception)"
+}

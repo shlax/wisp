@@ -7,4 +7,8 @@ object ClosedConnectedClient{
   def unapply(m: ClosedConnectedClient): Some[(ClientConnection, Option[Throwable])] = Some((m.connection, m.exception))
 }
 
-class ClosedConnectedClient(connection: ClientConnection, val exception: Option[Throwable]) extends ConnectionEvent(connection)
+class ClosedConnectedClient(conn: ClientConnection, val exception: Option[Throwable]) extends ConnectionEvent(conn){
+
+  override def toString = s"ClosedConnectedClient($connection, $exception)"
+}
+

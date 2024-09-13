@@ -10,4 +10,7 @@ object FailedTimerSchedule {
 
 }
 
-class FailedTimerSchedule(timer:Timer, actorRef: ActorRef, val delay:Duration, exception: Throwable) extends FailedTimer(timer, actorRef, exception)
+class FailedTimerSchedule(tim:Timer, ref: ActorRef, val delay:Duration, exc: Throwable) extends FailedTimer(tim, ref, exc){
+
+  override def toString = s"FailedTimerSchedule($timer, $actorRef, $delay, $exception)"
+}
