@@ -25,6 +25,7 @@ object using {
 
     inline override def close(): Unit = {
       for(c <- toClose) c.close()
+      toClose = Nil
     }
   }
 
