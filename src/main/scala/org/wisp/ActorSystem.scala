@@ -12,11 +12,10 @@ class ActorSystem(val inboxCapacity:Int) extends Executor {
 
   def create(fn: ActorCreator, inboxCapacity:Int = inboxCapacity):ActorRef = {
     val inbox = new QueueInbox(this, inboxCapacity)
-    fn.create(inbox)
+    val a = fn.create(inbox)
+    inbox.init(a)
   }
 
-  def handle(actor: Actor, message: Message, e: Throwable): Unit = {
-
-  }
+  def handle(message: Message, actor: Option[Actor] = None, e: Option[Throwable] = None): Unit = { /* ? */ }
 
 }

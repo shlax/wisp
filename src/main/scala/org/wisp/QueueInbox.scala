@@ -3,22 +3,34 @@ package org.wisp
 import java.util
 import java.util.concurrent.{BlockingQueue, LinkedBlockingQueue}
 import java.util.concurrent.locks.ReentrantLock
+import scala.annotation.targetName
+import scala.compiletime.uninitialized
 import scala.util.control.NonFatal
 
-class QueueInbox(system: ActorSystem, val inboxCapacity:Int) extends Inbox {
+class QueueInbox(override val system: ActorSystem, val inboxCapacity:Int) extends Inbox {
 
-  protected class ActorMessage(val actor: Actor, val message: Message)
+  private var actor:Actor = uninitialized
 
-  protected def createQueue(): BlockingQueue[ActorMessage] = {
-    new LinkedBlockingQueue[ActorMessage](inboxCapacity)
+  def init(a:Actor):Actor = {
+    lock.lock()
+    try {
+      this.actor = a
+    } finally {
+      lock.unlock()
+    }
+    a
   }
 
-  private val queue: BlockingQueue[ActorMessage] = createQueue()
+  private val queue: BlockingQueue[Message] = createQueue()
+
+  protected def createQueue(): BlockingQueue[Message] = {
+    new LinkedBlockingQueue[Message](inboxCapacity)
+  }
 
   private val lock = new ReentrantLock()
   private var running:Boolean = false
 
-  protected def pull(): Option[ActorMessage] = {
+  protected def pull(): Option[Message] = {
     lock.lock()
     try {
       val n = Option(queue.poll())
@@ -29,10 +41,10 @@ class QueueInbox(system: ActorSystem, val inboxCapacity:Int) extends Inbox {
     }
   }
 
-  override def add(actor: Actor, message: Message): Unit = {
+  override def add(message: Message): Unit = {
     lock.lock()
     try{
-      queue.put(ActorMessage(actor, message))
+      queue.put(message)
       if(!running){
         running = true
 
@@ -41,12 +53,16 @@ class QueueInbox(system: ActorSystem, val inboxCapacity:Int) extends Inbox {
             var next = pull()
             while(next.isDefined){
               val n = next.get
-              actor.accept(n.actor).apply(n.message)
+              actor.accept(new ActorRef(system){
+                  @targetName("send")
+                  override def !(v: Any): Unit = accept(Message(actor, v))
+                  override def accept(t: Message): Unit = n.from.accept(t)
+                }).apply(n.message)
               next = pull()
             }
           } catch {
             case NonFatal(e) =>
-              system.handle(actor, message, e)
+              system.handle(message, Some(actor), Some(e))
           }
         })
       }
