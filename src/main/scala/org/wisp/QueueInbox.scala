@@ -7,24 +7,14 @@ import scala.annotation.targetName
 import scala.compiletime.uninitialized
 import scala.util.control.NonFatal
 
-class QueueInbox(override val system: ActorSystem, val inboxCapacity:Int) extends Inbox {
+class QueueInbox(override val system: ActorSystem, inboxCapacity:Int, fn: ActorCreator) extends Inbox {
 
-  private var actor:Actor = uninitialized
+  val actor:Actor = fn.create(this)
 
-  def init(a:Actor):Actor = {
-    lock.lock()
-    try {
-      this.actor = a
-    } finally {
-      lock.unlock()
-    }
-    a
-  }
+  private val queue: BlockingQueue[Message] = createQueue(inboxCapacity)
 
-  private val queue: BlockingQueue[Message] = createQueue()
-
-  protected def createQueue(): BlockingQueue[Message] = {
-    new LinkedBlockingQueue[Message](inboxCapacity)
+  protected def createQueue(capacity:Int): BlockingQueue[Message] = {
+    new LinkedBlockingQueue[Message](capacity)
   }
 
   private val lock = new ReentrantLock()
