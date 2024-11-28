@@ -32,9 +32,10 @@ class QueueInbox(override val system: ActorSystem, inboxCapacity:Int, fn: ActorC
   }
 
   override def add(message: Message): Unit = {
+    queue.put(message)
+
     lock.lock()
     try{
-      queue.put(message)
       if(!running){
         running = true
 
