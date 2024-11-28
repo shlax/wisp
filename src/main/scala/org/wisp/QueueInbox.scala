@@ -7,24 +7,30 @@ import scala.annotation.targetName
 import scala.compiletime.uninitialized
 import scala.util.control.NonFatal
 
-class QueueInbox(override val system: ActorSystem, inboxCapacity:Int, fn: ActorCreator) extends Inbox {
+class QueueInbox(override val system: ActorSystem, val inboxCapacity:Int, fn: ActorCreator) extends Inbox {
 
   val actor:Actor = fn.create(this)
 
-  private val queue: BlockingQueue[Message] = createQueue(inboxCapacity)
+  private val queue: util.Queue[Message] = createQueue(inboxCapacity)
 
-  protected def createQueue(capacity:Int): BlockingQueue[Message] = {
-    new LinkedBlockingQueue[Message](capacity)
+  protected def createQueue(capacity:Int): util.Queue[Message] = {
+    new util.LinkedList[Message]
   }
 
   private val lock = new ReentrantLock()
+  private val cnd = lock.newCondition()
+
   private var running:Boolean = false
 
   protected def pull(): Option[Message] = {
     lock.lock()
     try {
       val n = Option(queue.poll())
-      if (n.isEmpty) running = false
+      if (n.isEmpty){
+        running = false
+      }else{
+        cnd.signal()
+      }
       n
     } finally {
       lock.unlock()
@@ -32,10 +38,12 @@ class QueueInbox(override val system: ActorSystem, inboxCapacity:Int, fn: ActorC
   }
 
   override def add(message: Message): Unit = {
-    queue.put(message)
-
     lock.lock()
     try{
+      while (queue.size() > inboxCapacity){
+        cnd.await()
+      }
+      queue.add(message)
       if(!running){
         running = true
 
