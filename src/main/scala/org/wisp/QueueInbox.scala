@@ -40,7 +40,7 @@ class QueueInbox(override val system: ActorSystem, val inboxCapacity:Int, fn: Ac
   override def add(message: Message): Unit = {
     lock.lock()
     try{
-      while (queue.size() > inboxCapacity){
+      while (queue.size() >= inboxCapacity){
         cnd.await()
       }
       queue.add(message)
