@@ -18,7 +18,9 @@ class HelloAsk {
   def test():Unit = {
     new ActorSystem(3) | { sys =>
       val hello = sys.create(HelloActor(_))
-      (hello ? "world").whenComplete( (m, e) => println(m.message) )
+      (hello ? "world").whenComplete { (m, e) =>
+        println(m.message)
+      }
 
       Thread.sleep(Duration.ofSeconds(5))
     }
