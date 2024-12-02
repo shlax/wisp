@@ -6,19 +6,19 @@ import org.wisp.using.*
 
 import java.time.Duration
 
-class HelloWorld {
+class HelloAsk {
 
   class HelloActor(in:Inbox) extends Actor(in){
     override def accept(from: ActorRef): PartialFunction[Any, Unit] = {
-      case a => println(a)
+      case a => from ! "Hello "+a
     }
   }
 
   @Test
-  def test(): Unit = {
-    new ActorSystem(3)|{ sys =>
+  def test():Unit = {
+    new ActorSystem(3) | { sys =>
       val hello = sys.create(HelloActor(_))
-      hello ! "Hello world"
+      (hello ? "world").whenComplete( (m, e) => println(m.message) )
 
       Thread.sleep(Duration.ofSeconds(5))
     }
