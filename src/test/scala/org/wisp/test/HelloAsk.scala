@@ -5,8 +5,11 @@ import org.wisp.{Actor, ActorRef, ActorSystem, Inbox}
 import org.wisp.using.*
 
 import java.time.Duration
+import java.util.concurrent.CountDownLatch
 
 class HelloAsk {
+
+  val cd = new CountDownLatch(1)
 
   class HelloActor(in:Inbox) extends Actor(in){
     override def accept(from: ActorRef): PartialFunction[Any, Unit] = {
@@ -20,9 +23,10 @@ class HelloAsk {
       val hello = sys.create(HelloActor(_))
       (hello ? "world").whenComplete { (m, e) =>
         println(m.message)
+        cd.countDown()
       }
 
-      Thread.sleep(Duration.ofSeconds(5))
+      cd.await()
     }
   }
 
