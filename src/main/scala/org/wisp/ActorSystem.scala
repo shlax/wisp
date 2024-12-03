@@ -17,7 +17,7 @@ class ActorSystem(val inboxCapacity:Int) extends Executor, AutoCloseable{
   def handle(message: Message, actor: Option[Actor] = None, e: Option[Throwable] = None): Unit = { /* ? */ }
 
   override def close(): Unit = {
-    executor.shutdown()
+    executor.close()
   }
 
 }
