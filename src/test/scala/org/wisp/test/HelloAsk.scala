@@ -1,10 +1,9 @@
 package org.wisp.test
 
 import org.junit.jupiter.api.Test
-import org.wisp.{Actor, ActorRef, ActorSystem, Inbox}
+import org.wisp.{Actor, ActorRef, ActorSystem, Inbox, Message}
 import org.wisp.using.*
 
-import java.time.Duration
 import java.util.concurrent.CountDownLatch
 
 class HelloAsk {
