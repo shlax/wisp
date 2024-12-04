@@ -1,8 +1,8 @@
 package org.wisp
 
 @FunctionalInterface
-trait ActorCreator {
+trait ActorCreator[T <: Actor] {
 
-  def create(i:Inbox) : Actor
+  def create(i:Inbox) : T
 
 }

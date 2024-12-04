@@ -15,7 +15,7 @@ abstract class ActorRef(val system:ActorSystem) extends Consumer[Message]{
 
   @targetName("ask")
   def ?(v:Any) : CompletableFuture[Message] = {
-    val cf = new CompletableFuture[Message]
+    val cf = CompletableFuture[Message]()
     accept( Message( new ActorRef(system) {
         override def accept(t: Message): Unit = cf.complete(t)
       },v) )
