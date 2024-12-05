@@ -25,6 +25,10 @@ class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extend
     ConcurrentHashMap[String, ActorRef]()
   }
 
+  def register(path:String, ref:ActorRef) : Option[ActorRef] = {
+    Option(bindMap.put(path, ref))
+  }
+
   val closed:AtomicBoolean = new AtomicBoolean(false)
 
   executor.execute(this)
