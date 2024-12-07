@@ -79,7 +79,7 @@ class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extend
   }
 
   def send(address: SocketAddress, path:String, m:Any):Unit = {
-    val bOut = new ByteArrayOutputStream(capacity)
+    val bOut = new ByteArrayOutputStream()
     new ObjectOutputStream(bOut)|{ out =>
       out.writeUTF(path)
       out.writeObject(m)
