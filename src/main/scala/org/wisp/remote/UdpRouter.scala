@@ -66,8 +66,8 @@ class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extend
                 send(address, path, v)
             }
           }
-          @targetName("ask")
-          override def ?< (v: Any): CompletableFuture[Message] = {
+          //@targetName("ask")
+          override def ask(v: Any): CompletableFuture[Message] = {
             throw new UnsupportedOperationException("ask pattern is not supported for remote")
           }
         }, m) )

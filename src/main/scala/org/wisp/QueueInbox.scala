@@ -54,7 +54,7 @@ class QueueInbox[T <: Actor](override val system: ActorSystem, val inboxCapacity
               val n = next.get
               actor.accept(new ActorRef(system){
                   @targetName("send")
-                  override def << (v: Any): Unit = accept(Message(actor, v))
+                  override def <<(v: Any): Unit = accept(Message(actor, v))
                   override def accept(t: Message): Unit = n.from.accept(t)
                 }).apply(n.message)
               next = pull()
