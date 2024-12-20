@@ -22,7 +22,7 @@ class HelloWorld {
   def test(): Unit = {
     new ActorSystem(3)|{ sys =>
       val hello = sys.create(HelloActor(_))
-      hello ! "Hello world"
+      hello << "Hello world"
 
       cd.await()
     }

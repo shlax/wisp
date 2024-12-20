@@ -12,7 +12,7 @@ class HelloAsk {
 
   class HelloActor(in:Inbox) extends Actor(in){
     override def accept(from: ActorRef): PartialFunction[Any, Unit] = {
-      case a => from ! "Hello "+a
+      case a => from << "Hello "+a
     }
   }
 
@@ -20,7 +20,7 @@ class HelloAsk {
   def test():Unit = {
     ActorSystem(3) | { sys =>
       val hello = sys.create(HelloActor(_))
-      (hello ? "world").whenComplete { (m, e) =>
+      (hello ?< "world").whenComplete { (m, e) =>
         println(m.message)
         cd.countDown()
       }
