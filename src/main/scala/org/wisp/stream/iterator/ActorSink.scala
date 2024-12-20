@@ -29,7 +29,7 @@ class ActorSink(prev:ActorRef)(fn:BiConsumer[ActorRef, Any]) extends ActorRef(pr
         fn.accept(t.from, v)
         next()
       case End =>
-        cf.complete(null)
+        if(!cf.complete(null)) throw new IllegalStateException("ended")
     }
   }
 
