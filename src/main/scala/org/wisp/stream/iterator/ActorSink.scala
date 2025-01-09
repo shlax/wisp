@@ -26,7 +26,7 @@ class ActorSink(prev:ActorRef)(fn:BiConsumer[ActorRef, Any]) extends ActorRef(pr
     t.message match {
       case Next(v) =>
         if(cf.isDone) throw new IllegalStateException("ended")
-        fn.accept(t.from, v)
+        fn.accept(t.sender, v)
         next()
       case End =>
         if(!cf.complete(null)) throw new IllegalStateException("ended")

@@ -2,8 +2,8 @@ package org.wisp
 
 object Message {
 
-  def unapply(m:Message) : (ActorRef, Any) = (m.from, m.message)
+  def unapply(m:Message) : (ActorRef, Any) = (m.sender, m.message)
   
 }
 
-class Message(val from:ActorRef, val message:Any)
+class Message(val sender:ActorRef, val message:Any)
