@@ -6,7 +6,7 @@ import org.wisp.{ActorRef, ActorSystem, Message}
 import java.util
 import java.util.concurrent.locks.ReentrantLock
 
-class ForEachSource(it:Source[T], system:ActorSystem) extends ActorRef(system), Runnable {
+class ForEachSource(it:Source[?], system:ActorSystem) extends ActorRef(system), Runnable {
 
   private val nodes:util.Queue[ActorRef] = createNodes()
 
