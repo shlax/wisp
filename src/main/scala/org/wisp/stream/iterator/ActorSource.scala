@@ -2,6 +2,7 @@ package org.wisp.stream.iterator
 
 import org.wisp.stream.Source
 import org.wisp.{ActorRef, ActorSystem, Message}
+import org.wisp.stream.iterator.message.*
 
 import java.util.concurrent.locks.ReentrantLock
 

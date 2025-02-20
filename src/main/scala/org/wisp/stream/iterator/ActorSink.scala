@@ -1,6 +1,7 @@
 package org.wisp.stream.iterator
 
 import org.wisp.{ActorRef, Message}
+import org.wisp.stream.iterator.message.*
 
 import java.util.concurrent.CompletableFuture
 import java.util.function.{BiConsumer, Consumer}
