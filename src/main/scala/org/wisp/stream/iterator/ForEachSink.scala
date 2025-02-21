@@ -2,7 +2,7 @@ package org.wisp.stream.iterator
 
 import org.wisp.{ActorRef, ActorSystem, Message}
 import org.wisp.stream.Source
-import org.wisp.stream.iterator.message.Next
+import org.wisp.stream.iterator.message.{Next, HasNext, End}
 
 import java.util
 import java.util.concurrent.locks.ReentrantLock
@@ -36,10 +36,11 @@ class ForEachSink(it:Source[?], system:ActorSystem, prev: Seq[ActorRef], fn:BiCo
     util.LinkedList[ActorRef]()
   }
 
-  private val values: util.Queue[(actor:ActorRef, value:Any)] = createValues()
+  protected class ActorValue(val actor:ActorRef, val value:Any)
+  private val values: util.Queue[ActorValue] = createValues()
 
-  protected def createValues(): util.Queue[(actor:ActorRef, value:Any)] = {
-    util.LinkedList[(actor:ActorRef, value:Any)]()
+  protected def createValues(): util.Queue[ActorValue] = {
+    util.LinkedList[ActorValue]()
   }
 
   private val lock = new ReentrantLock()
@@ -103,7 +104,7 @@ class ForEachSink(it:Source[?], system:ActorSystem, prev: Seq[ActorRef], fn:BiCo
         case Next(v) =>
           val ind = prev.indexOf(t.sender)
           if(ended(ind)) throw new IllegalStateException("ended")
-          values.add((t.sender, v))
+          values.add(ActorValue(t.sender, v))
           condition.signal()
         case End =>
           val ind = prev.indexOf(t.sender)
