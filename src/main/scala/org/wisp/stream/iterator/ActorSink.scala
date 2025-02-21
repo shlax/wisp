@@ -6,31 +6,51 @@ import org.wisp.stream.iterator.message.*
 import java.util.concurrent.CompletableFuture
 import java.util.function.{BiConsumer, Consumer}
 
-class ActorSink(prev:ActorRef)(fn:BiConsumer[ActorRef, Any]) extends ActorRef(prev.system){
+object ActorSink {
 
-  def this(prev:ActorRef)(f:Consumer[Any]) = {
-    this(prev)( (_, m) => { f.accept(m) } )
+  def apply(prev: Seq[ActorRef], f: Consumer[Any]): ActorSink = {
+    new ActorSink(prev, (_, m) => { f.accept(m) })
   }
 
-  private val cf = new CompletableFuture[Void]
+  def apply(prev: ActorRef, f: Consumer[Any]): ActorSink = {
+    new ActorSink(Seq(prev), (_, m) => { f.accept(m) })
+  }
+
+  def apply(prev: Seq[ActorRef], f: BiConsumer[ActorRef, Any]): ActorSink = {
+    new ActorSink(prev, f)
+  }
+
+  def apply(prev: ActorRef, f: BiConsumer[ActorRef, Any]): ActorSink = {
+    new ActorSink(Seq(prev), f)
+  }
+
+}
+
+class ActorSink(prev:Seq[ActorRef], fn:BiConsumer[ActorRef, Any]) extends ActorRef(prev.head.system){
+
+  private val cfs = prev.map( p => (p, new CompletableFuture[Void])).toMap
+  private val all = CompletableFuture.allOf(cfs.values.toSeq*)
 
   def start(): CompletableFuture[Void] = {
-    next()
-    cf
+    for(p <- prev) next(p)
+    all
   }
 
-  private def next(): Unit = {
-    prev.ask(HasNext).thenAccept(this)
+  private def next(p:ActorRef): Unit = {
+    p.ask(HasNext).thenAccept(this)
   }
 
   override def accept(t: Message): Unit = {
     t.message match {
       case Next(v) =>
-        if(cf.isDone) throw new IllegalStateException("ended")
+        if(all.isDone) throw new IllegalStateException("ended all")
+        if(cfs(t.sender).isDone) throw new IllegalStateException("ended")
+
         fn.accept(t.sender, v)
-        next()
+        next(t.sender)
       case End =>
-        if(!cf.complete(null)) throw new IllegalStateException("ended")
+        val c = cfs(t.sender)
+        if(!c.complete(null)) throw new IllegalStateException("ended")
     }
   }
 
