@@ -11,6 +11,12 @@ object Source{
     }
   }
 
+  extension[E](i: util.Enumeration[E]){
+    def asSource: Source[E] = {
+      () => if (i.hasMoreElements) Some(i.nextElement()) else None
+    }
+  }
+
   extension[E] (it: lang.Iterable[E]) {
     def asSource: Source[E] = new Source[E] {
       private val i = it.iterator()
