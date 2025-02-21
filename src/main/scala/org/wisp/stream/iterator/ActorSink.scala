@@ -26,10 +26,10 @@ object ActorSink {
 
 }
 
-class ActorSink(prev:Seq[ActorRef], fn:BiConsumer[ActorRef, Any]) extends ActorRef(prev.head.system){
+class ActorSink(prev:Seq[ActorRef], fn:BiConsumer[ActorRef, Any]) extends Consumer[Message]{
 
   private val cfs = prev.map( p => (p, new CompletableFuture[Void])).toMap
-  private val all = CompletableFuture.allOf(cfs.values.toSeq*)
+  private val all = if(cfs.size == 1) cfs.head._2 else CompletableFuture.allOf(cfs.values.toSeq*)
 
   def start(): CompletableFuture[Void] = {
     for(p <- prev) next(p)
