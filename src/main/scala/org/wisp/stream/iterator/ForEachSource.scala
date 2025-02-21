@@ -21,22 +21,17 @@ class ForEachSource(it:Source[?], system:ActorSystem) extends ActorRef(system), 
   private var ended = false
 
   override def run():Unit = {
-    it.forEach { e =>
-      lock.lock()
-      try {
+    lock.lock()
+    try {
+      it.forEach { e =>
         var a = nodes.poll()
         while (a == null){
           condition.await()
           a = nodes.poll()
         }
         a << Next(e)
-      } finally {
-        lock.unlock()
       }
-    }
 
-    lock.lock()
-    try {
       ended = true
       var a = nodes.poll()
       while (a != null) {
@@ -49,20 +44,19 @@ class ForEachSource(it:Source[?], system:ActorSystem) extends ActorRef(system), 
   }
 
   override def accept(t: Message): Unit = {
-    t.message match {
-      case HasNext =>
-        lock.lock()
-        try {
+    lock.lock()
+    try {
+      t.message match {
+        case HasNext =>
           if (ended) {
             t.sender << End
           } else {
             nodes.add(t.sender)
             condition.signal()
           }
-        } finally {
-          lock.unlock()
-        }
-
+      }
+    } finally {
+      lock.unlock()
     }
   }
 
