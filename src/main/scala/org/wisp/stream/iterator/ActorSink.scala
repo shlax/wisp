@@ -9,11 +9,11 @@ import java.util.function.{BiConsumer, Consumer}
 object ActorSink {
 
   def apply(prev: Seq[ActorRef], f: Consumer[Any]): ActorSink = {
-    new ActorSink(prev, (_, m) => { f.accept(m) })
+    new ActorSink(prev, (_, m) => f.accept(m) )
   }
 
   def apply(prev: ActorRef, f: Consumer[Any]): ActorSink = {
-    new ActorSink(Seq(prev), (_, m) => { f.accept(m) })
+    new ActorSink(Seq(prev), (_, m) => f.accept(m) )
   }
 
   def apply(prev: Seq[ActorRef], f: BiConsumer[ActorRef, Any]): ActorSink = {

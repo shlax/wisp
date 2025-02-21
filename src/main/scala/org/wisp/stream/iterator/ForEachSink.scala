@@ -11,15 +11,11 @@ import java.util.function.{BiConsumer, Consumer}
 object ForEachSink {
 
   def apply(it:Source[?], system:ActorSystem, prev: Seq[ActorRef], f: Consumer[Any]): ForEachSink = {
-    new ForEachSink(it, system, prev, (_, m) => {
-      f.accept(m)
-    })
+    new ForEachSink(it, system, prev, (_, m) => f.accept(m) )
   }
 
   def apply(it:Source[?], system:ActorSystem, prev: ActorRef, f: Consumer[Any]): ForEachSink = {
-    new ForEachSink(it, system, Seq(prev), (_, m) => {
-      f.accept(m)
-    })
+    new ForEachSink(it, system, Seq(prev), (_, m) => f.accept(m) )
   }
 
   def apply(it:Source[?], system:ActorSystem, prev: Seq[ActorRef], f: BiConsumer[ActorRef, Any]): ForEachSink = {
