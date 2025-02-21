@@ -6,7 +6,7 @@ import org.wisp.ActorSystem
 import org.wisp.using.*
 import org.wisp.stream.Source.*
 
-class WorkRequest {
+class HelloActorFlow {
 
   @Test
   def test(): Unit = {
