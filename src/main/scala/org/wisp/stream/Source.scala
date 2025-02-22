@@ -52,7 +52,7 @@ trait Source[T] {
   /** {{{if(hasNext) Some(next()) else None}}} */
   def next():Option[T]
 
-  def map[R](f:java.util.function.Function[T, R]): Source[R] = {
+  def map[R](f:T => R): Source[R] = {
     val self = this
     new Source[R](){
       def next():Option[R] = {

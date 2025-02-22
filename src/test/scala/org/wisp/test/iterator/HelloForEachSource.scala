@@ -1,10 +1,10 @@
-package org.wisp.test
+package org.wisp.test.iterator
 
 import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.ActorSystem
+import org.wisp.stream.Source.*
 import org.wisp.stream.iterator.{ActorFlow, ActorSink, ForEachSource}
 import org.wisp.using.*
-import org.wisp.stream.Source.*
 
 import scala.util.Random
 
@@ -14,11 +14,11 @@ class HelloForEachSource {
   def test(): Unit = {
     ActorSystem() | { sys =>
       val tId = Thread.currentThread().threadId
+
       val data = Seq(0, 1, 2, 3, 4, 5).asSource.map{ i =>
         Assertions.assertTrue(Thread.currentThread().threadId == tId)
         "s["+Thread.currentThread().threadId+"]:"+i
       }
-
       val src = ForEachSource(data, sys)
 
       val w1 = sys.create(i => ActorFlow(src, i, { q =>

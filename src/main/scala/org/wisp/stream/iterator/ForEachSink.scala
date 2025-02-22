@@ -2,33 +2,37 @@ package org.wisp.stream.iterator
 
 import org.wisp.{ActorRef, ActorSystem, Message}
 import org.wisp.stream.Source
-import org.wisp.stream.iterator.message.{Next, HasNext, End}
+import org.wisp.stream.iterator.message.{End, HasNext, Next}
 
 import java.util
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.{BiConsumer, Consumer}
+import java.util.function
+import scala.annotation.targetName
 
 object ForEachSink {
 
-  def apply(it:Source[?], system:ActorSystem, prev: Seq[ActorRef], f: Consumer[Any]): ForEachSink = {
-    new ForEachSink(it, system, prev, (_, m) => f.accept(m) )
+  def apply(it:Source[?], system:ActorSystem, f: Consumer[Any])(prev: ActorRef =>  Seq[ActorRef]): ForEachSink = {
+    new ForEachSink(it, system, (_, m) => f.accept(m))(prev)
   }
 
-  def apply(it:Source[?], system:ActorSystem, prev: ActorRef, f: Consumer[Any]): ForEachSink = {
-    new ForEachSink(it, system, Seq(prev), (_, m) => f.accept(m) )
+  @targetName("create")
+  def apply(it:Source[?], system:ActorSystem, f: Consumer[Any])(prev: ActorRef => ActorRef): ForEachSink = {
+    new ForEachSink(it, system, (_, m) => f.accept(m))(r => Seq(prev.apply(r)) )
   }
 
-  def apply(it:Source[?], system:ActorSystem, prev: Seq[ActorRef], f: BiConsumer[ActorRef, Any]): ForEachSink = {
-    new ForEachSink(it, system, prev, f)
+  def apply(it:Source[?], system:ActorSystem, f: BiConsumer[ActorRef, Any])(prev: ActorRef => Seq[ActorRef]): ForEachSink = {
+    new ForEachSink(it, system, f)(prev)
   }
 
-  def apply(it:Source[?], system:ActorSystem, prev: ActorRef, f: BiConsumer[ActorRef, Any]): ForEachSink = {
-    new ForEachSink(it, system, Seq(prev), f)
+  @targetName("create")
+  def apply(it:Source[?], system:ActorSystem,  f: BiConsumer[ActorRef, Any])(prev: ActorRef => ActorRef): ForEachSink = {
+    new ForEachSink(it, system, f)(r => Seq(prev.apply(r)) )
   }
 
 }
 
-class ForEachSink(it:Source[?], system:ActorSystem, prev: Seq[ActorRef], fn:BiConsumer[ActorRef, Any]) extends ActorRef(system), Runnable {
+class ForEachSink(it:Source[?], system:ActorSystem, fn:BiConsumer[ActorRef, Any])(pf: ActorRef => Seq[ActorRef]) extends ActorRef(system), Runnable {
 
   private val nodes: util.Queue[ActorRef] = createNodes()
 
@@ -45,6 +49,8 @@ class ForEachSink(it:Source[?], system:ActorSystem, prev: Seq[ActorRef], fn:BiCo
 
   private val lock = new ReentrantLock()
   private val condition = lock.newCondition()
+
+  private val prev = pf.apply(this)
 
   private val ended = Array.fill(prev.size)(false)
   private var inputEnded = false
@@ -76,6 +82,7 @@ class ForEachSink(it:Source[?], system:ActorSystem, prev: Seq[ActorRef], fn:BiCo
                 a << Next(v)
               case None =>
                 inputEnded = true
+                a << End
             }
           }
           a = nodes.poll()
