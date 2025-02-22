@@ -45,13 +45,13 @@ class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extend
     }
   }
 
-  def execute(address: SocketAddress, data:Array[Byte]):Unit = {
+  protected def execute(address: SocketAddress, data:Array[Byte]):Unit = {
     executor.execute{ () =>
       process(address, data)
     }
   }
 
-  def process(address: SocketAddress, data: Array[Byte]): Unit = {
+  protected def process(address: SocketAddress, data: Array[Byte]): Unit = {
     new ObjectInputStream(new ByteArrayInputStream(data)) | { in =>
       val key = in.readUTF()
       val ref = bindMap.get(key)
