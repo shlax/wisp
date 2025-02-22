@@ -4,6 +4,7 @@ import org.wisp.{ActorRef, Message}
 import org.wisp.stream.iterator.message.*
 
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.locks.ReentrantLock
 import java.util.function.{BiConsumer, Consumer}
 
 object ActorSink {
@@ -31,6 +32,8 @@ class ActorSink(prev:Seq[ActorRef], fn:BiConsumer[ActorRef, Any]) extends Consum
   private val ended = Array.fill(prev.length)(false)
   private val completed = CompletableFuture[Void]
 
+  private val lock = new ReentrantLock()
+
   def start(): CompletableFuture[Void] = {
     for(p <- prev) next(p)
     completed
@@ -41,25 +44,30 @@ class ActorSink(prev:Seq[ActorRef], fn:BiConsumer[ActorRef, Any]) extends Consum
   }
 
   override def accept(t: Message): Unit = {
-    t.message match {
-      case Next(v) =>
-        val ind = prev.indexOf(t.sender)
-        if(ended(ind)){
-          if(completed.isDone) throw new IllegalStateException("all ended")
-          throw new IllegalStateException("ended")
-        }
-
-        fn.accept(t.sender, v)
-        next(t.sender)
-      case End =>
-        val ind = prev.indexOf(t.sender)
-        if(ended(ind)) throw new IllegalStateException("ended")
-        ended(ind) = true
-        if(!ended.contains(false)){
-          if(!completed.complete(null)){
-            throw new IllegalStateException("all ended")
+    lock.lock()
+    try {
+      t.message match {
+        case Next(v) =>
+          val ind = prev.indexOf(t.sender)
+          if (ended(ind)) {
+            if (completed.isDone) throw new IllegalStateException("all ended")
+            throw new IllegalStateException("ended")
           }
-        }
+
+          fn.accept(t.sender, v)
+          next(t.sender)
+        case End =>
+          val ind = prev.indexOf(t.sender)
+          if (ended(ind)) throw new IllegalStateException("ended")
+          ended(ind) = true
+          if (!ended.contains(false)) {
+            if (!completed.complete(null)) {
+              throw new IllegalStateException("all ended")
+            }
+          }
+      }
+    }finally {
+      lock.unlock()
     }
   }
 
