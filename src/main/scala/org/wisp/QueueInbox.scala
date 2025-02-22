@@ -1,5 +1,7 @@
 package org.wisp
 
+import org.wisp.exceptions.ProcessingException
+
 import java.util
 import java.util.concurrent.{BlockingQueue, LinkedBlockingQueue}
 import java.util.concurrent.locks.ReentrantLock
