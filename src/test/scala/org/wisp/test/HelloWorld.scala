@@ -20,7 +20,7 @@ class HelloWorld {
 
   @Test
   def test(): Unit = {
-    new ActorSystem(3)|{ sys =>
+    new ActorSystem()|{ sys =>
       val hello = sys.create(HelloActor(_))
       hello << "Hello world"
 

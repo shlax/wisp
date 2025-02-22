@@ -2,7 +2,7 @@ package org.wisp
 
 import java.util.concurrent.{Executor, ExecutorService, Executors}
 
-class ActorSystem(val inboxCapacity:Int) extends Executor, AutoCloseable{
+class ActorSystem(val inboxCapacity:Int = 3) extends Executor, AutoCloseable{
 
   val executor: ExecutorService = Executors.newVirtualThreadPerTaskExecutor()
   

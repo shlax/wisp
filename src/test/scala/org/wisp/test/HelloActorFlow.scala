@@ -12,7 +12,7 @@ class HelloActorFlow {
 
   @Test
   def test(): Unit = {
-    new ActorSystem(3) | { sys =>
+    ActorSystem() | { sys =>
       val data = Seq(0,1,2,3,4,5)
       val src = ActorSource(data.asSource, sys)
 
