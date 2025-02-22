@@ -6,20 +6,14 @@ import org.wisp.using.*
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
 import java.net.SocketAddress
 import java.nio.ByteBuffer
-import java.nio.channels.DatagramChannel
+import java.nio.channels.{AsynchronousCloseException, DatagramChannel}
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.{CompletableFuture, ConcurrentHashMap, ConcurrentMap, Executor}
 import scala.annotation.targetName
 
-class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extends Runnable, AutoCloseable{
+class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extends UdpClient(address), Runnable{
 
-  val channel:DatagramChannel = createDatagramChannel(address)
-
-  protected def createDatagramChannel(address: SocketAddress):DatagramChannel = {
-    DatagramChannel.open().bind(address)
-  }
-
-  val bindMap: ConcurrentMap[String, ActorRef] = createBindMap()
+  protected val bindMap: ConcurrentMap[String, ActorRef] = createBindMap()
 
   protected def createBindMap():ConcurrentMap[String, ActorRef] = {
     ConcurrentHashMap[String, ActorRef]()
@@ -29,19 +23,28 @@ class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extend
     Option(bindMap.put(path, ref))
   }
 
-  val closed:AtomicBoolean = new AtomicBoolean(false)
+  def remove(path: String): Option[ActorRef] = {
+    Option(bindMap.remove(path))
+  }
 
-  executor.execute(this)
+  protected val closed:AtomicBoolean = new AtomicBoolean(false)
 
   override def run(): Unit = {
     val buff = ByteBuffer.allocateDirect(capacity)
     while(!closed.get()){
-      val adr = channel.receive(buff)
-      buff.flip()
-      val data = new Array[Byte](buff.remaining())
-      buff.get(data)
-      execute(adr, data)
-      buff.clear()
+      val adr = try{
+        Some(channel.receive(buff))
+      }catch{
+        case e: AsynchronousCloseException =>
+          if(closed.get()) None else throw e
+      }
+      for(a <- adr) {
+        buff.flip()
+        val data = new Array[Byte](buff.remaining())
+        buff.get(data)
+        execute(a, data)
+        buff.clear()
+      }
     }
   }
 
@@ -79,26 +82,9 @@ class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extend
       }, rm.message) )
   }
 
-  def write(m: RemoteMessage): Array[Byte] = {
-    val bOut = new ByteArrayOutputStream()
-    new ObjectOutputStream(bOut) | { out =>
-      out.writeUTF(m.path)
-      out.writeObject(m.message)
-    }
-    bOut.toByteArray
-  }
-
-  def send(adr: SocketAddress, m:RemoteMessage):Unit = {
-    val buff = write(m)
-    val r = channel.send(ByteBuffer.wrap(buff), adr)
-    if(r != buff.length){
-      throw new RuntimeException("message to long "+r+" "+buff.length)
-    }
-  }
-
   override def close(): Unit = {
     closed.set(true)
-    channel.close()
+    super.close()
   }
 
 }
