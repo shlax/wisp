@@ -51,40 +51,45 @@ class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extend
     }
   }
 
-  protected def process(adr: SocketAddress, data: Array[Byte]): Unit = {
+  protected def read(data: Array[Byte]):RemoteMessage = {
     new ObjectInputStream(new ByteArrayInputStream(data)) | { in =>
-      val key = in.readUTF()
-      val ref = bindMap.get(key)
-      if(ref == null){
-        throw new IllegalStateException("not found "+key)
-      }
-      val m = in.readObject()
-      ref.accept( Message( new ActorRef(ref.system){
-          override def accept(t: Message): Unit = {
-            t.message match {
-              case m : RemoteMessage =>
-                send(adr, m)
-            }
-          }
-          //@targetName("ask")
-          override def ask(v: Any): CompletableFuture[Message] = {
-            throw new UnsupportedOperationException("ask pattern is not supported for remote")
-          }
-        }, m) )
+      RemoteMessage(in.readUTF(), in.readObject())
     }
+  }
+
+  protected def process(adr: SocketAddress, data: Array[Byte]): Unit = {
+    val rm = read(data)
+
+    val ref = bindMap.get(rm.path)
+    if (ref == null) {
+      throw new IllegalStateException("not found " + rm.path)
+    }
+
+    ref.accept( Message( new ActorRef(ref.system){
+        override def accept(t: Message): Unit = {
+          t.message match {
+            case m : RemoteMessage =>
+              send(adr, m)
+          }
+        }
+        //@targetName("ask")
+        override def ask(v: Any): CompletableFuture[Message] = {
+          throw new UnsupportedOperationException("ask pattern is not supported for remote")
+        }
+      }, rm.message) )
+  }
+
+  def write(m: RemoteMessage): Array[Byte] = {
+    val bOut = new ByteArrayOutputStream()
+    new ObjectOutputStream(bOut) | { out =>
+      out.writeUTF(m.path)
+      out.writeObject(m.message)
+    }
+    bOut.toByteArray
   }
 
   def send(adr: SocketAddress, m:RemoteMessage):Unit = {
-    send(adr, m.path, m.message)
-  }
-
-  def send(adr: SocketAddress, path:String, m:Any):Unit = {
-    val bOut = new ByteArrayOutputStream()
-    new ObjectOutputStream(bOut)|{ out =>
-      out.writeUTF(path)
-      out.writeObject(m)
-    }
-    val buff = bOut.toByteArray
+    val buff = write(m)
     val r = channel.send(ByteBuffer.wrap(buff), adr)
     if(r != buff.length){
       throw new RuntimeException("message to long "+r+" "+buff.length)
