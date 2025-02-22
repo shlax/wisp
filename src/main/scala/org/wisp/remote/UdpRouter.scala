@@ -68,7 +68,7 @@ class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extend
       throw new IllegalStateException("not found " + rm.path)
     }
 
-    ref.accept( Message( new ActorRef(ref.system){
+    ref.accept( Message( new ActorRef(ref.exceptionHandler){
         override def accept(t: Message): Unit = {
           t.message match {
             case m : RemoteMessage =>

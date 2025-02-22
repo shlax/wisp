@@ -1,9 +1,11 @@
 package org.wisp
 
+import org.wisp.exceptions.ExceptionHandler
+
 import java.util.concurrent.{Executor, ExecutorService, Executors}
 import scala.util.control.NonFatal
 
-class ActorSystem(val inboxCapacity:Int = 3) extends Executor, AutoCloseable{
+class ActorSystem(val inboxCapacity:Int = 3) extends Executor, ExceptionHandler, AutoCloseable{
 
   val executor: ExecutorService = Executors.newVirtualThreadPerTaskExecutor()
   
@@ -20,10 +22,6 @@ class ActorSystem(val inboxCapacity:Int = 3) extends Executor, AutoCloseable{
 
   def create[T <: Actor](fn: ActorCreator[T], inboxCapacity:Int = inboxCapacity):T = {
     QueueInbox(this, inboxCapacity, fn).actor
-  }
-
-  def handle(exception: Throwable): Unit = {
-    exception.printStackTrace()
   }
 
   override def close(): Unit = {
