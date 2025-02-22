@@ -17,7 +17,6 @@ abstract class ActorLink(val exceptionHandler: ExceptionHandler) extends Consume
       },v) )
   }
 
-  // @targetName("ask")
   def ask(v:Any) : CompletableFuture[Message] = {
     val cf = CompletableFuture[Message]()
     accept( Message( new ActorLink(exceptionHandler) {
