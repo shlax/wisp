@@ -10,7 +10,7 @@ abstract class ActorRef(val system:ActorSystem) extends Consumer[Message]{
   def <<(v:Any) : Unit = {
     accept( Message( new ActorRef(system) {
         override def accept(t: Message): Unit = {
-          system.handle(new Exception("dropped message") ,Some(t))
+          system.handle(UndeliveredException(t))
         }
       },v) )
   }
