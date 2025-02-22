@@ -48,21 +48,21 @@ class QueueInbox[T <: Actor](override val system: ActorSystem, val inboxCapacity
         running = true
 
         system.execute(() => {
-          try {
             var next = pull()
             while(next.isDefined){
               val n = next.get
-              actor.accept(new ActorRef(system){
-                  @targetName("send")
-                  override def <<(v: Any): Unit = accept(Message(actor, v))
-                  override def accept(t: Message): Unit = n.sender.accept(t)
-                }).apply(n.message)
+              try {
+                actor.accept(new ActorRef(system){
+                    @targetName("send")
+                    override def <<(v: Any): Unit = accept(Message(actor, v))
+                    override def accept(t: Message): Unit = n.sender.accept(t)
+                  }).apply(n.message)
+              } catch {
+                case NonFatal(e) =>
+                  system.handle(message, Some(actor), Some(e))
+              }
               next = pull()
             }
-          } catch {
-            case NonFatal(e) =>
-              system.handle(message, Some(actor), Some(e))
-          }
         })
       }
     }finally {

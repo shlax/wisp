@@ -6,7 +6,7 @@ import org.wisp.remote.{RemoteMessage, UdpClient, UdpRouter}
 import org.wisp.using.*
 
 import java.net.InetSocketAddress
-import java.util.concurrent.CountDownLatch
+import java.util.concurrent.{CountDownLatch, TimeUnit}
 
 class HelloRemote {
 
@@ -35,7 +35,7 @@ class HelloRemote {
       Thread.sleep(50)
       c.send(adr, RemoteMessage("echo", "world"))
 
-      cd.await()
+      cd.await(3, TimeUnit.SECONDS)
       println()
     }
   }
