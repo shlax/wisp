@@ -13,7 +13,7 @@ class ActorSystem(val inboxCapacity:Int = 3) extends Executor, AutoCloseable{
         command.run()
       }catch {
         case NonFatal(e) =>
-          e.printStackTrace()
+          handle(e)
       }
     })
   }
@@ -22,8 +22,12 @@ class ActorSystem(val inboxCapacity:Int = 3) extends Executor, AutoCloseable{
     QueueInbox(this, inboxCapacity, fn).actor
   }
 
-  def handle(message: Message, actor: Option[Actor] = None, e: Option[Throwable] = None): Unit = {
-    new RuntimeException("error processing "+message+" in "+actor, e.orNull).printStackTrace()
+  def handle(exception: Throwable, message: Option[Message] = None, actor: Option[Actor] = None): Unit = {
+    val msg = StringBuilder()
+    msg.append(exception.getMessage)
+    for(m <- message) msg.append(" message: ").append(m)
+    for(a <- actor) msg.append(" actor: ").append(a)
+    new Exception(msg.toString, exception).printStackTrace()
   }
 
   override def close(): Unit = {
