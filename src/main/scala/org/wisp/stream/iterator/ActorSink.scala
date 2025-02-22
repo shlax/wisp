@@ -28,8 +28,8 @@ object ActorSink {
 
 class ActorSink(prev:Seq[ActorRef], fn:BiConsumer[ActorRef, Any]) extends Consumer[Message]{
 
-  private val cfs = Array.fill(prev.length){ new CompletableFuture[Void] }
-  private val all = if(cfs.length == 1) cfs.head else CompletableFuture.allOf(cfs*)
+  private val cfs = Array.fill(prev.length)(false)
+  private val all = CompletableFuture[Void]
 
   def start(): CompletableFuture[Void] = {
     for(p <- prev) next(p)
@@ -44,8 +44,8 @@ class ActorSink(prev:Seq[ActorRef], fn:BiConsumer[ActorRef, Any]) extends Consum
     t.message match {
       case Next(v) =>
         val ind = prev.indexOf(t.sender)
-        if(cfs(ind).isDone){
-          if(all.isDone) throw new IllegalStateException("ended all")
+        if(cfs(ind)){
+          if(all.isDone) throw new IllegalStateException("all ended")
           throw new IllegalStateException("ended")
         }
 
@@ -53,7 +53,13 @@ class ActorSink(prev:Seq[ActorRef], fn:BiConsumer[ActorRef, Any]) extends Consum
         next(t.sender)
       case End =>
         val ind = prev.indexOf(t.sender)
-        if(!cfs(ind).complete(null)) throw new IllegalStateException("ended")
+        if(cfs(ind)) throw new IllegalStateException("ended")
+        cfs(ind) = true
+        if(!cfs.contains(false)){
+          if(!all.complete(null)){
+            throw new IllegalStateException("all ended")
+          }
+        }
     }
   }
 
