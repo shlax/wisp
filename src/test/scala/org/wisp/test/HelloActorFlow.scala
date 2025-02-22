@@ -1,10 +1,12 @@
 package org.wisp.test
 
 import org.junit.jupiter.api.Test
-import org.wisp.stream.iterator.{ActorSink, ActorSource, ActorFlow}
+import org.wisp.stream.iterator.{ActorFlow, ActorSink, ActorSource}
 import org.wisp.ActorSystem
 import org.wisp.using.*
 import org.wisp.stream.Source.*
+
+import scala.util.Random
 
 class HelloActorFlow {
 
@@ -15,12 +17,12 @@ class HelloActorFlow {
       val src = ActorSource(data.asSource, sys)
 
       val w1 = sys.create( i => ActorFlow(src, i, { q =>
-        Thread.sleep(100)
+        Thread.sleep(Random.nextInt(50))
         "w1:" + Thread.currentThread().threadId + ":" + q
       }))
 
       val w2 = sys.create(i => ActorFlow(src, i, { q =>
-        Thread.sleep(50)
+        Thread.sleep(Random.nextInt(25))
         "w2:" + Thread.currentThread().threadId + ":" + q
       }))
 
