@@ -40,18 +40,18 @@ class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extend
       buff.flip()
       val data = new Array[Byte](buff.remaining())
       buff.get(data)
-      execute(address, data)
+      execute(adr, data)
       buff.clear()
     }
   }
 
-  protected def execute(address: SocketAddress, data:Array[Byte]):Unit = {
+  protected def execute(adr: SocketAddress, data:Array[Byte]):Unit = {
     executor.execute{ () =>
-      process(address, data)
+      process(adr, data)
     }
   }
 
-  protected def process(address: SocketAddress, data: Array[Byte]): Unit = {
+  protected def process(adr: SocketAddress, data: Array[Byte]): Unit = {
     new ObjectInputStream(new ByteArrayInputStream(data)) | { in =>
       val key = in.readUTF()
       val ref = bindMap.get(key)
@@ -63,7 +63,7 @@ class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extend
           override def accept(t: Message): Unit = {
             t.message match {
               case RemoteMessage(path, v) =>
-                send(address, path, v)
+                send(adr, path, v)
             }
           }
           //@targetName("ask")
@@ -74,18 +74,18 @@ class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extend
     }
   }
 
-  def send(address: SocketAddress, m:RemoteMessage):Unit = {
-    send(address, m.path, m.message)
+  def send(adr: SocketAddress, m:RemoteMessage):Unit = {
+    send(adr, m.path, m.message)
   }
 
-  def send(address: SocketAddress, path:String, m:Any):Unit = {
+  def send(adr: SocketAddress, path:String, m:Any):Unit = {
     val bOut = new ByteArrayOutputStream()
     new ObjectOutputStream(bOut)|{ out =>
       out.writeUTF(path)
       out.writeObject(m)
     }
     val buff = bOut.toByteArray
-    val r = channel.send(ByteBuffer.wrap(buff), address)
+    val r = channel.send(ByteBuffer.wrap(buff), adr)
     if(r != buff.length){
       throw new RuntimeException("message to long "+r+" "+buff.length)
     }
