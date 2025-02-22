@@ -62,8 +62,8 @@ class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extend
       ref.accept( Message( new ActorRef(ref.system){
           override def accept(t: Message): Unit = {
             t.message match {
-              case RemoteMessage(path, v) =>
-                send(adr, path, v)
+              case m : RemoteMessage =>
+                send(adr, m)
             }
           }
           //@targetName("ask")
