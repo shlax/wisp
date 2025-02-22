@@ -1,20 +1,20 @@
 package org.wisp.stream.iterator
 
-import org.wisp.{Actor, ActorRef, Inbox}
+import org.wisp.{Actor, ActorLink, Inbox}
 import org.wisp.stream.iterator.message.*
 
 import java.util
 
-class ActorFlow(prev:ActorRef, inbox:Inbox, fn: Any => Any) extends Actor(inbox){
+class ActorFlow(prev:ActorLink, inbox:Inbox, fn: Any => Any) extends Actor(inbox){
 
-  private val nodes:util.Queue[ActorRef] = createNodes()
+  private val nodes:util.Queue[ActorLink] = createNodes()
   private var ended = false
 
-  protected def createNodes(): util.Queue[ActorRef] = {
-    util.LinkedList[ActorRef]()
+  protected def createNodes(): util.Queue[ActorLink] = {
+    util.LinkedList[ActorLink]()
   }
 
-  override def accept(from: ActorRef): PartialFunction[Any, Unit] = {
+  override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
     case Next(v) =>
       if (ended) throw new IllegalStateException("ended")
 

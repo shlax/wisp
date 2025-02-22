@@ -1,18 +1,18 @@
 package org.wisp.stream.iterator
 
 import org.wisp.stream.Source
-import org.wisp.{ActorRef, ActorSystem, Message}
+import org.wisp.{ActorLink, ActorSystem, Message}
 import org.wisp.stream.iterator.message.*
 
 import java.util
 import java.util.concurrent.locks.ReentrantLock
 
-class ForEachSource(it:Source[?], system:ActorSystem) extends ActorRef(system), Runnable {
+class ForEachSource(it:Source[?], system:ActorSystem) extends ActorLink(system), Runnable {
 
-  private val nodes:util.Queue[ActorRef] = createNodes()
+  private val nodes:util.Queue[ActorLink] = createNodes()
 
-  protected def createNodes(): util.Queue[ActorRef] = {
-    util.LinkedList[ActorRef]()
+  protected def createNodes(): util.Queue[ActorLink] = {
+    util.LinkedList[ActorLink]()
   }
 
   private val lock = new ReentrantLock()

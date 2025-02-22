@@ -6,11 +6,11 @@ import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
 import scala.annotation.targetName
 
-abstract class ActorRef(val exceptionHandler: ExceptionHandler) extends Consumer[Message]{
+abstract class ActorLink(val exceptionHandler: ExceptionHandler) extends Consumer[Message]{
 
   @targetName("send")
   def <<(v:Any) : Unit = {
-    accept( Message( new ActorRef(exceptionHandler) {
+    accept( Message( new ActorLink(exceptionHandler) {
         override def accept(t: Message): Unit = {
           exceptionHandler.handle(UndeliveredException(t))
         }
@@ -20,7 +20,7 @@ abstract class ActorRef(val exceptionHandler: ExceptionHandler) extends Consumer
   // @targetName("ask")
   def ask(v:Any) : CompletableFuture[Message] = {
     val cf = CompletableFuture[Message]()
-    accept( Message( new ActorRef(exceptionHandler) {
+    accept( Message( new ActorLink(exceptionHandler) {
         override def accept(t: Message): Unit = cf.complete(t)
       },v) )
     cf

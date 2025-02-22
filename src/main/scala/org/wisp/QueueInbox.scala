@@ -9,7 +9,7 @@ import scala.annotation.targetName
 import scala.compiletime.uninitialized
 import scala.util.control.NonFatal
 
-class QueueInbox[T <: Actor](override val system: ActorSystem, val inboxCapacity:Int, fn: ActorCreator[T]) extends Inbox {
+class QueueInbox[T <: Actor](override val system: ActorSystem, val inboxCapacity:Int, fn: ActorFactory[T]) extends Inbox {
 
   val actor:T = fn.create(this)
 
@@ -54,7 +54,7 @@ class QueueInbox[T <: Actor](override val system: ActorSystem, val inboxCapacity
             while(next.isDefined){
               val n = next.get
               try {
-                actor.accept(new ActorRef(system){
+                actor.accept(new ActorLink(system){
                     @targetName("send")
                     override def <<(v: Any): Unit = accept(Message(actor, v))
                     override def accept(t: Message): Unit = n.sender.accept(t)

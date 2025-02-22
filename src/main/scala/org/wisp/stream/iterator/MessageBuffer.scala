@@ -1,12 +1,12 @@
 package org.wisp.stream.iterator
 
-import org.wisp.{ActorRef, Message}
+import org.wisp.{ActorLink, Message}
 import org.wisp.stream.iterator.message.*
 
 import java.util
 import java.util.concurrent.locks.ReentrantLock
 
-class MessageBuffer(prev:ActorRef, val size:Int) extends ActorRef(prev.exceptionHandler){
+class MessageBuffer(prev:ActorLink, val size:Int) extends ActorLink(prev.exceptionHandler){
   private val lock = new ReentrantLock()
 
   private var ended = false
@@ -18,10 +18,10 @@ class MessageBuffer(prev:ActorRef, val size:Int) extends ActorRef(prev.exception
     util.LinkedList[Any]()
   }
 
-  private val nodes: util.Queue[ActorRef] = createNodes()
+  private val nodes: util.Queue[ActorLink] = createNodes()
 
-  protected def createNodes(): util.Queue[ActorRef] = {
-    util.LinkedList[ActorRef]()
+  protected def createNodes(): util.Queue[ActorLink] = {
+    util.LinkedList[ActorLink]()
   }
 
   private def next(): Unit = {

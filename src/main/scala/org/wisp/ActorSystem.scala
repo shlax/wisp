@@ -20,7 +20,7 @@ class ActorSystem(val inboxCapacity:Int = 3) extends Executor, ExceptionHandler,
     })
   }
 
-  def create[T <: Actor](fn: ActorCreator[T], inboxCapacity:Int = inboxCapacity):T = {
+  def create[T <: Actor](fn: ActorFactory[T], inboxCapacity:Int = inboxCapacity):T = {
     QueueInbox(this, inboxCapacity, fn).actor
   }
 

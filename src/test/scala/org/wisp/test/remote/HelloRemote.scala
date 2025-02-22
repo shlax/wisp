@@ -1,7 +1,7 @@
 package org.wisp.test.remote
 
 import org.junit.jupiter.api.Test
-import org.wisp.{Actor, ActorRef, ActorSystem}
+import org.wisp.{Actor, ActorLink, ActorSystem}
 import org.wisp.remote.{RemoteMessage, UdpClient, UdpRouter}
 import org.wisp.using.*
 
@@ -22,7 +22,7 @@ class HelloRemote {
       s.execute(r)
 
       r.register("echo", s.create(i => new Actor(i){
-        override def accept(from: ActorRef): PartialFunction[Any, Unit] = {
+        override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
           case x:Any =>
             print(""+x+" ")
             cd.countDown()

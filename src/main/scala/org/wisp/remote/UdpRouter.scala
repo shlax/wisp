@@ -1,6 +1,6 @@
 package org.wisp.remote
 
-import org.wisp.{ActorRef, Message}
+import org.wisp.{ActorLink, Message}
 import org.wisp.using.*
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
@@ -13,17 +13,17 @@ import scala.annotation.targetName
 
 class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extends UdpClient(address), Runnable{
 
-  protected val bindMap: ConcurrentMap[String, ActorRef] = createBindMap()
+  protected val bindMap: ConcurrentMap[String, ActorLink] = createBindMap()
 
-  protected def createBindMap():ConcurrentMap[String, ActorRef] = {
-    ConcurrentHashMap[String, ActorRef]()
+  protected def createBindMap():ConcurrentMap[String, ActorLink] = {
+    ConcurrentHashMap[String, ActorLink]()
   }
 
-  def register(path:String, ref:ActorRef) : Option[ActorRef] = {
+  def register(path:String, ref:ActorLink) : Option[ActorLink] = {
     Option(bindMap.put(path, ref))
   }
 
-  def remove(path: String): Option[ActorRef] = {
+  def remove(path: String): Option[ActorLink] = {
     Option(bindMap.remove(path))
   }
 
@@ -68,7 +68,7 @@ class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extend
       throw new IllegalStateException("not found " + rm.path)
     }
 
-    ref.accept( Message( new ActorRef(ref.exceptionHandler){
+    ref.accept( Message( new ActorLink(ref.exceptionHandler){
         override def accept(t: Message): Unit = {
           t.message match {
             case m : RemoteMessage =>

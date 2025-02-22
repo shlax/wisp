@@ -1,6 +1,6 @@
 package org.wisp.stream.iterator
 
-import org.wisp.{ActorRef, Message}
+import org.wisp.{ActorLink, Message}
 import org.wisp.stream.iterator.message.*
 
 import java.util.concurrent.CompletableFuture
@@ -9,25 +9,25 @@ import java.util.function.{BiConsumer, Consumer}
 
 object ActorSink {
 
-  def apply(prev: Seq[ActorRef], f: Consumer[Any]): ActorSink = {
+  def apply(prev: Seq[ActorLink], f: Consumer[Any]): ActorSink = {
     new ActorSink(prev, (_, m) => f.accept(m) )
   }
 
-  def apply(prev: ActorRef, f: Consumer[Any]): ActorSink = {
+  def apply(prev: ActorLink, f: Consumer[Any]): ActorSink = {
     new ActorSink(Seq(prev), (_, m) => f.accept(m) )
   }
 
-  def apply(prev: Seq[ActorRef], f: BiConsumer[ActorRef, Any]): ActorSink = {
+  def apply(prev: Seq[ActorLink], f: BiConsumer[ActorLink, Any]): ActorSink = {
     new ActorSink(prev, f)
   }
 
-  def apply(prev: ActorRef, f: BiConsumer[ActorRef, Any]): ActorSink = {
+  def apply(prev: ActorLink, f: BiConsumer[ActorLink, Any]): ActorSink = {
     new ActorSink(Seq(prev), f)
   }
 
 }
 
-class ActorSink(prev:Seq[ActorRef], fn:BiConsumer[ActorRef, Any]) extends Consumer[Message]{
+class ActorSink(prev:Seq[ActorLink], fn:BiConsumer[ActorLink, Any]) extends Consumer[Message]{
 
   private val ended = Array.fill(prev.length)(false)
   private val completed = CompletableFuture[Void]
@@ -39,7 +39,7 @@ class ActorSink(prev:Seq[ActorRef], fn:BiConsumer[ActorRef, Any]) extends Consum
     completed
   }
 
-  private def next(p:ActorRef): Unit = {
+  private def next(p:ActorLink): Unit = {
     p.ask(HasNext).thenAccept(this)
   }
 

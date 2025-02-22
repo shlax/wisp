@@ -1,6 +1,6 @@
 package org.wisp.stream
 
-import org.wisp.ActorRef
+import org.wisp.ActorLink
 
 import java.util
 import java.util.function.{Consumer, Function, Predicate}
@@ -125,7 +125,7 @@ class Flow[T] extends Consumer[T] with AutoCloseable {
   }
 
   @targetName("sendTo")
-  def >> (ref:ActorRef): Flow[T] = {
+  def >> (ref:ActorLink): Flow[T] = {
     to( (e: T) => { ref << e } )
   }
 

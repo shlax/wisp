@@ -1,6 +1,6 @@
 package org.wisp.stream.iterator
 
-import org.wisp.{ActorRef, ActorSystem, Message}
+import org.wisp.{ActorLink, ActorSystem, Message}
 import org.wisp.stream.Source
 import org.wisp.stream.iterator.message.{End, HasNext, Next}
 
@@ -13,36 +13,36 @@ import scala.annotation.targetName
 object ForEachSink {
 
   @targetName("applySeq")
-  def apply(it:Source[?], system:ActorSystem, f: Consumer[Any])(prev: ActorRef => Seq[ActorRef]): ForEachSink = {
+  def apply(it:Source[?], system:ActorSystem, f: Consumer[Any])(prev: ActorLink => Seq[ActorLink]): ForEachSink = {
     new ForEachSink(it, system, (_, m) => f.accept(m))(prev)
   }
 
   @targetName("applyOne")
-  def apply(it:Source[?], system:ActorSystem, f: Consumer[Any])(prev: ActorRef => ActorRef): ForEachSink = {
+  def apply(it:Source[?], system:ActorSystem, f: Consumer[Any])(prev: ActorLink => ActorLink): ForEachSink = {
     new ForEachSink(it, system, (_, m) => f.accept(m))(r => Seq(prev.apply(r)) )
   }
 
   @targetName("applySeq")
-  def apply(it:Source[?], system:ActorSystem, f: BiConsumer[ActorRef, Any])(prev: ActorRef => Seq[ActorRef]): ForEachSink = {
+  def apply(it:Source[?], system:ActorSystem, f: BiConsumer[ActorLink, Any])(prev: ActorLink => Seq[ActorLink]): ForEachSink = {
     new ForEachSink(it, system, f)(prev)
   }
 
   @targetName("applyOne")
-  def apply(it:Source[?], system:ActorSystem,  f: BiConsumer[ActorRef, Any])(prev: ActorRef => ActorRef): ForEachSink = {
+  def apply(it:Source[?], system:ActorSystem,  f: BiConsumer[ActorLink, Any])(prev: ActorLink => ActorLink): ForEachSink = {
     new ForEachSink(it, system, f)(r => Seq(prev.apply(r)) )
   }
 
 }
 
-class ForEachSink(it:Source[?], system:ActorSystem, fn:BiConsumer[ActorRef, Any])(pf: ActorRef => Seq[ActorRef]) extends ActorRef(system), Runnable {
+class ForEachSink(it:Source[?], system:ActorSystem, fn:BiConsumer[ActorLink, Any])(pf: ActorLink => Seq[ActorLink]) extends ActorLink(system), Runnable {
 
-  private val nodes: util.Queue[ActorRef] = createNodes()
+  private val nodes: util.Queue[ActorLink] = createNodes()
 
-  protected def createNodes(): util.Queue[ActorRef] = {
-    util.LinkedList[ActorRef]()
+  protected def createNodes(): util.Queue[ActorLink] = {
+    util.LinkedList[ActorLink]()
   }
 
-  protected class ActorValue(val actor:ActorRef, val value:Any)
+  protected class ActorValue(val actor:ActorLink, val value:Any)
   private val values: util.Queue[ActorValue] = createValues()
 
   protected def createValues(): util.Queue[ActorValue] = {
@@ -57,7 +57,7 @@ class ForEachSink(it:Source[?], system:ActorSystem, fn:BiConsumer[ActorRef, Any]
   private val ended = Array.fill(prev.size)(false)
   private var inputEnded = false
 
-  private def next(p: ActorRef): Unit = {
+  private def next(p: ActorLink): Unit = {
     p.ask(HasNext).thenAccept(this)
   }
 
