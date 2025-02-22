@@ -59,6 +59,7 @@ class ActorSink(prev:Seq[ActorRef], fn:BiConsumer[ActorRef, Any]) extends Consum
         case End =>
           val ind = prev.indexOf(t.sender)
           if (ended(ind)) throw new IllegalStateException("ended")
+
           ended(ind) = true
           if (!ended.contains(false)) {
             if (!completed.complete(null)) {
