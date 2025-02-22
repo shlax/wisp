@@ -52,6 +52,15 @@ trait Source[T] {
   /** {{{if(hasNext) Some(next()) else None}}} */
   def next():Option[T]
 
+  def map[R](f:java.util.function.Function[T, R]): Source[R] = {
+    val self = this
+    new Source[R](){
+      def next():Option[R] = {
+        self.next().map( i => f.apply(i) )
+      }
+    }
+  }
+
   def forEach(c: Consumer[? >: T]):Unit = {
     var v = next()
     while (v.isDefined){
