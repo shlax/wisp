@@ -12,20 +12,22 @@ import scala.annotation.targetName
 
 object ForEachSink {
 
-  def apply(it:Source[?], system:ActorSystem, f: Consumer[Any])(prev: ActorRef =>  Seq[ActorRef]): ForEachSink = {
+  @targetName("applySeq")
+  def apply(it:Source[?], system:ActorSystem, f: Consumer[Any])(prev: ActorRef => Seq[ActorRef]): ForEachSink = {
     new ForEachSink(it, system, (_, m) => f.accept(m))(prev)
   }
 
-  @targetName("create")
+  @targetName("applyOne")
   def apply(it:Source[?], system:ActorSystem, f: Consumer[Any])(prev: ActorRef => ActorRef): ForEachSink = {
     new ForEachSink(it, system, (_, m) => f.accept(m))(r => Seq(prev.apply(r)) )
   }
 
+  @targetName("applySeq")
   def apply(it:Source[?], system:ActorSystem, f: BiConsumer[ActorRef, Any])(prev: ActorRef => Seq[ActorRef]): ForEachSink = {
     new ForEachSink(it, system, f)(prev)
   }
 
-  @targetName("create")
+  @targetName("applyOne")
   def apply(it:Source[?], system:ActorSystem,  f: BiConsumer[ActorRef, Any])(prev: ActorRef => ActorRef): ForEachSink = {
     new ForEachSink(it, system, f)(r => Seq(prev.apply(r)) )
   }
