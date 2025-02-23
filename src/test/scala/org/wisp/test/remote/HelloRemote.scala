@@ -2,7 +2,7 @@ package org.wisp.test.remote
 
 import org.junit.jupiter.api.Test
 import org.wisp.{Actor, ActorLink, ActorSystem}
-import org.wisp.remote.{RemoteMessage, UdpClient, UdpRouter}
+import org.wisp.remote.{RemoteActorLink, UdpClient, UdpRouter}
 import org.wisp.using.*
 
 import java.net.InetSocketAddress
@@ -30,10 +30,11 @@ class HelloRemote {
       }))
 
       val c = use(UdpClient())
+      val l = RemoteActorLink(c, adr, "echo")
 
-      c.send(adr, RemoteMessage("echo", "Hello"))
+      l << "Hello"
       Thread.sleep(50)
-      c.send(adr, RemoteMessage("echo", "world"))
+      l << "world"
 
       cd.await(3, TimeUnit.SECONDS)
       println()
