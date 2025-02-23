@@ -8,15 +8,15 @@ import scala.annotation.targetName
 import scala.util.control.NonFatal
 import scala.jdk.CollectionConverters.*
 
-object Stream {
+object Sink {
 
-  def apply[T](fn: Consumer[Stream[T]]): Stream[T] = {
-    val f = new Stream[T]
+  def apply[T](fn: Consumer[Sink[T]]): Sink[T] = {
+    val f = new Sink[T]
     fn.accept(f)
     f
   }
 
-  def apply[T](fe: Source[T])(fn: Consumer[Stream[T]]): Unit = {
+  def apply[T](fe: Source[T])(fn: Consumer[Sink[T]]): Unit = {
     val f = apply(fn)
     try {
       fe.forEach(f)
@@ -27,7 +27,7 @@ object Stream {
 
 }
 
-class Stream[T] extends Consumer[T] with AutoCloseable {
+class Sink[T] extends Consumer[T] with AutoCloseable {
   private val next = new util.LinkedList[Consumer[? >: T]]
 
   override def accept(t: T): Unit = {
@@ -52,22 +52,22 @@ class Stream[T] extends Consumer[T] with AutoCloseable {
     }
   }
 
-  def map[R](fn: T => R) : Stream[R] = {
-    val nf = new Stream[R]
+  def map[R](fn: T => R) : Sink[R] = {
+    val nf = new Sink[R]
     to( (e: T) => { nf.accept(fn.apply(e)) } )
     nf
   }
 
-  def flatMap[R](fn: Consumer[R] => Consumer[T]) : Stream[R] = {
-    val nf = new Stream[R]
+  def flatMap[R](fn: Consumer[R] => Consumer[T]) : Sink[R] = {
+    val nf = new Sink[R]
     to( (e: T) => { fn.apply(nf).accept(e) } )
     nf
   }
 
   // import scala.jdk.OptionConverters.*
-  def groupBy[K, E](keyFn: T => K, collectFn: (Option[E], T) => E): Stream[E] = {
-    val nf = new Stream[E]
-    to(new Stream[T]{
+  def groupBy[K, E](keyFn: T => K, collectFn: (Option[E], T) => E): Sink[E] = {
+    val nf = new Sink[E]
+    to(new Sink[T]{
       private var value: Option[E] = None
       private var key: Option[K] = None
 
@@ -99,32 +99,32 @@ class Stream[T] extends Consumer[T] with AutoCloseable {
     nf
   }
 
-  def filter[E >: T](fn: Predicate[E]): Stream[T] = {
-    val nf = new Stream[T]
+  def filter[E >: T](fn: Predicate[E]): Sink[T] = {
+    val nf = new Sink[T]
     to( (e: T) => { if(fn.test(e)) nf.accept(e) } )
     nf
   }
 
-  def to[E >: T](s: Consumer[E]): Stream[T] = {
+  def to[E >: T](s: Consumer[E]): Sink[T] = {
     next.add(s)
     this
   }
 
-  def collect[F >: T, R](pf: PartialFunction[F, R]): Stream[R] = {
-    val nf = new Stream[R]
+  def collect[F >: T, R](pf: PartialFunction[F, R]): Sink[R] = {
+    val nf = new Sink[R]
     to((e: T) => {
       if (pf.isDefinedAt(e)) nf.accept(pf.apply(e))
     })
     nf
   }
 
-  def as(fn: Consumer[Stream[T]]): Stream[T] = {
+  def as(fn: Consumer[Sink[T]]): Sink[T] = {
     fn.accept(this)
     this
   }
 
   @targetName("sendTo")
-  def >> (ref:ActorLink): Stream[T] = {
+  def >> (ref:ActorLink): Sink[T] = {
     to( (e: T) => { ref << e } )
   }
 
