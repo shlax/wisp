@@ -9,7 +9,7 @@ import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
 import java.util.function
 
-class ForEachSink(it:Source[?], fn:Consumer[Any])(pf: ActorLink => ActorLink) extends ActorLink, Runnable {
+class ForEachSink(src:Source[?], sink:Consumer[Any])(link: ActorLink => ActorLink) extends ActorLink, Runnable {
 
   private val nodes: util.Queue[ActorLink] = createNodes()
 
@@ -27,7 +27,7 @@ class ForEachSink(it:Source[?], fn:Consumer[Any])(pf: ActorLink => ActorLink) ex
   private val lock = new ReentrantLock()
   private val condition = lock.newCondition()
 
-  private val prev = pf.apply(this)
+  private val prev = link.apply(this)
 
   private var ended = false
   private var inputEnded = false
@@ -44,7 +44,7 @@ class ForEachSink(it:Source[?], fn:Consumer[Any])(pf: ActorLink => ActorLink) ex
       while (!ended){
         var v = values.poll()
         while(v != null){
-          fn.accept(v.value)
+          sink.accept(v.value)
           next(v.actor)
           v = values.poll()
         }
@@ -54,7 +54,7 @@ class ForEachSink(it:Source[?], fn:Consumer[Any])(pf: ActorLink => ActorLink) ex
           if(inputEnded){
             a << End
           }else {
-            it.next() match {
+            src.next() match {
               case Some(v) =>
                 a << Next(v)
               case None =>

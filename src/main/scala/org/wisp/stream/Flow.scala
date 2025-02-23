@@ -3,7 +3,7 @@ package org.wisp.stream
 import org.wisp.ActorLink
 
 import java.util
-import java.util.function.{BiFunction, Consumer, Function, Predicate}
+import java.util.function.{Consumer, Predicate}
 import scala.annotation.targetName
 import scala.util.control.NonFatal
 import scala.jdk.CollectionConverters.*
@@ -28,7 +28,7 @@ object Flow {
 }
 
 class Flow[T] extends Consumer[T] with AutoCloseable {
-  private val next = new util.LinkedList[Consumer[? >: T]]
+  private val next = new util.LinkedList[Consumer[T]]
 
   override def accept(t: T): Unit = {
     for (i <- next.asScala) i.accept(t)
@@ -52,23 +52,23 @@ class Flow[T] extends Consumer[T] with AutoCloseable {
     }
   }
 
-  def map[R, V >: T](fn: Function[V, R]) : Flow[R] = {
+  def map[R](fn: T => R) : Flow[R] = {
     val nf = new Flow[R]
     to( (e: T) => { nf.accept(fn.apply(e)) } )
     nf
   }
 
-  def flatMap[R, V >: T](fn: Function[Consumer[R], Consumer[V]]) : Flow[R] = {
+  def flatMap[R](fn: Consumer[R] => Consumer[T]) : Flow[R] = {
     val nf = new Flow[R]
     to( (e: T) => { fn.apply(nf).accept(e) } )
     nf
   }
 
   // import scala.jdk.OptionConverters.*
-  def groupBy[K, E, V >: T, R >: T](keyFn: Function[V, K], collectFn: BiFunction[Option[E], R, E]): Flow[E] = {
-    val nf = new Flow[E]
+  def groupBy[K, R](keyFn: T => K, collectFn: (Option[R], T) => R): Flow[R] = {
+    val nf = new Flow[R]
     to(new Flow[T]{
-      private var value: Option[E] = None
+      private var value: Option[R] = None
       private var key: Option[K] = None
 
       override def accept(t: T): Unit = {
@@ -99,18 +99,18 @@ class Flow[T] extends Consumer[T] with AutoCloseable {
     nf
   }
 
-  def filter[V >: T](fn: Predicate[V]): Flow[T] = {
+  def filter(fn: Predicate[T]): Flow[T] = {
     val nf = new Flow[T]
     to( (e: T) => { if(fn.test(e)) nf.accept(e) } )
     nf
   }
 
-  def to[V >: T](s: Consumer[V]): Flow[T] = {
+  def to(s: Consumer[T]): Flow[T] = {
     next.add(s)
     this
   }
 
-  def collect[R, V >: T](pf: PartialFunction[V, R]): Flow[R] = {
+  def collect[R](pf: PartialFunction[T, R]): Flow[R] = {
     val nf = new Flow[R]
     to((e: T) => {
       if (pf.isDefinedAt(e)) nf.accept(pf.apply(e))
