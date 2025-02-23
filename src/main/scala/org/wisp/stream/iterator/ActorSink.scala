@@ -5,21 +5,9 @@ import org.wisp.stream.iterator.message.*
 
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.locks.ReentrantLock
-import java.util.function.{BiConsumer, Consumer}
+import java.util.function.Consumer
 
-object ActorSink {
-
-  def apply(prev: ActorLink, f: Consumer[Any]): ActorSink = {
-    new ActorSink(prev, (_, m) => f.accept(m) )
-  }
-
-  def apply(prev: ActorLink, f: BiConsumer[ActorLink, Any]): ActorSink = {
-    new ActorSink(prev, f)
-  }
-
-}
-
-class ActorSink(prev:ActorLink, fn:BiConsumer[ActorLink, Any]) extends Consumer[Message]{
+class ActorSink(prev:ActorLink, fn:Consumer[Any]) extends Consumer[Message]{
 
   private val completed = CompletableFuture[Void]
   private val lock = new ReentrantLock()
@@ -39,7 +27,7 @@ class ActorSink(prev:ActorLink, fn:BiConsumer[ActorLink, Any]) extends Consumer[
       t.message match {
         case Next(v) =>
           if (completed.isDone) throw new IllegalStateException("all ended")
-          fn.accept(t.sender, v)
+          fn.accept(v)
           next(t.sender)
         case End =>
           if (!completed.complete(null)) {

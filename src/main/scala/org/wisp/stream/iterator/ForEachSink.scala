@@ -6,22 +6,10 @@ import org.wisp.stream.iterator.message.{End, HasNext, Next}
 
 import java.util
 import java.util.concurrent.locks.ReentrantLock
-import java.util.function.{BiConsumer, Consumer}
+import java.util.function.Consumer
 import java.util.function
 
-object ForEachSink {
-
-  def apply(it:Source[?], f: Consumer[Any])(prev: ActorLink => ActorLink): ForEachSink = {
-    new ForEachSink(it, (_, m) => f.accept(m))(prev)
-  }
-
-  def apply(it:Source[?], f: BiConsumer[ActorLink, Any])(prev: ActorLink => ActorLink): ForEachSink = {
-    new ForEachSink(it, f)(prev)
-  }
-
-}
-
-class ForEachSink(it:Source[?], fn:BiConsumer[ActorLink, Any])(pf: ActorLink => ActorLink) extends ActorLink, Runnable {
+class ForEachSink(it:Source[?], fn:Consumer[Any])(pf: ActorLink => ActorLink) extends ActorLink, Runnable {
 
   private val nodes: util.Queue[ActorLink] = createNodes()
 
@@ -56,7 +44,7 @@ class ForEachSink(it:Source[?], fn:BiConsumer[ActorLink, Any])(pf: ActorLink => 
       while (!ended){
         var v = values.poll()
         while(v != null){
-          fn.accept(v.actor, v.value)
+          fn.accept(v.value)
           next(v.actor)
           v = values.poll()
         }
