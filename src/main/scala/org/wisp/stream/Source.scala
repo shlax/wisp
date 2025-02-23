@@ -101,7 +101,7 @@ trait Source[T] {
     }
   }
 
-  def groupBy[K, V >: T, E, R >: T](keyFn: V => K, collectFn: (Option[E], R) => E): Source[E] = {
+  def groupBy[K, E, V >: T, R >: T](keyFn: V => K, collectFn: (Option[E], R) => E): Source[E] = {
     val self = this
     new Source[E]() {
       private var lastValue: Option[E] = None

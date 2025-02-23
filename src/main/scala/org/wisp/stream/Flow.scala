@@ -65,7 +65,7 @@ class Flow[T] extends Consumer[T] with AutoCloseable {
   }
 
   // import scala.jdk.OptionConverters.*
-  def groupBy[K, V >: T, E, R >: T](keyFn: Function[V, K], collectFn: BiFunction[Option[E], R, E]): Flow[E] = {
+  def groupBy[K, E, V >: T, R >: T](keyFn: Function[V, K], collectFn: BiFunction[Option[E], R, E]): Flow[E] = {
     val nf = new Flow[E]
     to(new Flow[T]{
       private var value: Option[E] = None
