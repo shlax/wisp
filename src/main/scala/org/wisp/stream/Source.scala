@@ -1,7 +1,7 @@
 package org.wisp.stream
 
 import java.{lang, util}
-import java.util.function.Consumer
+import java.util.function.{Consumer, Predicate}
 
 object Source{
 
@@ -57,6 +57,19 @@ trait Source[T] {
     new Source[R](){
       def next():Option[R] = {
         self.next().map( i => f.apply(i) )
+      }
+    }
+  }
+
+  def filter(p:Predicate[T]): Source[T] = {
+    val self = this
+    new Source[T]() {
+      def next(): Option[T] = {
+        var n = self.next()
+        while (n.isDefined && !p.test(n.get)){
+          n = self.next()
+        }
+        n
       }
     }
   }
