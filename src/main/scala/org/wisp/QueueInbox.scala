@@ -7,7 +7,7 @@ import java.util.concurrent.locks.ReentrantLock
 import scala.annotation.targetName
 import scala.util.control.NonFatal
 
-class QueueInbox[T <: Actor](override val system: ActorSystem, val inboxCapacity:Int, fn: ActorFactory[T]) extends Inbox {
+class QueueInbox[T <: Actor](override val system: ActorSystem, inboxCapacity:Int, fn: ActorFactory[T]) extends Inbox {
 
   val actor:T = fn.create(this)
 
