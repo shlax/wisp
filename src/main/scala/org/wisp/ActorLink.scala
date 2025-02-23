@@ -12,13 +12,15 @@ trait ActorLink extends Consumer[Message]{
   @targetName("send")
   def <<(v:Any) : Unit = {
     accept( Message((t: Message) => {
-      throw UndeliveredException(t)
-    },v) )
+        throw UndeliveredException(t)
+      },v) )
   }
 
   def ask(v:Any) : CompletableFuture[Message] = {
     val cf = CompletableFuture[Message]()
-    accept( Message((t: Message) => cf.complete(t),v) )
+    accept( Message((t: Message) => {
+        if(!cf.complete(t)) throw UndeliveredException(t)
+      },v) )
     cf
   }
 
