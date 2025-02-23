@@ -1,3 +1,3 @@
 package org.wisp.stream.iterator.message
 
-object End extends ResponseMessage
+case object End extends ResponseMessage
