@@ -6,7 +6,8 @@ import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
 import scala.annotation.targetName
 
-abstract class ActorLink extends Consumer[Message]{
+@FunctionalInterface
+trait ActorLink extends Consumer[Message]{
 
   @targetName("send")
   def <<(v:Any) : Unit = {
