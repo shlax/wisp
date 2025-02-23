@@ -65,7 +65,7 @@ class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extend
 
     val ref = bindMap.get(rm.path)
     if (ref == null) {
-      throw new IllegalStateException("not found " + rm.path)
+      throw new IllegalStateException("not found: " + rm.path)
     }
 
     ref.accept( Message( new ActorLink{
