@@ -52,7 +52,7 @@ trait Source[T] {
   /** {{{if(hasNext) Some(next()) else None}}} */
   def next():Option[T]
 
-  def map[R, V >: T](f:V => R): Source[R] = {
+  def map[R](f: T => R): Source[R] = {
     val self = this
     new Source[R](){
       def next():Option[R] = {
@@ -61,7 +61,7 @@ trait Source[T] {
     }
   }
 
-  def flatMap[R, V >: T](f: V => Source[R]): Source[R] = {
+  def flatMap[R](f: T => Source[R]): Source[R] = {
     val self = this
     new Source[R]() {
       var last:Option[Source[R]] = None
@@ -88,7 +88,7 @@ trait Source[T] {
     }
   }
 
-  def filter[V >: T](p:Predicate[V]): Source[T] = {
+  def filter(p:Predicate[T]): Source[T] = {
     val self = this
     new Source[T]() {
       def next(): Option[T] = {
@@ -101,7 +101,7 @@ trait Source[T] {
     }
   }
 
-  def groupBy[K, E, V >: T, R >: T](keyFn: V => K, collectFn: (Option[E], R) => E): Source[E] = {
+  def groupBy[K, E](keyFn: T => K, collectFn: (Option[E], T) => E): Source[E] = {
     val self = this
     new Source[E]() {
       private var lastValue: Option[E] = None
@@ -133,7 +133,7 @@ trait Source[T] {
     }
   }
 
-  def forEach(c: Consumer[? >: T]):Unit = {
+  def forEach(c: Consumer[T]):Unit = {
     var v = next()
     while (v.isDefined){
       c.accept(v.get)
