@@ -1,6 +1,7 @@
 package org.wisp.stream
 
 import org.wisp.ActorLink
+import org.wisp.using.*
 
 import java.util
 import java.util.function.{Consumer, Predicate}
@@ -17,12 +18,7 @@ object Sink {
   }
 
   def apply[T](fe: Source[T])(fn: Consumer[Sink[T]]): Unit = {
-    val f = apply(fn)
-    try {
-      fe.forEach(f)
-    }finally {
-      f.close()
-    }
+    apply(fn) | ( f => fe.forEach(f) )
   }
 
 }
