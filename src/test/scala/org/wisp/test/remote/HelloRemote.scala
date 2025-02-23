@@ -19,8 +19,6 @@ class HelloRemote {
       val s = use(ActorSystem())
 
       val r = use(UdpRouter(adr, 2024, s))
-      s.execute(r)
-
       r.register("echo", s.create(i => new Actor(i){
         override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
           case x:Any =>
@@ -28,6 +26,7 @@ class HelloRemote {
             cd.countDown()
         }
       }))
+      s.execute(r)
 
       val c = use(UdpClient())
       val l = RemoteActorLink(c, adr, "echo")
