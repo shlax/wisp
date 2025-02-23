@@ -61,7 +61,7 @@ trait Source[T] {
     }
   }
 
-  def filter(p:Predicate[T]): Source[T] = {
+  def filter[V >: T](p:Predicate[V]): Source[T] = {
     val self = this
     new Source[T]() {
       def next(): Option[T] = {
