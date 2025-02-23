@@ -12,7 +12,7 @@ class Node[T](val graph: Graph, val link: ActorLink) {
     graph.node(r)
   }
 
-  def to(c: Consumer[T]): ActorSink = {
+  def to[E >: T](c: Consumer[E]): ActorSink = {
     ActorSink(link, (a: Any) => c.accept(a.asInstanceOf[T]) )
   }
 

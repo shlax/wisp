@@ -88,7 +88,7 @@ trait Source[T] {
     }
   }
 
-  def filter(p:Predicate[T]): Source[T] = {
+  def filter[E >: T](p:Predicate[E]): Source[T] = {
     val self = this
     new Source[T]() {
       def next(): Option[T] = {
@@ -133,7 +133,7 @@ trait Source[T] {
     }
   }
 
-  def forEach(c: Consumer[T]):Unit = {
+  def forEach[E >: T](c: Consumer[E]):Unit = {
     var v = next()
     while (v.isDefined){
       c.accept(v.get)
