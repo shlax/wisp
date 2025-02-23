@@ -1,26 +1,27 @@
 package org.wisp.stream.typed
 
 import org.wisp.ActorLink
-import org.wisp.stream.iterator.{ActorFlow, ActorSink}
+import org.wisp.stream.iterator.{ActorFlow, ActorSink, MessageBuffer}
 
 import java.util.function.Consumer
 
-class Node[T](val stream: Stream, val link: ActorLink) {
+class Node[T](val graph: Graph, val link: ActorLink) {
 
-  def map[V, F >: T](fn: F => V): Node[V] = {
-    val r = stream.system.create(i => ActorFlow(link, i, (a: Any) => {
-      fn.apply(a.asInstanceOf[T])
-    }))
-    new Node[V](stream, r)
+  def map[V](fn: T => V): Node[V] = {
+    val r = graph.system.create( i => ActorFlow(link, i, (a: Any) => fn.apply(a.asInstanceOf[T]) ) )
+    graph.node(r)
   }
 
-  def to[V >: T](c: Consumer[V]): ActorSink = {
-    ActorSink(link, (a: Any) => {
-      c.accept(a.asInstanceOf[V])
-    })
+  def to(c: Consumer[T]): ActorSink = {
+    ActorSink(link, (a: Any) => c.accept(a.asInstanceOf[T]) )
   }
 
-  def as[R, V >: Node[? >: T]](fn: V => R): R = {
+  def buffer(size:Int) : Node[T] = {
+    val r = MessageBuffer(link, size)
+    graph.node(r)
+  }
+
+  def as[R](fn: Node[T] => R): R = {
     fn.apply(this)
   }
 
