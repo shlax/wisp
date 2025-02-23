@@ -8,33 +8,20 @@ import java.util
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.{BiConsumer, Consumer}
 import java.util.function
-import scala.annotation.targetName
 
 object ForEachSink {
 
-  @targetName("applySeq")
-  def apply(it:Source[?], f: Consumer[Any])(prev: ActorLink => Seq[ActorLink]): ForEachSink = {
+  def apply(it:Source[?], f: Consumer[Any])(prev: ActorLink => ActorLink): ForEachSink = {
     new ForEachSink(it, (_, m) => f.accept(m))(prev)
   }
 
-  @targetName("applyOne")
-  def apply(it:Source[?], f: Consumer[Any])(prev: ActorLink => ActorLink): ForEachSink = {
-    new ForEachSink(it, (_, m) => f.accept(m))(r => Seq(prev.apply(r)) )
-  }
-
-  @targetName("applySeq")
-  def apply(it:Source[?], f: BiConsumer[ActorLink, Any])(prev: ActorLink => Seq[ActorLink]): ForEachSink = {
-    new ForEachSink(it, f)(prev)
-  }
-
-  @targetName("applyOne")
   def apply(it:Source[?], f: BiConsumer[ActorLink, Any])(prev: ActorLink => ActorLink): ForEachSink = {
-    new ForEachSink(it, f)(r => Seq(prev.apply(r)) )
+    new ForEachSink(it, f)(prev)
   }
 
 }
 
-class ForEachSink(it:Source[?], fn:BiConsumer[ActorLink, Any])(pf: ActorLink => Seq[ActorLink]) extends ActorLink, Runnable {
+class ForEachSink(it:Source[?], fn:BiConsumer[ActorLink, Any])(pf: ActorLink => ActorLink) extends ActorLink, Runnable {
 
   private val nodes: util.Queue[ActorLink] = createNodes()
 
@@ -54,19 +41,19 @@ class ForEachSink(it:Source[?], fn:BiConsumer[ActorLink, Any])(pf: ActorLink => 
 
   private val prev = pf.apply(this)
 
-  private val ended = Array.fill(prev.size)(false)
+  private var ended = false
   private var inputEnded = false
 
-  private def next(p: ActorLink): Unit = {
+  private def next(p:ActorLink): Unit = {
     p.ask(HasNext).thenAccept(this)
   }
 
   override def run(): Unit = {
     lock.lock()
     try {
-      for(p <- prev) next(p)
+      next(prev)
 
-      while (ended.contains(false)){
+      while (!ended){
         var v = values.poll()
         while(v != null){
           fn.accept(v.actor, v.value)
@@ -90,7 +77,7 @@ class ForEachSink(it:Source[?], fn:BiConsumer[ActorLink, Any])(pf: ActorLink => 
           a = nodes.poll()
         }
 
-        if(ended.contains(false)){
+        if(!ended){
           condition.await()
         }
       }
@@ -111,14 +98,12 @@ class ForEachSink(it:Source[?], fn:BiConsumer[ActorLink, Any])(pf: ActorLink => 
             condition.signal()
           }
         case Next(v) =>
-          val ind = prev.indexOf(t.sender)
-          if(ended(ind)) throw new IllegalStateException("ended")
+          if(ended) throw new IllegalStateException("ended")
           values.add(ActorValue(t.sender, v))
           condition.signal()
         case End =>
-          val ind = prev.indexOf(t.sender)
-          if(ended(ind)) throw new IllegalStateException("ended")
-          ended(ind) = true
+          if(ended) throw new IllegalStateException("ended")
+          ended = true
           condition.signal()
       }
     } finally {

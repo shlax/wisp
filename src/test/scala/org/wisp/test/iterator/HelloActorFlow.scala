@@ -16,17 +16,12 @@ class HelloActorFlow {
       val data = Seq(0,1,2,3,4,5).asSource
       val src = ActorSource(data)
 
-      val w1 = sys.create( i => ActorFlow(src, i, { q =>
+      val w = sys.create( i => ActorFlow(src, i, { q =>
         Thread.sleep(Random.nextInt(50))
-        "w1:" + Thread.currentThread().threadId + ":" + q
+        "w:" + Thread.currentThread().threadId + ":" + q
       }))
 
-      val w2 = sys.create(i => ActorFlow(src, i, { q =>
-        Thread.sleep(Random.nextInt(25))
-        "w2:" + Thread.currentThread().threadId + ":" + q
-      }))
-
-      ActorSink(Seq(w1, w2), println(_)).start().get()
+      ActorSink(w, println(_)).start().get()
 
     }
   }
