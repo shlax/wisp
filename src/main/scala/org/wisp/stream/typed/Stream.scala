@@ -10,7 +10,7 @@ class Stream(val system:ActorSystem){
 
   class Node[T](val link:ActorLink) {
 
-    def map[V](fn: T => V): Node[V] = {
+    def map[V, F >: T](fn: F => V): Node[V] = {
       val r = system.create(i => ActorFlow(link, i, (a:Any) => {
           fn.apply(a.asInstanceOf[T])
         }))
@@ -23,7 +23,7 @@ class Stream(val system:ActorSystem){
         })
     }
 
-    def as[R, V >: Node[T]](fn: V => R) : R = {
+    def as[R, V >: Node[? >: T]](fn: V => R) : R = {
       fn.apply(this)
     }
 
