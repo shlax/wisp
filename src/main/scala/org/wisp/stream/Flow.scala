@@ -3,9 +3,8 @@ package org.wisp.stream
 import org.wisp.ActorLink
 
 import java.util
-import java.util.function.{Consumer, Function, Predicate}
+import java.util.function.{BiFunction, Consumer, Function, Predicate}
 import scala.annotation.targetName
-import scala.collection.mutable
 import scala.util.control.NonFatal
 import scala.jdk.CollectionConverters.*
 
@@ -65,33 +64,33 @@ class Flow[T] extends Consumer[T] with AutoCloseable {
     nf
   }
 
-  def groupBy[K, V >: T](keyFn: Function[V, K]): Flow[Seq[T]] = {
-    val nf = new Flow[Seq[T]]
+  // import scala.jdk.OptionConverters.*
+  def groupBy[K, V >: T, E, R >: T](keyFn: Function[V, K], collectFn: BiFunction[Option[E], R, E]): Flow[E] = {
+    val nf = new Flow[E]
     to(new Flow[T]{
-      private var queue: mutable.ArrayBuffer[T] = mutable.ArrayBuffer[T]()
+      private var value: Option[E] = None
       private var key: Option[K] = None
 
       override def accept(t: T): Unit = {
         val k = keyFn.apply(t)
         if (key.isEmpty) {
+          value = Option(collectFn.apply(value, t))
           key = Some(k)
         } else if (key.get != k) {
-          nf.accept(queue.toSeq)
-
+          for(x <- value) nf.accept(x)
+          value = Option(collectFn.apply(None, t))
           key = Some(k)
-          queue = mutable.ArrayBuffer[T]()
+        }else{
+          value = Option(collectFn.apply(value, t))
         }
-        queue += t
         super.accept(t)
       }
 
       override def close(): Unit = {
-        if(queue.nonEmpty){
-          nf.accept(queue.toSeq)
+        for(x <- value) nf.accept(x)
+        value = None
+        key = None
 
-          key = None
-          queue = mutable.ArrayBuffer[T]()
-        }
         nf.close()
         super.close()
       }

@@ -61,6 +61,33 @@ trait Source[T] {
     }
   }
 
+  def flatMap[R](f: T => Source[R]): Source[R] = {
+    val self = this
+    new Source[R]() {
+      var last:Option[Source[R]] = None
+      var end = false
+
+      def next(): Option[R] = {
+        var r : Option[R] = None
+        while(!end && r.isEmpty){
+          if(last.isEmpty){
+            self.next() match {
+              case None =>
+                end = true
+              case Some(x) =>
+                last = Some(f.apply(x))
+            }
+          }
+          for(q <- last){
+            r = q.next()
+            if(r.isEmpty) last = None
+          }
+        }
+        r
+      }
+    }
+  }
+
   def filter[V >: T](p:Predicate[V]): Source[T] = {
     val self = this
     new Source[T]() {
