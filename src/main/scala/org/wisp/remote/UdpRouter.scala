@@ -1,15 +1,15 @@
 package org.wisp.remote
 
+import org.wisp.remote.exceptions.UnsupportedAskException
 import org.wisp.{ActorLink, Message}
 import org.wisp.using.*
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
+import java.io.{ByteArrayInputStream, ObjectInputStream}
 import java.net.SocketAddress
 import java.nio.ByteBuffer
-import java.nio.channels.{AsynchronousCloseException, DatagramChannel}
+import java.nio.channels.AsynchronousCloseException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.{CompletableFuture, ConcurrentHashMap, ConcurrentMap, Executor}
-import scala.annotation.targetName
 
 class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extends UdpClient(address), Runnable{
 
@@ -68,7 +68,7 @@ class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extend
       throw new IllegalStateException("not found " + rm.path)
     }
 
-    ref.accept( Message( new ActorLink(ref.exceptionHandler){
+    ref.accept( Message( new ActorLink{
         override def accept(t: Message): Unit = {
           t.message match {
             case m : RemoteMessage =>
@@ -77,7 +77,7 @@ class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extend
         }
 
         override def ask(v: Any): CompletableFuture[Message] = {
-          throw new UnsupportedOperationException("ask pattern is not supported for remote")
+          throw UnsupportedAskException(v)
         }
       }, rm.message) )
   }

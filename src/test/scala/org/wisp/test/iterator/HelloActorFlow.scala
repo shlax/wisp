@@ -14,7 +14,7 @@ class HelloActorFlow {
   def test(): Unit = {
     ActorSystem() | { sys =>
       val data = Seq(0,1,2,3,4,5).asSource
-      val src = ActorSource(data, sys)
+      val src = ActorSource(data)
 
       val w1 = sys.create( i => ActorFlow(src, i, { q =>
         Thread.sleep(Random.nextInt(50))

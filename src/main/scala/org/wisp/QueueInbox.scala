@@ -3,10 +3,8 @@ package org.wisp
 import org.wisp.exceptions.ProcessingException
 
 import java.util
-import java.util.concurrent.{BlockingQueue, LinkedBlockingQueue}
 import java.util.concurrent.locks.ReentrantLock
 import scala.annotation.targetName
-import scala.compiletime.uninitialized
 import scala.util.control.NonFatal
 
 class QueueInbox[T <: Actor](override val system: ActorSystem, val inboxCapacity:Int, fn: ActorFactory[T]) extends Inbox {
@@ -54,7 +52,7 @@ class QueueInbox[T <: Actor](override val system: ActorSystem, val inboxCapacity
             while(next.isDefined){
               val n = next.get
               try {
-                actor.accept(new ActorLink(system){
+                actor.accept(new ActorLink{
                     @targetName("send")
                     override def <<(v: Any): Unit = accept(Message(actor, v))
                     override def accept(t: Message): Unit = n.sender.accept(t)

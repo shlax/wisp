@@ -27,7 +27,7 @@ class HelloForEachSink {
         }
       }
 
-      val src:ForEachSink = ForEachSink(data, sys, sink){ (ref:ActorLink) =>
+      val src:ForEachSink = ForEachSink(data, sink){ (ref:ActorLink) =>
         sys.create(i => ActorFlow(ref, i, { q =>
           "w:" + Thread.currentThread().threadId + ":" + q
         }))

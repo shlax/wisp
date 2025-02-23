@@ -6,7 +6,7 @@ import org.wisp.stream.iterator.message.*
 import java.util
 import java.util.concurrent.locks.ReentrantLock
 
-class MessageBuffer(prev:ActorLink, val size:Int) extends ActorLink(prev.exceptionHandler){
+class MessageBuffer(prev:ActorLink, val size:Int) extends ActorLink{
   private val lock = new ReentrantLock()
 
   private var ended = false

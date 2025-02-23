@@ -1,6 +1,6 @@
 package org.wisp.stream.iterator
 
-import org.wisp.{ActorLink, ActorSystem, Message}
+import org.wisp.{ActorLink, Message}
 import org.wisp.stream.Source
 import org.wisp.stream.iterator.message.{End, HasNext, Next}
 
@@ -13,28 +13,28 @@ import scala.annotation.targetName
 object ForEachSink {
 
   @targetName("applySeq")
-  def apply(it:Source[?], system:ActorSystem, f: Consumer[Any])(prev: ActorLink => Seq[ActorLink]): ForEachSink = {
-    new ForEachSink(it, system, (_, m) => f.accept(m))(prev)
+  def apply(it:Source[?], f: Consumer[Any])(prev: ActorLink => Seq[ActorLink]): ForEachSink = {
+    new ForEachSink(it, (_, m) => f.accept(m))(prev)
   }
 
   @targetName("applyOne")
-  def apply(it:Source[?], system:ActorSystem, f: Consumer[Any])(prev: ActorLink => ActorLink): ForEachSink = {
-    new ForEachSink(it, system, (_, m) => f.accept(m))(r => Seq(prev.apply(r)) )
+  def apply(it:Source[?], f: Consumer[Any])(prev: ActorLink => ActorLink): ForEachSink = {
+    new ForEachSink(it, (_, m) => f.accept(m))(r => Seq(prev.apply(r)) )
   }
 
   @targetName("applySeq")
-  def apply(it:Source[?], system:ActorSystem, f: BiConsumer[ActorLink, Any])(prev: ActorLink => Seq[ActorLink]): ForEachSink = {
-    new ForEachSink(it, system, f)(prev)
+  def apply(it:Source[?], f: BiConsumer[ActorLink, Any])(prev: ActorLink => Seq[ActorLink]): ForEachSink = {
+    new ForEachSink(it, f)(prev)
   }
 
   @targetName("applyOne")
-  def apply(it:Source[?], system:ActorSystem,  f: BiConsumer[ActorLink, Any])(prev: ActorLink => ActorLink): ForEachSink = {
-    new ForEachSink(it, system, f)(r => Seq(prev.apply(r)) )
+  def apply(it:Source[?], f: BiConsumer[ActorLink, Any])(prev: ActorLink => ActorLink): ForEachSink = {
+    new ForEachSink(it, f)(r => Seq(prev.apply(r)) )
   }
 
 }
 
-class ForEachSink(it:Source[?], system:ActorSystem, fn:BiConsumer[ActorLink, Any])(pf: ActorLink => Seq[ActorLink]) extends ActorLink(system), Runnable {
+class ForEachSink(it:Source[?], fn:BiConsumer[ActorLink, Any])(pf: ActorLink => Seq[ActorLink]) extends ActorLink, Runnable {
 
   private val nodes: util.Queue[ActorLink] = createNodes()
 

@@ -19,7 +19,7 @@ class HelloForEachSource {
         Assertions.assertTrue(Thread.currentThread().threadId == tId)
         "s["+Thread.currentThread().threadId+"]:"+i
       }
-      val src = ForEachSource(data, sys)
+      val src = ForEachSource(data)
 
       val w1 = sys.create(i => ActorFlow(src, i, { q =>
         Thread.sleep(Random.nextInt(50))
