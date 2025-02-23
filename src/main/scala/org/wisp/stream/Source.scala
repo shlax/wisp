@@ -52,7 +52,7 @@ trait Source[T] {
   /** {{{if(hasNext) Some(next()) else None}}} */
   def next():Option[T]
 
-  def map[R](f:T => R): Source[R] = {
+  def map[R, V >: T](f:V => R): Source[R] = {
     val self = this
     new Source[R](){
       def next():Option[R] = {
@@ -61,7 +61,7 @@ trait Source[T] {
     }
   }
 
-  def flatMap[R](f: T => Source[R]): Source[R] = {
+  def flatMap[R, V >: T](f: V => Source[R]): Source[R] = {
     val self = this
     new Source[R]() {
       var last:Option[Source[R]] = None
