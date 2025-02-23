@@ -1,4 +1,4 @@
-package org.wisp.test.iterator
+package org.wisp.test.stream.iterator
 
 import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.ActorSystem
