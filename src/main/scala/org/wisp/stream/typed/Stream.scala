@@ -14,8 +14,7 @@ class Stream(val system:ActorSystem){
 
   def forEach[T, V >: Node[ ? >: T]](s:Source[? <: T])(fn : Consumer[V]) : ForEachSource = {
     val f = ForEachSource(s)
-    val n = Node[T](this, f)
-    fn.accept(n)
+    fn.accept( Node[T](this, f) )
     f
   }
 
