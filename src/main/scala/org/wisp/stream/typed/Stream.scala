@@ -8,11 +8,11 @@ import java.util.function.Consumer
 
 class Stream(val system:ActorSystem){
 
-  def from[T](s:Source[T]) : Node[T] = {
+  def from[T](s:Source[? <: T]) : Node[T] = {
     Node[T](this, ActorSource(s))
   }
 
-  def forEach[T, V >: Node[ ? >: T]](s:Source[T])(fn : Consumer[V]) : ForEachSource = {
+  def forEach[T, V >: Node[ ? >: T]](s:Source[? <: T])(fn : Consumer[V]) : ForEachSource = {
     val f = ForEachSource(s)
     val n = Node[T](this, f)
     fn.accept(n)
