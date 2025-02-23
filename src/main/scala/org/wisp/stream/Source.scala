@@ -101,6 +101,38 @@ trait Source[T] {
     }
   }
 
+  def groupBy[K, V >: T, E, R >: T](keyFn: V => K, collectFn: (Option[E], R) => E): Source[E] = {
+    val self = this
+    new Source[E]() {
+      private var lastValue: Option[E] = None
+      private var lastKey: Option[K] = None
+      private var end = false
+
+      def next(): Option[E] = {
+        var r:Option[E] = None
+        while (!end && r.isEmpty){
+          self.next() match{
+            case Some(nv) =>
+              val nk = keyFn.apply(nv)
+              if(lastKey.contains(nk)){
+                lastValue = Some(collectFn.apply(lastValue, nv))
+              }else{
+                r = lastValue
+                lastValue = Some(collectFn.apply(None, nv))
+                lastKey = Some(nk)
+              }
+            case None =>
+              r = lastValue
+              lastValue = None
+              lastKey = None
+              end = true
+          }
+        }
+        r
+      }
+    }
+  }
+
   def forEach(c: Consumer[? >: T]):Unit = {
     var v = next()
     while (v.isDefined){

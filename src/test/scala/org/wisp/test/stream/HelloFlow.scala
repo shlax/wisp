@@ -19,4 +19,15 @@ class HelloFlow {
     }
   }
 
+  @Test
+  def groupBy():Unit = {
+    val data = Seq(("a", 1), ("a", 2), ("b", 3), ("b", 4)).asSource
+
+    Flow(data){ f =>
+      f.groupBy(_._1, (c:Option[List[Int]], i:(String,Int)) => {
+          i._2 :: c.getOrElse(Nil)
+        } ).map(println)
+    }
+  }
+
 }
