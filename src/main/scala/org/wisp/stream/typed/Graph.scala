@@ -17,7 +17,7 @@ class Graph(val system:ActorSystem){
   }
 
   def router[T](nodes: Iterable[Node[T]]): Node[T] = {
-    val r = MessageRouter(nodes.map(_.link))
+    val r = MessageRouter(system, nodes.map(_.link))
     node(r)
   }
 
@@ -32,7 +32,7 @@ class Graph(val system:ActorSystem){
   }
 
   def forEach[T, R](s:Source[T], c:Consumer[R])(fn: Node[T] => Node[R]) : ForEachSink = {
-    ForEachSink(s, (a: Any) => c.accept(a.asInstanceOf[R]) ){ prev =>
+    ForEachSink(system, s, (a: Any) => c.accept(a.asInstanceOf[R]) ){ prev =>
       fn.apply( node(prev) ).link
     }
   }

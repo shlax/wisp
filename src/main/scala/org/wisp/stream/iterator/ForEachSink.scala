@@ -1,5 +1,6 @@
 package org.wisp.stream.iterator
 
+import org.wisp.exceptions.ExceptionHandler
 import org.wisp.{ActorLink, Message}
 import org.wisp.stream.Source
 import org.wisp.stream.iterator.message.{End, HasNext, Next}
@@ -9,7 +10,7 @@ import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
 import java.util.function
 
-class ForEachSink(src:Source[?], sink:Consumer[Any])(link: ActorLink => ActorLink) extends ActorLink, Runnable {
+class ForEachSink(eh: ExceptionHandler, src:Source[?], sink:Consumer[Any])(link: ActorLink => ActorLink) extends ActorLink, Runnable {
 
   private val nodes: util.Queue[ActorLink] = createNodes()
 
@@ -33,7 +34,7 @@ class ForEachSink(src:Source[?], sink:Consumer[Any])(link: ActorLink => ActorLin
   private var inputEnded = false
 
   private def next(p:ActorLink): Unit = {
-    p.ask(HasNext).thenAccept(this)
+    p.ask(HasNext).whenComplete(eh >> this)
   }
 
   override def run(): Unit = {

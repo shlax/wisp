@@ -21,7 +21,7 @@ class HelloActorFlow {
         "w:" + Thread.currentThread().threadId + ":" + q
       }))
 
-      ActorSink(w, println(_)).start().get()
+      ActorSink(sys, w, println(_)).start().get()
 
     }
   }

@@ -13,11 +13,11 @@ class Node[T](val graph: Graph, val link: ActorLink) {
   }
 
   def to[E >: T](c: Consumer[E]): ActorSink = {
-    ActorSink(link, (a: Any) => c.accept(a.asInstanceOf[T]) )
+    ActorSink(graph.system, link, (a: Any) => c.accept(a.asInstanceOf[T]) )
   }
 
   def buffer(size:Int) : Node[T] = {
-    val r = MessageBuffer(link, size)
+    val r = MessageBuffer(graph.system ,link, size)
     graph.node(r)
   }
 

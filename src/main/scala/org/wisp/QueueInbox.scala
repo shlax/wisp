@@ -59,7 +59,7 @@ class QueueInbox[T <: Actor](override val system: ActorSystem, inboxCapacity:Int
                   }).apply(n.message)
               } catch {
                 case NonFatal(e) =>
-                  system.handle(ProcessingException(n, actor, e))
+                  system.onException(ProcessingException(n, actor, e))
               }
               next = pull()
             }

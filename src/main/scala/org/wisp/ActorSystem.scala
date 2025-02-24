@@ -15,7 +15,7 @@ class ActorSystem(val inboxCapacity:Int = 3) extends Executor, ExceptionHandler,
         command.run()
       }catch {
         case NonFatal(e) =>
-          handle(e)
+          onException(e)
       }
     })
   }

@@ -1,12 +1,13 @@
 package org.wisp.stream.iterator
 
+import org.wisp.exceptions.ExceptionHandler
 import org.wisp.{ActorLink, Message}
 import org.wisp.stream.iterator.message.*
 
 import java.util
 import java.util.concurrent.locks.ReentrantLock
 
-class MessageBuffer(prev:ActorLink, size:Int) extends ActorLink{
+class MessageBuffer(eh: ExceptionHandler, prev:ActorLink, size:Int) extends ActorLink{
   private val lock = new ReentrantLock()
 
   private var ended = false
@@ -27,7 +28,7 @@ class MessageBuffer(prev:ActorLink, size:Int) extends ActorLink{
   private def next(): Unit = {
     if (!ended && queue.size() + requested < size) {
       requested += 1
-      prev.ask(HasNext).thenAccept(this)
+      prev.ask(HasNext).whenComplete(eh >> this)
     }
   }
 

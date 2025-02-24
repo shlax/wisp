@@ -29,7 +29,7 @@ class ActorFlow(prev:ActorLink, inbox:Inbox, fn: Any => Any) extends Actor(inbox
         from << End
       } else {
         nodes.add(from)
-        prev.ask(HasNext).thenAccept(this)
+        prev.ask(HasNext).whenComplete(inbox.system >> this)
       }
 
     case End =>
