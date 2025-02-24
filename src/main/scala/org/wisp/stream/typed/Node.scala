@@ -1,7 +1,7 @@
 package org.wisp.stream.typed
 
 import org.wisp.ActorLink
-import org.wisp.stream.iterator.{StreamWorker, ActorSink, StreamBuffer}
+import org.wisp.stream.iterator.{StreamWorker, StreamSink, StreamBuffer}
 
 import java.util.function.Consumer
 
@@ -12,8 +12,8 @@ class Node[T](val graph: Graph, val link: ActorLink) {
     graph.node(r)
   }
 
-  def to[E >: T](c: Consumer[E]): ActorSink = {
-    ActorSink(graph.system, link, (a: Any) => c.accept(a.asInstanceOf[T]) )
+  def to[E >: T](c: Consumer[E]): StreamSink = {
+    StreamSink(graph.system, link, (a: Any) => c.accept(a.asInstanceOf[T]) )
   }
 
   def buffer(size:Int) : Node[T] = {

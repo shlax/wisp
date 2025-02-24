@@ -3,7 +3,7 @@ package org.wisp.test.stream.iterator
 import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.ActorSystem
 import org.wisp.stream.Source.*
-import org.wisp.stream.iterator.{StreamWorker, ActorSink, ForEachSource}
+import org.wisp.stream.iterator.{StreamWorker, StreamSink, ForEachSource}
 import org.wisp.using.*
 
 import scala.util.Random
@@ -26,7 +26,7 @@ class HelloForEachSource {
         "w:" + Thread.currentThread().threadId + ":" + q
       }))
 
-      val cf = ActorSink(sys, w, println(_)).start()
+      val cf = StreamSink(sys, w, println(_)).start()
       Thread.sleep(50)
       println("start")
 

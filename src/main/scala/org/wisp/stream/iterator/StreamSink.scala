@@ -9,7 +9,7 @@ import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
 import org.wisp.lock.*
 
-class ActorSink(eh:ExceptionHandler, prev:ActorLink, sink:Consumer[Any]) extends Consumer[Message]{
+class StreamSink(eh:ExceptionHandler, prev:ActorLink, sink:Consumer[Any]) extends Consumer[Message]{
 
   private val completed = CompletableFuture[Void]
   private val lock = new ReentrantLock()

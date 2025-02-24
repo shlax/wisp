@@ -2,7 +2,7 @@ package org.wisp.stream.typed
 
 import org.wisp.{ActorLink, ActorSystem}
 import org.wisp.stream.Source
-import org.wisp.stream.iterator.{ActorSource, ForEachSink, ForEachSource, ZipStream}
+import org.wisp.stream.iterator.{StreamSource, ForEachSink, ForEachSource, ZipStream}
 
 import java.util.function.Consumer
 
@@ -13,7 +13,7 @@ class Graph(val system:ActorSystem){
   }
 
   def from[T](s:Source[T]) : Node[T] = {
-    node(ActorSource(s))
+    node(StreamSource(s))
   }
 
   def zip[T](nodes: Iterable[Node[T]]): Node[T] = {

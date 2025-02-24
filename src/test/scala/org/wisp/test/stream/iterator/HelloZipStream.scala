@@ -2,7 +2,7 @@ package org.wisp.test.stream.iterator
 
 import org.junit.jupiter.api.Test
 import org.wisp.ActorSystem
-import org.wisp.stream.iterator.{StreamWorker, ActorSink, ActorSource, StreamBuffer, ZipStream}
+import org.wisp.stream.iterator.{StreamWorker, StreamSink, StreamSource, StreamBuffer, ZipStream}
 import org.wisp.using.*
 import org.wisp.stream.Source.*
 
@@ -14,7 +14,7 @@ class HelloZipStream {
   def test():Unit = {
     ActorSystem() | { sys =>
       val data = Seq(0, 1, 2, 3, 4).asSource
-      val src = ActorSource(data)
+      val src = StreamSource(data)
 
       val w1 = sys.create(i => StreamWorker(src, i, { q =>
         println("w1:start")
@@ -30,7 +30,7 @@ class HelloZipStream {
 
       val r = ZipStream(sys, w1, w2)
 
-      ActorSink(sys, r, println(_)).start().get()
+      StreamSink(sys, r, println(_)).start().get()
 
     }
   }
