@@ -5,10 +5,10 @@ import java.util.concurrent.locks.ReentrantLock
 object lock {
 
   extension (l: ReentrantLock) {
-    inline def withLock[R](inline f: => R): R = {
+    inline def withLock[R](inline block: => R): R = {
       l.lock()
       try {
-        f
+        block
       } finally {
         l.unlock()
       }
