@@ -29,14 +29,14 @@ class MessageRouter(prev:Iterable[ActorLink]) extends ActorLink{
     State()
   }
 
-  protected def select(s:Map[ActorLink, State]): (ActorLink, State) = {
-    s.minBy(_._2)
-  }
-
   private val state:Map[ActorLink, State] = {
     val m = mutable.Map[ActorLink, State]()
     for(p <- prev) m(p) = createState()
     m.toMap
+  }
+
+  protected def select(s:Map[ActorLink, State]): (ActorLink, State) = {
+    s.minBy(_._2)
   }
 
   override def accept(t: Message): Unit = {
@@ -44,7 +44,7 @@ class MessageRouter(prev:Iterable[ActorLink]) extends ActorLink{
     try {
       t.message match {
         case HasNext =>
-          if(state.forall(_._2.ended)){
+          if(state.values.forall(_.ended)){
             t.sender << End
           }else{
             nodes.add(t.sender)
@@ -72,6 +72,14 @@ class MessageRouter(prev:Iterable[ActorLink]) extends ActorLink{
 
           st.requested -= 1
           if(st.requested != 0) throw new IllegalStateException("missing "+st.requested+" messages")
+
+          if(state.values.forall(_.ended)){
+            var a = nodes.poll()
+            while (a != null) {
+              a << End
+              a = nodes.poll()
+            }
+          }
       }
     } finally {
       lock.unlock()
