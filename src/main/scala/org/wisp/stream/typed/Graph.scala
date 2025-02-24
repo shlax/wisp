@@ -21,6 +21,10 @@ class Graph(val system:ActorSystem){
     node(r)
   }
 
+  def router[T](nodes:Node[T]*): Node[T] = {
+    router(nodes)
+  }
+
   def forEach[T](s:Source[T])(fn : Node[T] => Unit ) : ForEachSource = {
     val f = ForEachSource(s)
     fn.apply( node(f) )
