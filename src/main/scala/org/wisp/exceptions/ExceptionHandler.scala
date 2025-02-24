@@ -1,7 +1,5 @@
 package org.wisp.exceptions
 
-import org.wisp.Message
-
 import java.util.function.{BiConsumer, Consumer}
 import scala.annotation.targetName
 import scala.util.control.NonFatal
