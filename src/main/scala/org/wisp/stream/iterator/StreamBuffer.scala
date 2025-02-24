@@ -12,7 +12,7 @@ class StreamBuffer(eh: ExceptionHandler, prev:ActorLink, size:Int) extends Actor
   private val lock = new ReentrantLock()
 
   private var ended = false
-  private var requested = 0
+  private var requested = false
 
   private val queue:util.Queue[Any] = createQueue()
 
@@ -27,8 +27,9 @@ class StreamBuffer(eh: ExceptionHandler, prev:ActorLink, size:Int) extends Actor
   }
 
   private def next(): Unit = {
-    if (!ended && queue.size() + requested < size) {
-      requested += 1
+    val req = if(requested) 1 else 0
+    if (!ended && queue.size() + req < size) {
+      requested = true
       prev.ask(HasNext).whenComplete(eh >> this)
     }
   }
@@ -51,9 +52,8 @@ class StreamBuffer(eh: ExceptionHandler, prev:ActorLink, size:Int) extends Actor
         }
 
       case Next(v) =>
-        if (ended) throw new IllegalStateException("ended")
-
-        requested -= 1
+        if(ended) throw new IllegalStateException("ended")
+        requested = false
 
         val n = nodes.poll()
         if (n == null) {
@@ -65,7 +65,8 @@ class StreamBuffer(eh: ExceptionHandler, prev:ActorLink, size:Int) extends Actor
         next()
 
       case End =>
-        requested -= 1
+        if(ended) throw new IllegalStateException("ended")
+        requested = false
         ended = true
 
         if (queue.isEmpty) {
