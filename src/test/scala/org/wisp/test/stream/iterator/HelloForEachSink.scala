@@ -2,7 +2,7 @@ package org.wisp.test.stream.iterator
 
 import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.{ActorLink, ActorSystem}
-import org.wisp.stream.iterator.{ActorFlow, ForEachSink}
+import org.wisp.stream.iterator.{StreamWorker, ForEachSink}
 import org.wisp.using.*
 import org.wisp.stream.Source.*
 
@@ -28,7 +28,7 @@ class HelloForEachSink {
       }
 
       val src:ForEachSink = ForEachSink(sys, data, sink){ (ref:ActorLink) =>
-        sys.create(i => ActorFlow(ref, i, { q =>
+        sys.create(i => StreamWorker(ref, i, { q =>
           "w:" + Thread.currentThread().threadId + ":" + q
         }))
       }

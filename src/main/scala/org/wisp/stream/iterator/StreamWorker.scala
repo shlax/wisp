@@ -5,7 +5,7 @@ import org.wisp.stream.iterator.message.*
 
 import java.util
 
-class ActorFlow(prev:ActorLink, inbox:Inbox, fn: Any => Any) extends Actor(inbox){
+class StreamWorker(prev:ActorLink, inbox:Inbox, fn: Any => Any) extends Actor(inbox){
 
   private val nodes:util.Queue[ActorLink] = createNodes()
   private var ended = false

@@ -2,7 +2,7 @@ package org.wisp.stream.typed
 
 import org.wisp.{ActorLink, ActorSystem}
 import org.wisp.stream.Source
-import org.wisp.stream.iterator.{ActorSource, ForEachSink, ForEachSource, MessageRouter}
+import org.wisp.stream.iterator.{ActorSource, ForEachSink, ForEachSource, ZipStream}
 
 import java.util.function.Consumer
 
@@ -16,13 +16,13 @@ class Graph(val system:ActorSystem){
     node(ActorSource(s))
   }
 
-  def router[T](nodes: Iterable[Node[T]]): Node[T] = {
-    val r = MessageRouter(system, nodes.map(_.link))
+  def zip[T](nodes: Iterable[Node[T]]): Node[T] = {
+    val r = ZipStream(system, nodes.map(_.link))
     node(r)
   }
 
-  def router[T](nodes:Node[T]*): Node[T] = {
-    router(nodes)
+  def zip[T](nodes:Node[T]*): Node[T] = {
+    zip(nodes)
   }
 
   def forEach[T](s:Source[T])(fn : Node[T] => Unit ) : ForEachSource = {

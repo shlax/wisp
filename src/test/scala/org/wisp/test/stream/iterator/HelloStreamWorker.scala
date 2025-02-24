@@ -3,12 +3,12 @@ package org.wisp.test.stream.iterator
 import org.junit.jupiter.api.Test
 import org.wisp.ActorSystem
 import org.wisp.stream.Source.*
-import org.wisp.stream.iterator.{ActorFlow, ActorSink, ActorSource}
+import org.wisp.stream.iterator.{StreamWorker, ActorSink, ActorSource}
 import org.wisp.using.*
 
 import scala.util.Random
 
-class HelloActorFlow {
+class HelloStreamWorker {
 
   @Test
   def test(): Unit = {
@@ -16,7 +16,7 @@ class HelloActorFlow {
       val data = Seq(0,1,2,3,4,5).asSource
       val src = ActorSource(data)
 
-      val w = sys.create( i => ActorFlow(src, i, { q =>
+      val w = sys.create( i => StreamWorker(src, i, { q =>
         Thread.sleep(Random.nextInt(50))
         "w:" + Thread.currentThread().threadId + ":" + q
       }))

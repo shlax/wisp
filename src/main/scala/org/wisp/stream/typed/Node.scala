@@ -1,14 +1,14 @@
 package org.wisp.stream.typed
 
 import org.wisp.ActorLink
-import org.wisp.stream.iterator.{ActorFlow, ActorSink, MessageBuffer}
+import org.wisp.stream.iterator.{StreamWorker, ActorSink, StreamBuffer}
 
 import java.util.function.Consumer
 
 class Node[T](val graph: Graph, val link: ActorLink) {
 
   def map[V](fn: T => V): Node[V] = {
-    val r = graph.system.create( i => ActorFlow(link, i, (a: Any) => fn.apply(a.asInstanceOf[T]) ) )
+    val r = graph.system.create( i => StreamWorker(link, i, (a: Any) => fn.apply(a.asInstanceOf[T]) ) )
     graph.node(r)
   }
 
@@ -17,7 +17,7 @@ class Node[T](val graph: Graph, val link: ActorLink) {
   }
 
   def buffer(size:Int) : Node[T] = {
-    val r = MessageBuffer(graph.system ,link, size)
+    val r = StreamBuffer(graph.system ,link, size)
     graph.node(r)
   }
 

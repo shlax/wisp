@@ -6,6 +6,7 @@ import org.wisp.stream.iterator.message.*
 
 import java.util
 import java.util.concurrent.locks.ReentrantLock
+import org.wisp.lock.*
 
 class ForEachSource(it:Source[?]) extends ActorLink, Runnable {
 
@@ -20,43 +21,33 @@ class ForEachSource(it:Source[?]) extends ActorLink, Runnable {
 
   private var ended = false
 
-  override def run():Unit = {
-    lock.lock()
-    try {
-      it.forEach { e =>
-        var a = nodes.poll()
-        while (a == null){
-          condition.await()
-          a = nodes.poll()
-        }
-        a << Next(e)
-      }
-
-      ended = true
+  override def run():Unit = lock.withLock {
+    it.forEach { e =>
       var a = nodes.poll()
-      while (a != null) {
-        a << End
+      while (a == null){
+        condition.await()
         a = nodes.poll()
       }
-    } finally {
-      lock.unlock()
+      a << Next(e)
+    }
+
+    ended = true
+    var a = nodes.poll()
+    while (a != null) {
+      a << End
+      a = nodes.poll()
     }
   }
 
-  override def accept(t: Message): Unit = {
-    lock.lock()
-    try {
-      t.message match {
-        case HasNext =>
-          if (ended) {
-            t.sender << End
-          } else {
-            nodes.add(t.sender)
-            condition.signal()
-          }
-      }
-    } finally {
-      lock.unlock()
+  override def accept(t: Message): Unit = lock.withLock {
+    t.message match {
+      case HasNext =>
+        if (ended) {
+          t.sender << End
+        } else {
+          nodes.add(t.sender)
+          condition.signal()
+        }
     }
   }
 

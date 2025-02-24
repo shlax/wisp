@@ -9,6 +9,7 @@ import java.util
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
 import java.util.function
+import org.wisp.lock.*
 
 class ForEachSink(eh: ExceptionHandler, src:Source[?], sink:Consumer[Any])(link: ActorLink => ActorLink) extends ActorLink, Runnable {
 
@@ -37,66 +38,56 @@ class ForEachSink(eh: ExceptionHandler, src:Source[?], sink:Consumer[Any])(link:
     p.ask(HasNext).whenComplete(eh >> this)
   }
 
-  override def run(): Unit = {
-    lock.lock()
-    try {
-      next(prev)
+  override def run(): Unit = lock.withLock {
+    next(prev)
 
-      while (!ended){
-        var v = values.poll()
-        while(v != null){
-          sink.accept(v.value)
-          next(v.actor)
-          v = values.poll()
-        }
-
-        var a = nodes.poll()
-        while (a != null){
-          if(inputEnded){
-            a << End
-          }else {
-            src.next() match {
-              case Some(v) =>
-                a << Next(v)
-              case None =>
-                inputEnded = true
-                a << End
-            }
-          }
-          a = nodes.poll()
-        }
-
-        if(!ended){
-          condition.await()
-        }
+    while (!ended) {
+      var v = values.poll()
+      while (v != null) {
+        sink.accept(v.value)
+        next(v.actor)
+        v = values.poll()
       }
-    } finally {
-      lock.unlock()
+
+      var a = nodes.poll()
+      while (a != null) {
+        if (inputEnded) {
+          a << End
+        } else {
+          src.next() match {
+            case Some(v) =>
+              a << Next(v)
+            case None =>
+              inputEnded = true
+              a << End
+          }
+        }
+        a = nodes.poll()
+      }
+
+      if (!ended) {
+        condition.await()
+      }
     }
   }
 
-  override def accept(t: Message): Unit = {
-    lock.lock()
-    try {
-      t.message match {
-        case HasNext =>
-          if (inputEnded) {
-            t.sender << End
-          } else {
-            nodes.add(t.sender)
-            condition.signal()
-          }
-        case Next(v) =>
-          if(ended) throw new IllegalStateException("ended")
-          values.add(ActorValue(t.sender, v))
+  override def accept(t: Message): Unit = lock.withLock {
+    t.message match {
+      case HasNext =>
+        if (inputEnded) {
+          t.sender << End
+        } else {
+          nodes.add(t.sender)
           condition.signal()
-        case End =>
-          if(ended) throw new IllegalStateException("ended")
-          ended = true
-          condition.signal()
-      }
-    } finally {
-      lock.unlock()
+        }
+      case Next(v) =>
+        if(ended) throw new IllegalStateException("ended")
+        values.add(ActorValue(t.sender, v))
+        condition.signal()
+      case End =>
+        if(ended) throw new IllegalStateException("ended")
+        ended = true
+        condition.signal()
     }
   }
 

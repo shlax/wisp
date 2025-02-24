@@ -7,6 +7,7 @@ import org.wisp.stream.iterator.message.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
+import org.wisp.lock.*
 
 class ActorSink(eh:ExceptionHandler, prev:ActorLink, sink:Consumer[Any]) extends Consumer[Message]{
 
@@ -18,21 +19,16 @@ class ActorSink(eh:ExceptionHandler, prev:ActorLink, sink:Consumer[Any]) extends
     completed
   }
 
-  override def accept(t: Message): Unit = {
-    lock.lock()
-    try {
-      t.message match {
-        case Next(v) =>
-          if (completed.isDone) throw new IllegalStateException("all ended")
-          sink.accept(v)
-          prev.ask(HasNext).whenComplete(eh >> this)
-        case End =>
-          if (!completed.complete(null)) {
-            throw new IllegalStateException("all ended")
-          }
-      }
-    }finally {
-      lock.unlock()
+  override def accept(t: Message): Unit = lock.withLock{
+    t.message match {
+      case Next(v) =>
+        if (completed.isDone) throw new IllegalStateException("all ended")
+        sink.accept(v)
+        prev.ask(HasNext).whenComplete(eh >> this)
+      case End =>
+        if (!completed.complete(null)) {
+          throw new IllegalStateException("all ended")
+        }
     }
   }
 
