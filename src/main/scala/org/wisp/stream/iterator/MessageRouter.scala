@@ -25,7 +25,7 @@ class MessageRouter(prev:Iterable[ActorLink]) extends ActorLink{
     }
   }
 
-  private val state:Map[ActorLink, State] = {
+  protected val state:Map[ActorLink, State] = {
     val m = mutable.Map[ActorLink, State]()
     for(p <- prev) m(p) = State()
     m.toMap
@@ -69,5 +69,5 @@ class MessageRouter(prev:Iterable[ActorLink]) extends ActorLink{
       lock.unlock()
     }
   }
-  
+
 }
