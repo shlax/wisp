@@ -34,6 +34,7 @@ class ActorFlow(prev:ActorLink, inbox:Inbox, fn: Any => Any) extends Actor(inbox
 
     case End =>
       ended = true
+
       var a = nodes.poll()
       while (a != null) {
         a << End

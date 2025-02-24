@@ -8,6 +8,8 @@ import java.util.concurrent.locks.ReentrantLock
 import scala.collection.mutable
 
 class MessageRouter(prev:Iterable[ActorLink]) extends ActorLink{
+  def this(l:ActorLink*) = this(l)
+
   private val lock = new ReentrantLock()
 
   private val nodes: util.Queue[ActorLink] = createNodes()
@@ -36,7 +38,7 @@ class MessageRouter(prev:Iterable[ActorLink]) extends ActorLink{
   }
 
   protected def select(s:Map[ActorLink, State]): (ActorLink, State) = {
-    s.minBy(_._2)
+    s.find(i => !i._2.ended).minBy(_._2)
   }
 
   override def accept(t: Message): Unit = {
@@ -50,7 +52,7 @@ class MessageRouter(prev:Iterable[ActorLink]) extends ActorLink{
             nodes.add(t.sender)
             val n = select(state)
             n._2.requested += 1
-            n._1 << HasNext
+            n._1.ask(HasNext).thenAccept(this)
           }
 
         case Next(v) =>
@@ -79,6 +81,10 @@ class MessageRouter(prev:Iterable[ActorLink]) extends ActorLink{
               a << End
               a = nodes.poll()
             }
+          }else{
+            val n = select(state)
+            n._2.requested += 1
+            n._1.ask(HasNext).thenAccept(this)
           }
       }
     } finally {
