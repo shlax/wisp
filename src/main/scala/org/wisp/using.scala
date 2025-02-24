@@ -6,7 +6,7 @@ object using {
 
   extension [T <: AutoCloseable](ac: T) {
     @targetName("withClose")
-    inline def | [R](f: T => R): R = {
+    inline def | [R](inline f: T => R): R = {
       try {
         f.apply(ac)
       } finally {
@@ -29,7 +29,7 @@ object using {
     }
   }
 
-  inline def using[R](f: UsingManager => R): R = {
+  inline def using[R](inline f: UsingManager => R): R = {
     val m = UsingManager()
     try {
       f.apply(m)
