@@ -25,9 +25,17 @@ class MessageRouter(prev:Iterable[ActorLink]) extends ActorLink{
     }
   }
 
-  protected val state:Map[ActorLink, State] = {
+  protected def createState(): State = {
+    State()
+  }
+
+  protected def select(s:Map[ActorLink, State]): (ActorLink, State) = {
+    s.minBy(_._2)
+  }
+
+  private val state:Map[ActorLink, State] = {
     val m = mutable.Map[ActorLink, State]()
-    for(p <- prev) m(p) = State()
+    for(p <- prev) m(p) = createState()
     m.toMap
   }
 
@@ -40,7 +48,7 @@ class MessageRouter(prev:Iterable[ActorLink]) extends ActorLink{
             t.sender << End
           }else{
             nodes.add(t.sender)
-            val n = state.minBy(_._2)
+            val n = select(state)
             n._2.requested += 1
             n._1 << HasNext
           }
