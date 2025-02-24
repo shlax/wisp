@@ -85,10 +85,14 @@ class ZipStream(eh:ExceptionHandler, prev:Iterable[ActorLink]) extends ActorLink
     m.toMap
   }
 
+  protected def select(i:Iterable[State]) : Option[State] = {
+    i.find(_.hasValue)
+  }
+
   override def accept(t: Message): Unit = lock.withLock {
     t.message match {
       case HasNext =>
-        state.values.find(_.hasValue) match {
+        select(state.values) match {
           case Some(n) =>
             n.send(t.sender)
 
