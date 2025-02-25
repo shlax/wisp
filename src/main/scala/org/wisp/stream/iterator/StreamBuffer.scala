@@ -1,16 +1,12 @@
 package org.wisp.stream.iterator
 
 import org.wisp.exceptions.ExceptionHandler
-import org.wisp.lock.*
-import org.wisp.{ActorLink, Message}
+import org.wisp.ActorLink
 import org.wisp.stream.iterator.message.*
 
 import java.util
-import java.util.concurrent.locks.ReentrantLock
 
-class StreamBuffer(eh: ExceptionHandler, prev:ActorLink, size:Int) extends ActorLink{
-  private val lock = new ReentrantLock()
-
+class StreamBuffer(eh: ExceptionHandler, prev:ActorLink, size:Int) extends StreamActorLink, ActorLink{
   private var ended = false
   private var requested = false
 
@@ -34,49 +30,46 @@ class StreamBuffer(eh: ExceptionHandler, prev:ActorLink, size:Int) extends Actor
     }
   }
 
-  override def accept(t: Message): Unit = lock.withLock{
-    t.value match {
-
-      case HasNext =>
-        val e = queue.poll()
-        if (e == null) {
-          if (ended) {
-            t.sender << End
-          } else {
-            nodes.add(t.sender)
-            next()
-          }
+  override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
+    case HasNext =>
+      val e = queue.poll()
+      if (e == null) {
+        if (ended) {
+          sender << End
         } else {
-          t.sender << Next(e)
+          nodes.add(sender)
           next()
         }
-
-      case Next(v) =>
-        if(ended) throw new IllegalStateException("ended")
-        requested = false
-
-        val n = nodes.poll()
-        if (n == null) {
-          queue.add(v)
-        } else {
-          n << Next(v)
-        }
-
+      } else {
+        sender << Next(e)
         next()
+      }
 
-      case End =>
-        if(ended) throw new IllegalStateException("ended")
-        requested = false
-        ended = true
+    case Next(v) =>
+      if(ended) throw new IllegalStateException("ended")
+      requested = false
 
-        if (queue.isEmpty) {
-          var a = nodes.poll()
-          while (a != null) {
-            a << End
-            a = nodes.poll()
-          }
+      val n = nodes.poll()
+      if (n == null) {
+        queue.add(v)
+      } else {
+        n << Next(v)
+      }
+
+      next()
+
+    case End =>
+      if(ended) throw new IllegalStateException("ended")
+      requested = false
+      ended = true
+
+      if (queue.isEmpty) {
+        var a = nodes.poll()
+        while (a != null) {
+          a << End
+          a = nodes.poll()
         }
-    }
+      }
   }
 
 }

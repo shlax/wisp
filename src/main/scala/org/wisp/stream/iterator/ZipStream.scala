@@ -1,18 +1,14 @@
 package org.wisp.stream.iterator
 
 import org.wisp.exceptions.ExceptionHandler
-import org.wisp.stream.iterator.message.{End, HasNext, Next}
-import org.wisp.{ActorLink, Message}
+import org.wisp.stream.iterator.message.{End, HasNext, IteratorMessage, Next}
+import org.wisp.ActorLink
 
 import java.util
-import java.util.concurrent.locks.ReentrantLock
 import scala.collection.mutable
-import org.wisp.lock.*
 
-class ZipStream(eh:ExceptionHandler, prev:Iterable[ActorLink]) extends ActorLink{
+class ZipStream(eh:ExceptionHandler, prev:Iterable[ActorLink]) extends StreamActorLink, ActorLink{
   def this(handler:ExceptionHandler, l:ActorLink*) = this(handler, l)
-
-  private val lock = new ReentrantLock()
 
   private val nodes: util.Queue[ActorLink] = createNodes()
 
@@ -89,37 +85,35 @@ class ZipStream(eh:ExceptionHandler, prev:Iterable[ActorLink]) extends ActorLink
     i.find(_.hasValue)
   }
 
-  override def accept(t: Message): Unit = lock.withLock {
-    t.value match {
-      case HasNext =>
-        select(state.values) match {
-          case Some(n) =>
-            n.send(t.sender)
+  override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
+    case HasNext =>
+      select(state.values) match {
+        case Some(n) =>
+          n.send(sender)
 
-          case None =>
-            if(state.values.forall(_.isFinished)){
-              t.sender << End
-            }else{
-              nodes.add(t.sender)
-              for(x <- state.values) x.requestNext()
-            }
-        }
-
-      case Next(v) =>
-        state(t.sender).next(v)
-
-      case End =>
-        state(t.sender).end()
-
-        if(state.values.forall(_.isFinished)){
-          var a = nodes.poll()
-          while (a != null) {
-            a << End
-            a = nodes.poll()
+        case None =>
+          if(state.values.forall(_.isFinished)){
+            sender << End
+          }else{
+            nodes.add(sender)
+            for(x <- state.values) x.requestNext()
           }
-        }
+      }
 
-    }
+    case Next(v) =>
+      state(sender).next(v)
+
+    case End =>
+      state(sender).end()
+
+      if(state.values.forall(_.isFinished)){
+        var a = nodes.poll()
+        while (a != null) {
+          a << End
+          a = nodes.poll()
+        }
+      }
+
   }
 
 }

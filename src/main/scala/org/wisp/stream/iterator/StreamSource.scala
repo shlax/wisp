@@ -4,28 +4,24 @@ import org.wisp.stream.Source
 import org.wisp.{ActorLink, Message}
 import org.wisp.stream.iterator.message.*
 import org.wisp.lock.*
-import java.util.concurrent.locks.ReentrantLock
 
-class StreamSource[T](src:Source[T]) extends ActorLink{
+class StreamSource[T](src:Source[T]) extends StreamActorLink, ActorLink{
 
-  private val lock = new ReentrantLock()
   private var ended = false
 
-  override def accept(t: Message): Unit = lock.withLock{
-    t.value match {
-      case HasNext =>
-        if (ended) {
-          t.sender << End
+  override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
+    case HasNext =>
+      if (ended) {
+        sender << End
+      } else {
+        val n = src.next()
+        if (n.isDefined) {
+          sender << Next(n.get)
         } else {
-          val n = src.next()
-          if (n.isDefined) {
-            t.sender << Next(n.get)
-          } else {
-            ended = true
-            t.sender << End
-          }
+          ended = true
+          sender << End
         }
-    }
+      }
   }
 
 }

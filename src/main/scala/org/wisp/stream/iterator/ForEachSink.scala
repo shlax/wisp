@@ -1,17 +1,16 @@
 package org.wisp.stream.iterator
 
 import org.wisp.exceptions.ExceptionHandler
-import org.wisp.{ActorLink, Message}
+import org.wisp.ActorLink
 import org.wisp.stream.Source
-import org.wisp.stream.iterator.message.{End, HasNext, Next}
+import org.wisp.stream.iterator.message.{End, HasNext, IteratorMessage, Next}
 
 import java.util
-import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
 import java.util.function
 import org.wisp.lock.*
 
-class ForEachSink[F, T](eh: ExceptionHandler, src:Source[F], sink:Consumer[T])(link: ActorLink => ActorLink) extends ActorLink, Runnable {
+class ForEachSink[F, T](eh: ExceptionHandler, src:Source[F], sink:Consumer[T])(link: ActorLink => ActorLink) extends StreamActorLink, ActorLink, Runnable {
 
   private val nodes: util.Queue[ActorLink] = createNodes()
 
@@ -26,7 +25,6 @@ class ForEachSink[F, T](eh: ExceptionHandler, src:Source[F], sink:Consumer[T])(l
     util.LinkedList[ActorValue]()
   }
 
-  private val lock = new ReentrantLock()
   private val condition = lock.newCondition()
 
   private val prev = link.apply(this)
@@ -71,24 +69,22 @@ class ForEachSink[F, T](eh: ExceptionHandler, src:Source[F], sink:Consumer[T])(l
     }
   }
 
-  override def accept(t: Message): Unit = lock.withLock {
-    t.value match {
-      case HasNext =>
-        if (inputEnded) {
-          t.sender << End
-        } else {
-          nodes.add(t.sender)
-          condition.signal()
-        }
-      case Next(v) =>
-        if(ended) throw new IllegalStateException("ended")
-        values.add(ActorValue(t.sender, v))
+  override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
+    case HasNext =>
+      if (inputEnded) {
+        sender << End
+      } else {
+        nodes.add(sender)
         condition.signal()
-      case End =>
-        if(ended) throw new IllegalStateException("ended")
-        ended = true
-        condition.signal()
-    }
+      }
+    case Next(v) =>
+      if(ended) throw new IllegalStateException("ended")
+      values.add(ActorValue(sender, v))
+      condition.signal()
+    case End =>
+      if(ended) throw new IllegalStateException("ended")
+      ended = true
+      condition.signal()
   }
 
 }
