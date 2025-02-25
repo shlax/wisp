@@ -18,7 +18,7 @@ class UdpClient(address: SocketAddress = null) extends AutoCloseable {
     val bOut = new ByteArrayOutputStream()
     new ObjectOutputStream(bOut) | { out =>
       out.writeUTF(m.path)
-      out.writeObject(m.message)
+      out.writeObject(m.value)
     }
     bOut.toByteArray
   }

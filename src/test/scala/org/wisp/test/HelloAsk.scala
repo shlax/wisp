@@ -21,7 +21,7 @@ class HelloAsk {
     ActorSystem() | { sys =>
       val hello = sys.create(HelloActor(_))
       hello.ask("world").whenComplete { (m, e) =>
-        println(m.message)
+        println(m.value)
         cd.countDown()
       }
 

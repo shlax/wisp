@@ -20,7 +20,7 @@ class StreamSink[T](eh:ExceptionHandler, prev:ActorLink, sink:Consumer[T]) exten
   }
 
   override def accept(t: Message): Unit = lock.withLock{
-    t.message match {
+    t.value match {
       case Next(v) =>
         if (completed.isDone) throw new IllegalStateException("all ended")
         sink.accept(v.asInstanceOf[T])

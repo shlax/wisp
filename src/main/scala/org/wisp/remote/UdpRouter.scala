@@ -70,7 +70,7 @@ class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extend
 
     ref.accept( Message( new ActorLink{
         override def accept(t: Message): Unit = {
-          t.message match {
+          t.value match {
             case m : RemoteMessage =>
               send(adr, m)
           }
@@ -79,7 +79,7 @@ class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extend
         override def ask(v: Any): CompletableFuture[Message] = {
           throw UnsupportedAskException(v)
         }
-      }, rm.message) )
+      }, rm.value) )
   }
 
   override def close(): Unit = {

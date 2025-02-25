@@ -72,7 +72,7 @@ class ForEachSink[F, T](eh: ExceptionHandler, src:Source[F], sink:Consumer[T])(l
   }
 
   override def accept(t: Message): Unit = lock.withLock {
-    t.message match {
+    t.value match {
       case HasNext =>
         if (inputEnded) {
           t.sender << End

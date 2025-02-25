@@ -90,7 +90,7 @@ class ZipStream(eh:ExceptionHandler, prev:Iterable[ActorLink]) extends ActorLink
   }
 
   override def accept(t: Message): Unit = lock.withLock {
-    t.message match {
+    t.value match {
       case HasNext =>
         select(state.values) match {
           case Some(n) =>

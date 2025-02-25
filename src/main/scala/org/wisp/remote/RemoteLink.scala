@@ -9,7 +9,7 @@ import java.util.concurrent.CompletableFuture
 class RemoteLink(c: UdpClient, adr:SocketAddress, path:String) extends ActorLink{
 
   override def accept(t: Message): Unit = {
-    c.send(adr, RemoteMessage(path, t.message))
+    c.send(adr, RemoteMessage(path, t.value))
   }
 
   override def ask(v:Any) : CompletableFuture[Message] = {

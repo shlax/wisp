@@ -50,7 +50,7 @@ class QueueInbox[T <: Actor](override val system: ActorSystem, inboxCapacity:Int
                   @targetName("send")
                   override def <<(v: Any): Unit = accept(Message(actor, v))
                   override def accept(t: Message): Unit = n.sender.accept(t)
-                }).apply(n.message)
+                }).apply(n.value)
             } catch {
               case NonFatal(e) =>
                 system.onException(ProcessingException(n, actor, e))

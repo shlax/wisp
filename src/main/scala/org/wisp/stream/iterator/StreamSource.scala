@@ -12,7 +12,7 @@ class StreamSource[T](src:Source[T]) extends ActorLink{
   private var ended = false
 
   override def accept(t: Message): Unit = lock.withLock{
-    t.message match {
+    t.value match {
       case HasNext =>
         if (ended) {
           t.sender << End

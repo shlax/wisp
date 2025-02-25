@@ -40,7 +40,7 @@ class ForEachSource[T](it:Source[T]) extends ActorLink, Runnable {
   }
 
   override def accept(t: Message): Unit = lock.withLock {
-    t.message match {
+    t.value match {
       case HasNext =>
         if (ended) {
           t.sender << End

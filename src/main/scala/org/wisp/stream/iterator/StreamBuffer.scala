@@ -35,7 +35,7 @@ class StreamBuffer(eh: ExceptionHandler, prev:ActorLink, size:Int) extends Actor
   }
 
   override def accept(t: Message): Unit = lock.withLock{
-    t.message match {
+    t.value match {
 
       case HasNext =>
         val e = queue.poll()
