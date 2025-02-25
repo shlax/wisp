@@ -6,6 +6,7 @@ import org.wisp.{ActorLink, Message}
 
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
+import scala.util.control.NonFatal
 
 abstract class StreamActorLink extends Consumer[Message]{
 
@@ -16,6 +17,54 @@ abstract class StreamActorLink extends Consumer[Message]{
   override def accept(t: Message): Unit = {
     val f = accept(t.sender)
     lock.withLock{ f.apply(t.value.asInstanceOf[IteratorMessage]) }
+  }
+
+  protected def autoClose(c:Consumer[?]):Unit = {
+    c match {
+      case ac: AutoCloseable =>
+        ac.close()
+      case _ =>
+    }
+  }
+
+  protected def autoClose(c: Consumer[?], e: Throwable): Unit = {
+    c match {
+      case ac: AutoCloseable =>
+        try {
+          ac.close()
+        } catch {
+          case NonFatal(ex) =>
+            ex.addSuppressed(e)
+            throw ex
+        }
+      case _ =>
+        throw e
+    }
+  }
+
+  protected def autoClose(c:Consumer[?])(block: => Unit):Unit = {
+    var e: Throwable = null
+    try{
+      block
+    }catch{
+      case NonFatal(ex) =>
+        e = ex
+    }finally {
+      c match{
+        case ac:AutoCloseable =>
+          try{
+            ac.close()
+          }catch{
+            case NonFatal(ex) =>
+              if(e != null) ex.addSuppressed(e)
+              e = ex
+          }
+        case _ =>
+      }
+    }
+    if(e != null){
+      throw e
+    }
   }
 
 }

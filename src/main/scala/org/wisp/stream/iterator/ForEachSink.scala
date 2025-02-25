@@ -29,36 +29,37 @@ class ForEachSink[F, T](eh: ExceptionHandler, src:Source[F], sink:Consumer[T])(l
   }
 
   override def run(): Unit = lock.withLock {
-    next()
+    autoClose(sink) {
+      next()
 
-    while (!ended) {
-      for (v <- value) {
-        value = None
-        sink.accept(v)
-        next()
-      }
-
-      var a = nodes.poll()
-      while (a != null) {
-        if (inputEnded) {
-          a << End
-        } else {
-          src.next() match {
-            case Some(v) =>
-              a << Next(v)
-            case None =>
-              inputEnded = true
-              a << End
-          }
+      while (!ended) {
+        for (v <- value) {
+          value = None
+          sink.accept(v)
+          next()
         }
-        a = nodes.poll()
-      }
 
-      if (!ended) {
-        condition.await()
+        var a = nodes.poll()
+        while (a != null) {
+          if (inputEnded) {
+            a << End
+          } else {
+            src.next() match {
+              case Some(v) =>
+                a << Next(v)
+              case None =>
+                inputEnded = true
+                a << End
+            }
+          }
+          a = nodes.poll()
+        }
+
+        if (!ended) {
+          condition.await()
+        }
       }
     }
-
   }
 
   override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {

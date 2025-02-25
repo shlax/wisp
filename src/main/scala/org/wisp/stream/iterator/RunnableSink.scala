@@ -20,20 +20,22 @@ class RunnableSink[T](eh:ExceptionHandler, prev:ActorLink, sink:Consumer[T]) ext
   }
 
   override def run(): Unit = lock.withLock {
-   next()
-
-    while (!ended){
-      for (v <- value) {
-        value = None
-        sink.accept(v)
-        next()
+    autoClose(sink) {
+      next()
+    
+      while (!ended) {
+        for (v <- value) {
+          value = None
+          sink.accept(v)
+          next()
+        }
+    
+        if (!ended) {
+          condition.await()
+        }
       }
-
-      if (!ended) {
-        condition.await()
-      }
+      
     }
-
   }
 
   override def accept(from: ActorLink): PartialFunction[IteratorMessage, Unit] = {
