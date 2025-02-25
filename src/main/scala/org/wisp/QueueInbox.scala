@@ -13,10 +13,7 @@ class QueueInbox[T <: Actor](override val system: ActorSystem, inboxCapacity:Int
   val actor:T = fn.create(this)
 
   protected val queue: util.Queue[Message] = createQueue(inboxCapacity)
-
-  protected def createQueue(capacity:Int): util.Queue[Message] = {
-    util.LinkedList[Message]()
-  }
+  protected def createQueue(capacity:Int): util.Queue[Message] = { util.LinkedList[Message]() }
 
   protected val lock:ReentrantLock = ReentrantLock()
   protected val cnd: Condition = lock.newCondition()
