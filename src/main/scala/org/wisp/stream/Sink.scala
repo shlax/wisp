@@ -114,9 +114,8 @@ class Sink[T] extends Consumer[T] with AutoCloseable {
     nf
   }
 
-  def as(fn: Consumer[Sink[T]]): Sink[T] = {
-    fn.accept(this)
-    this
+  def as[R](fn: Sink[T] => R): R = {
+    fn.apply(this)
   }
 
   @targetName("sendTo")
