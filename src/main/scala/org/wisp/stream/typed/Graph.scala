@@ -16,12 +16,12 @@ class Graph(val system:ActorSystem){
     node(StreamSource(s))
   }
 
-  def zip[T](nodes: Iterable[Node[? >: T]]): Node[T] = {
+  def zip[T](nodes: Iterable[Node[? <: T]]): Node[T] = {
     val r = ZipStream(system, nodes.map(_.link))
     node(r)
   }
 
-  def zip[T](nodes:Node[? >: T]*): Node[T] = {
+  def zip[T](nodes:Node[? <: T]*): Node[T] = {
     zip(nodes)
   }
 
