@@ -9,7 +9,7 @@ import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
 import org.wisp.lock.*
 
-class StreamSink(eh:ExceptionHandler, prev:ActorLink, sink:Consumer[Any]) extends Consumer[Message]{
+class StreamSink[T](eh:ExceptionHandler, prev:ActorLink, sink:Consumer[T]) extends Consumer[Message]{
 
   private val completed = CompletableFuture[Void]
   private val lock = new ReentrantLock()
@@ -23,7 +23,7 @@ class StreamSink(eh:ExceptionHandler, prev:ActorLink, sink:Consumer[Any]) extend
     t.message match {
       case Next(v) =>
         if (completed.isDone) throw new IllegalStateException("all ended")
-        sink.accept(v)
+        sink.accept(v.asInstanceOf[T])
         prev.ask(HasNext).whenComplete(eh >> this)
       case End =>
         if (!completed.complete(null)) {

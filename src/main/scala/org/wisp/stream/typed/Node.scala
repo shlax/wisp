@@ -8,12 +8,12 @@ import java.util.function.Consumer
 class Node[T](val graph: Graph, val link: ActorLink) {
 
   def map[V](fn: T => V): Node[V] = {
-    val r = graph.system.create( i => StreamWorker(link, i, (a: Any) => fn.apply(a.asInstanceOf[T]) ) )
+    val r = graph.system.create( i => StreamWorker(link, i, fn) )
     graph.node(r)
   }
 
-  def to[E >: T](c: Consumer[E]): StreamSink = {
-    StreamSink(graph.system, link, (a: Any) => c.accept(a.asInstanceOf[T]) )
+  def to[E >: T](c: Consumer[E]): StreamSink[E] = {
+    StreamSink(graph.system, link, c)
   }
 
   def buffer(size:Int) : Node[T] = {

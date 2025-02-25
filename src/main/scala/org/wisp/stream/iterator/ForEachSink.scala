@@ -11,7 +11,7 @@ import java.util.function.Consumer
 import java.util.function
 import org.wisp.lock.*
 
-class ForEachSink(eh: ExceptionHandler, src:Source[?], sink:Consumer[Any])(link: ActorLink => ActorLink) extends ActorLink, Runnable {
+class ForEachSink[F, T](eh: ExceptionHandler, src:Source[F], sink:Consumer[T])(link: ActorLink => ActorLink) extends ActorLink, Runnable {
 
   private val nodes: util.Queue[ActorLink] = createNodes()
 
@@ -44,7 +44,7 @@ class ForEachSink(eh: ExceptionHandler, src:Source[?], sink:Consumer[Any])(link:
     while (!ended) {
       var v = values.poll()
       while (v != null) {
-        sink.accept(v.value)
+        sink.accept(v.value.asInstanceOf[T])
         next(v.actor)
         v = values.poll()
       }

@@ -5,7 +5,7 @@ import org.wisp.stream.iterator.message.*
 
 import java.util
 
-class StreamWorker(prev:ActorLink, inbox:Inbox, fn: Any => Any) extends Actor(inbox){
+class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => T) extends Actor(inbox){
 
   private val nodes:util.Queue[ActorLink] = createNodes()
   private var ended = false
@@ -21,7 +21,7 @@ class StreamWorker(prev:ActorLink, inbox:Inbox, fn: Any => Any) extends Actor(in
       val n = nodes.poll()
       if (n == null) throw new IllegalStateException("no workers found for " + v)
 
-      val r = fn.apply(v)
+      val r = fn.apply(v.asInstanceOf[F])
       n << Next(r)
 
     case HasNext =>

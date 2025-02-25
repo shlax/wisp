@@ -6,7 +6,7 @@ import org.wisp.stream.iterator.message.*
 import org.wisp.lock.*
 import java.util.concurrent.locks.ReentrantLock
 
-class StreamSource(src:Source[?]) extends ActorLink{
+class StreamSource[T](src:Source[T]) extends ActorLink{
 
   private val lock = new ReentrantLock()
   private var ended = false

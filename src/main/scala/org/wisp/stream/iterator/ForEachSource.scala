@@ -8,7 +8,7 @@ import java.util
 import java.util.concurrent.locks.ReentrantLock
 import org.wisp.lock.*
 
-class ForEachSource(it:Source[?]) extends ActorLink, Runnable {
+class ForEachSource[T](it:Source[T]) extends ActorLink, Runnable {
 
   private val nodes:util.Queue[ActorLink] = createNodes()
 
