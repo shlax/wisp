@@ -55,6 +55,7 @@ class RunnableSink[T](prev:ActorLink, sink:Consumer[T])
       condition.signal()
     case End =>
       if (ended) throw new IllegalStateException("ended")
+
       ended = true
       condition.signal()
   }
