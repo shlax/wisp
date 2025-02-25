@@ -1,6 +1,7 @@
 package org.wisp
 
 import scala.annotation.targetName
+import scala.util.control.NonFatal
 
 object using {
 
@@ -24,8 +25,20 @@ object using {
     }
 
     override def close(): Unit = {
-      for(c <- toClose) c.close()
+      var e:Option[Throwable] = None
+      for (i <- toClose){
+          try {
+            i.close()
+          }catch {
+            case NonFatal(ex) =>
+              if(e.isDefined) ex.addSuppressed(e.get)
+              e = Some(ex)
+          }
+      }
       toClose = Nil
+      if(e.isDefined){
+        throw e.get
+      }
     }
   }
 
