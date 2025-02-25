@@ -7,22 +7,22 @@ import org.wisp.stream.iterator.message.*
 import java.util
 
 class StreamBuffer(eh: ExceptionHandler, prev:ActorLink, size:Int) extends StreamActorLink, ActorLink{
-  private var ended = false
-  private var requested = false
+  protected var ended = false
+  protected var requested = false
 
-  private val queue:util.Queue[Any] = createQueue()
+  protected val queue:util.Queue[Any] = createQueue()
 
   protected def createQueue(): util.Queue[Any] = {
     util.LinkedList[Any]()
   }
 
-  private val nodes: util.Queue[ActorLink] = createNodes()
+  protected val nodes: util.Queue[ActorLink] = createNodes()
 
   protected def createNodes(): util.Queue[ActorLink] = {
     util.LinkedList[ActorLink]()
   }
 
-  private def next(): Unit = {
+  protected def next(): Unit = {
     val req = if(requested) 1 else 0
     if (!ended && queue.size() + req < size) {
       requested = true

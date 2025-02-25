@@ -7,7 +7,7 @@ import org.wisp.lock.*
 
 class StreamSource[T](src:Source[T]) extends StreamActorLink, ActorLink{
 
-  private var ended = false
+  protected var ended = false
 
   override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
     case HasNext =>

@@ -10,29 +10,31 @@ import java.util.function.Consumer
 import java.util.function
 import org.wisp.lock.*
 
+import java.util.concurrent.locks.Condition
+
 class ForEachSink[F, T](eh: ExceptionHandler, src:Source[F], sink:Consumer[T])(link: ActorLink => ActorLink) extends StreamActorLink, ActorLink, Runnable {
 
-  private val nodes: util.Queue[ActorLink] = createNodes()
+  protected val nodes: util.Queue[ActorLink] = createNodes()
 
   protected def createNodes(): util.Queue[ActorLink] = {
     util.LinkedList[ActorLink]()
   }
 
   protected class ActorValue(val actor:ActorLink, val value:Any)
-  private val values: util.Queue[ActorValue] = createValues()
+  protected val values: util.Queue[ActorValue] = createValues()
 
   protected def createValues(): util.Queue[ActorValue] = {
     util.LinkedList[ActorValue]()
   }
 
-  private val condition = lock.newCondition()
+  protected val condition: Condition = lock.newCondition()
 
-  private val prev = link.apply(this)
+  protected val prev:ActorLink = link.apply(this)
 
-  private var ended = false
-  private var inputEnded = false
+  protected var inputEnded = false
+  protected var ended = false
 
-  private def next(p:ActorLink): Unit = {
+  protected def next(p:ActorLink): Unit = {
     p.ask(HasNext).whenComplete(eh >> this)
   }
 

@@ -3,7 +3,7 @@ package org.wisp
 import org.wisp.exceptions.ProcessingException
 
 import java.util
-import java.util.concurrent.locks.ReentrantLock
+import java.util.concurrent.locks.{Condition, ReentrantLock}
 import scala.annotation.targetName
 import scala.util.control.NonFatal
 import org.wisp.lock.*
@@ -12,16 +12,16 @@ class QueueInbox[T <: Actor](override val system: ActorSystem, inboxCapacity:Int
 
   val actor:T = fn.create(this)
 
-  private val queue: util.Queue[Message] = createQueue(inboxCapacity)
+  protected val queue: util.Queue[Message] = createQueue(inboxCapacity)
 
   protected def createQueue(capacity:Int): util.Queue[Message] = {
     util.LinkedList[Message]()
   }
 
-  private val lock = ReentrantLock()
-  private val cnd = lock.newCondition()
+  protected val lock:ReentrantLock = ReentrantLock()
+  protected val cnd: Condition = lock.newCondition()
 
-  private var running:Boolean = false
+  protected var running = false
 
   protected def pull(): Option[Message] = lock.withLock {
     val n = Option(queue.poll())

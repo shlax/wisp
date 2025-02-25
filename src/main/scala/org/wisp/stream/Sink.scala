@@ -24,7 +24,7 @@ object Sink {
 }
 
 class Sink[T] extends Consumer[T] with AutoCloseable {
-  private val next = new util.LinkedList[Consumer[? >: T]]
+  protected val next = new util.LinkedList[Consumer[? >: T]]
 
   override def accept(t: T): Unit = {
     for (i <- next.asScala) i.accept(t)
@@ -64,8 +64,8 @@ class Sink[T] extends Consumer[T] with AutoCloseable {
   def groupBy[K, E](keyFn: T => K, collectFn: (Option[E], T) => E): Sink[E] = {
     val nf = new Sink[E]
     to(new Sink[T]{
-      private var value: Option[E] = None
-      private var key: Option[K] = None
+      protected var value: Option[E] = None
+      protected var key: Option[K] = None
 
       override def accept(t: T): Unit = {
         val k = keyFn.apply(t)

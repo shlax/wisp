@@ -9,7 +9,7 @@ import java.util.function.Consumer
 
 class StreamSink[T](eh:ExceptionHandler, prev:ActorLink, sink:Consumer[T]) extends StreamActorLink{
 
-  private val completed = CompletableFuture[Void]
+  protected val completed:CompletableFuture[Void] = CompletableFuture[Void]
 
   def start(): CompletableFuture[Void] = {
     prev.ask(HasNext).whenComplete(eh >> this)

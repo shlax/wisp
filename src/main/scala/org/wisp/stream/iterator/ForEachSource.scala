@@ -7,16 +7,18 @@ import org.wisp.stream.iterator.message.*
 import java.util
 import org.wisp.lock.*
 
-class ForEachSource[T](it:Source[T]) extends StreamActorLink, ActorLink, Runnable {
-  private val condition = lock.newCondition()
+import java.util.concurrent.locks.Condition
 
-  private val nodes:util.Queue[ActorLink] = createNodes()
+class ForEachSource[T](it:Source[T]) extends StreamActorLink, ActorLink, Runnable {
+  protected val condition: Condition = lock.newCondition()
+
+  protected val nodes:util.Queue[ActorLink] = createNodes()
 
   protected def createNodes(): util.Queue[ActorLink] = {
     util.LinkedList[ActorLink]()
   }
 
-  private var ended = false
+  protected var ended = false
 
   override def run():Unit = lock.withLock {
     it.forEach { e =>

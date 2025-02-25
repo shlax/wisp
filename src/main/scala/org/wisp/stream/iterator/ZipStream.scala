@@ -10,7 +10,7 @@ import scala.collection.mutable
 class ZipStream(eh:ExceptionHandler, prev:Iterable[ActorLink]) extends StreamActorLink, ActorLink{
   def this(handler:ExceptionHandler, l:ActorLink*) = this(handler, l)
 
-  private val nodes: util.Queue[ActorLink] = createNodes()
+  protected val nodes: util.Queue[ActorLink] = createNodes()
 
   protected def createNodes(): util.Queue[ActorLink] = {
     util.LinkedList[ActorLink]()
@@ -75,7 +75,7 @@ class ZipStream(eh:ExceptionHandler, prev:Iterable[ActorLink]) extends StreamAct
     State(link)
   }
 
-  private val state:Map[ActorLink, State] = {
+  protected val state:Map[ActorLink, State] = {
     val m = mutable.Map[ActorLink, State]()
     for(p <- prev) m(p) = createState(p)
     m.toMap
