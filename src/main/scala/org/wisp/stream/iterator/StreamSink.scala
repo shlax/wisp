@@ -18,12 +18,12 @@ class StreamSink[T](eh:ExceptionHandler, prev:ActorLink, sink:Consumer[T]) exten
 
   override def accept(from: ActorLink): PartialFunction[IteratorMessage, Unit] = {
     case Next(v) =>
-      if (completed.isDone) throw new IllegalStateException("all ended")
+      if (completed.isDone) throw new IllegalStateException("ended")
       sink.accept(v.asInstanceOf[T])
       prev.ask(HasNext).whenComplete(eh >> this)
     case End =>
       if (!completed.complete(null)) {
-        throw new IllegalStateException("all ended")
+        throw new IllegalStateException("ended")
       }
   }
 
