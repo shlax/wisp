@@ -1,6 +1,5 @@
 package org.wisp.stream.iterator
 
-import org.wisp.exceptions.ExceptionHandler
 import org.wisp.{ActorLink, Message}
 import org.wisp.stream.iterator.message.*
 
