@@ -10,13 +10,11 @@ import org.wisp.lock.*
 import java.util.concurrent.locks.Condition
 
 class ForEachSource[T](it:Source[T]) extends StreamActorLink, ActorLink, Runnable {
-  protected val condition: Condition = lock.newCondition()
 
   protected val nodes:util.Queue[ActorLink] = createNodes()
+  protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
 
-  protected def createNodes(): util.Queue[ActorLink] = {
-    util.LinkedList[ActorLink]()
-  }
+  protected val condition: Condition = lock.newCondition()
 
   protected var ended = false
 

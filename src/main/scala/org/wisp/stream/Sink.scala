@@ -23,7 +23,7 @@ object Sink {
 
 }
 
-class Sink[T] extends Consumer[T] with AutoCloseable {
+class Sink[T] extends Consumer[T], AutoCloseable {
   protected val next = new util.LinkedList[Consumer[? >: T]]
 
   override def accept(t: T): Unit = {

@@ -8,6 +8,7 @@ import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
 
 abstract class StreamActorLink extends Consumer[Message]{
+
   protected val lock = new ReentrantLock()
 
   def accept(from:ActorLink): PartialFunction[IteratorMessage, Unit]
@@ -16,4 +17,5 @@ abstract class StreamActorLink extends Consumer[Message]{
     val f = accept(t.sender)
     lock.withLock{ f.apply(t.value.asInstanceOf[IteratorMessage]) }
   }
+
 }

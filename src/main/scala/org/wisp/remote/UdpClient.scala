@@ -36,4 +36,5 @@ class UdpClient(address: SocketAddress = null) extends AutoCloseable {
   override def close(): Unit = {
     channel.close()
   }
+
 }

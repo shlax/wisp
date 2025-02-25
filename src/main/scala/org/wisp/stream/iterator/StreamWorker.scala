@@ -8,11 +8,9 @@ import java.util
 class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => T) extends Actor(inbox){
 
   protected val nodes:util.Queue[ActorLink] = createNodes()
-  protected var ended = false
+  protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
 
-  protected def createNodes(): util.Queue[ActorLink] = {
-    util.LinkedList[ActorLink]()
-  }
+  protected var ended = false
 
   override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
     case Next(v) =>

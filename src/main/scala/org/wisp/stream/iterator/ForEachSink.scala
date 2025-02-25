@@ -15,38 +15,27 @@ import java.util.concurrent.locks.Condition
 class ForEachSink[F, T](eh: ExceptionHandler, src:Source[F], sink:Consumer[T])(link: ActorLink => ActorLink) extends StreamActorLink, ActorLink, Runnable {
 
   protected val nodes: util.Queue[ActorLink] = createNodes()
-
-  protected def createNodes(): util.Queue[ActorLink] = {
-    util.LinkedList[ActorLink]()
-  }
-
-  protected class ActorValue(val actor:ActorLink, val value:Any)
-  protected val values: util.Queue[ActorValue] = createValues()
-
-  protected def createValues(): util.Queue[ActorValue] = {
-    util.LinkedList[ActorValue]()
-  }
+  protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
 
   protected val condition: Condition = lock.newCondition()
+  protected val prev: ActorLink = link.apply(this)
 
-  protected val prev:ActorLink = link.apply(this)
-
+  protected var value: Option[T] = None
   protected var inputEnded = false
   protected var ended = false
 
-  protected def next(p:ActorLink): Unit = {
-    p.ask(HasNext).whenComplete(eh >> this)
+  protected def next(): Unit = {
+    prev.ask(HasNext).whenComplete(eh >> this)
   }
 
   override def run(): Unit = lock.withLock {
-    next(prev)
+    next()
 
     while (!ended) {
-      var v = values.poll()
-      while (v != null) {
-        sink.accept(v.value.asInstanceOf[T])
-        next(v.actor)
-        v = values.poll()
+      for (v <- value) {
+        value = None
+        sink.accept(v)
+        next()
       }
 
       var a = nodes.poll()
@@ -69,6 +58,7 @@ class ForEachSink[F, T](eh: ExceptionHandler, src:Source[F], sink:Consumer[T])(l
         condition.await()
       }
     }
+
   }
 
   override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
@@ -81,7 +71,9 @@ class ForEachSink[F, T](eh: ExceptionHandler, src:Source[F], sink:Consumer[T])(l
       }
     case Next(v) =>
       if(ended) throw new IllegalStateException("ended")
-      values.add(ActorValue(sender, v))
+      if(value.isDefined) throw new IllegalStateException("dropped value: "+v)
+
+      value = Some(v.asInstanceOf[T])
       condition.signal()
     case End =>
       if(ended) throw new IllegalStateException("ended")

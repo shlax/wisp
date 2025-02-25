@@ -11,10 +11,7 @@ class ZipStream(eh:ExceptionHandler, prev:Iterable[ActorLink]) extends StreamAct
   def this(handler:ExceptionHandler, l:ActorLink*) = this(handler, l)
 
   protected val nodes: util.Queue[ActorLink] = createNodes()
-
-  protected def createNodes(): util.Queue[ActorLink] = {
-    util.LinkedList[ActorLink]()
-  }
+  protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
 
   protected class State(val link:ActorLink){
     protected var value:Option[Any] = None
