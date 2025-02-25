@@ -32,7 +32,7 @@ class Graph(val system:ActorSystem){
   }
 
   def forEach[T, R](s:Source[T], c:Consumer[R])(fn: Node[T] => Node[R]) : ForEachSink[T, R] = {
-    ForEachSink(system, s, c ){ prev =>
+    ForEachSink(s, c ){ prev =>
       fn.apply( node(prev) ).link
     }
   }

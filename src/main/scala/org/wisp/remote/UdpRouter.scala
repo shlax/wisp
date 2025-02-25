@@ -11,7 +11,7 @@ import java.nio.channels.AsynchronousCloseException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.{CompletableFuture, ConcurrentHashMap, ConcurrentMap, Executor}
 
-class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extends UdpClient(address), Runnable{
+class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extends UdpClient(Some(address)), Runnable{
 
   protected val bindMap: ConcurrentMap[String, ActorLink] = createBindMap()
 

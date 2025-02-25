@@ -27,7 +27,7 @@ class HelloStreamBuffer {
         "w:" + Thread.currentThread().threadId + ":" + q
       }))
 
-      StreamSink(sys, w, println(_)).start().get()
+      StreamSink(w, println(_)).start().get()
 
     }
   }

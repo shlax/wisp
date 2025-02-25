@@ -22,7 +22,7 @@ class HelloRunnableSink {
         "w:" + Thread.currentThread().threadId + ":" + q
       }))
 
-      RunnableSink(sys, w, println(_)).run()
+      RunnableSink(w, println(_)).run()
 
     }
   }

@@ -19,26 +19,18 @@ abstract class StreamActorLink extends Consumer[Message]{
     lock.withLock{ f.apply(t.value.asInstanceOf[IteratorMessage]) }
   }
 
-  protected def autoClose(c:Consumer[?]):Unit = {
-    c match {
-      case ac: AutoCloseable =>
-        ac.close()
-      case _ =>
-    }
-  }
-
-  protected def autoClose(c: Consumer[?], e: Throwable): Unit = {
+  protected def autoClose(c: Consumer[?], tr: Option[Throwable]): Unit = {
     c match {
       case ac: AutoCloseable =>
         try {
           ac.close()
         } catch {
           case NonFatal(ex) =>
-            ex.addSuppressed(e)
+            for(e <- tr) ex.addSuppressed(e)
             throw ex
         }
       case _ =>
-        throw e
+        for(e <- tr) throw e
     }
   }
 

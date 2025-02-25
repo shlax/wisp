@@ -26,7 +26,7 @@ class HelloForEachSource {
         "w:" + Thread.currentThread().threadId + ":" + q
       }))
 
-      val cf = StreamSink(sys, w, println(_)).start()
+      val cf = StreamSink(w, println(_)).start()
       Thread.sleep(50)
       println("start")
 

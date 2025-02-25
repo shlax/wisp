@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.{BiConsumer, Consumer}
 import scala.util.control.NonFatal
 
-class StreamSink[T](eh:ExceptionHandler, prev:ActorLink, sink:Consumer[T]) extends StreamActorLink, BiConsumer[Message, Throwable]{
+class StreamSink[T](prev:ActorLink, sink:Consumer[T]) extends StreamActorLink, BiConsumer[Message, Throwable]{
 
   protected val completed:CompletableFuture[Void] = CompletableFuture[Void]
   protected val sinkClosed = AtomicBoolean(false)
@@ -29,13 +29,13 @@ class StreamSink[T](eh:ExceptionHandler, prev:ActorLink, sink:Consumer[T]) exten
         case NonFatal(exc) =>
           completed.completeExceptionally(exc)
           if(sinkClosed.compareAndSet(false, true)){
-            autoClose(sink, exc)
+            autoClose(sink, Some(exc))
           }
       }
     case End =>
       val c = completed.complete(null)
       if(sinkClosed.compareAndSet(false, true)){
-        autoClose(sink)
+        autoClose(sink, None)
       }
       if(!c){
         throw new IllegalStateException("ended")
@@ -46,7 +46,7 @@ class StreamSink[T](eh:ExceptionHandler, prev:ActorLink, sink:Consumer[T]) exten
     if(u != null){
       completed.completeExceptionally(u)
       if(sinkClosed.compareAndSet(false, true)){
-        autoClose(sink, u)
+        autoClose(sink, Some(u))
       }
     }else{
       accept(t)

@@ -6,6 +6,7 @@ import scala.util.control.NonFatal
 
 trait ExceptionHandler{
 
+  @Deprecated
   @targetName("forwardException")
   def >>[T](c:Consumer[T]):BiConsumer[T, Throwable] = { (v, e) =>
     if(e != null) onException(e)

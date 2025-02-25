@@ -30,7 +30,7 @@ class HelloZipStream {
 
       val r = ZipStream(sys, w1, w2)
 
-      StreamSink(sys, r, println(_)).start().get()
+      StreamSink(r, println(_)).start().get()
 
     }
   }

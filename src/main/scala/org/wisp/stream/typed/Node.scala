@@ -13,7 +13,7 @@ class Node[T](val graph: Graph, val link: ActorLink) {
   }
 
   def to[E >: T](c: Consumer[E]): StreamSink[E] = {
-    StreamSink(graph.system, link, c)
+    StreamSink(link, c)
   }
 
   def buffer(size:Int) : Node[T] = {

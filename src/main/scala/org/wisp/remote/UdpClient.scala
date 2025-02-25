@@ -6,13 +6,12 @@ import java.nio.ByteBuffer
 import java.nio.channels.DatagramChannel
 import org.wisp.using.*
 
-class UdpClient(address: SocketAddress = null) extends AutoCloseable {
+class UdpClient(address: Option[SocketAddress] = None) extends AutoCloseable {
 
   protected val channel: DatagramChannel = createDatagramChannel(address)
-
-  protected def createDatagramChannel(address: SocketAddress): DatagramChannel = {
+  protected def createDatagramChannel(adr: Option[SocketAddress]): DatagramChannel = {
     val dc = DatagramChannel.open()
-    if(address != null) dc.bind(address)
+    for(a <- adr) dc.bind(a)
     dc
   }
 
