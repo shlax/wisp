@@ -11,7 +11,9 @@ class UdpClient(address: SocketAddress = null) extends AutoCloseable {
   protected val channel: DatagramChannel = createDatagramChannel(address)
 
   protected def createDatagramChannel(address: SocketAddress): DatagramChannel = {
-    DatagramChannel.open().bind(address)
+    val dc = DatagramChannel.open()
+    if(address != null) dc.bind(address)
+    dc
   }
 
   protected def write(m: RemoteMessage): Array[Byte] = {
