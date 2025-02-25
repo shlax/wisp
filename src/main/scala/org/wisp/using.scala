@@ -8,11 +8,27 @@ object using {
   extension [T <: AutoCloseable](ac: T) {
     @targetName("withClose")
     inline def | [R](inline f: T => R): R = {
+      var r:Option[R] = None
+      var e:Throwable = null
       try {
-        f.apply(ac)
+        val x = f.apply(ac)
+        r = Some(x)
+      }catch{
+        case NonFatal(ex) =>
+          e = ex
       } finally {
-        ac.close()
+        try {
+          ac.close()
+        }catch{
+          case NonFatal(ex) =>
+            if(e != null) ex.addSuppressed(e)
+            e = ex
+        }
       }
+      if (e != null) {
+        throw e
+      }
+      r.get
     }
   }
 
@@ -25,19 +41,19 @@ object using {
     }
 
     override def close(): Unit = {
-      var e:Option[Throwable] = None
+      var e:Throwable = null
       for (i <- toClose){
           try {
             i.close()
           }catch {
             case NonFatal(ex) =>
-              if(e.isDefined) ex.addSuppressed(e.get)
-              e = Some(ex)
+              if(e != null) ex.addSuppressed(e)
+              e = ex
           }
       }
       toClose = Nil
-      if(e.isDefined){
-        throw e.get
+      if(e != null){
+        throw e
       }
     }
   }

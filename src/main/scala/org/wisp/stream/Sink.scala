@@ -31,20 +31,20 @@ class Sink[T] extends Consumer[T], AutoCloseable {
   }
 
   def close(): Unit = {
-    var e:Option[Throwable] = None
+    var e:Throwable = null
     for (i <- next.asScala) i match {
       case f: AutoCloseable =>
         try {
           f.close()
         }catch {
           case NonFatal(ex) =>
-            if(e.isDefined) ex.addSuppressed(e.get)
-            e = Some(ex)
+            if(e != null) ex.addSuppressed(e)
+            e = ex
         }
       case _ =>
     }
-    if(e.isDefined){
-      throw e.get
+    if(e != null){
+      throw e
     }
   }
 
