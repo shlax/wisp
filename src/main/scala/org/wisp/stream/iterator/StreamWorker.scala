@@ -7,6 +7,7 @@ import org.wisp.stream.iterator.message.*
 
 import java.util
 import java.util.function.BiConsumer
+import scala.util.control.NonFatal
 
 object StreamWorker {
 
@@ -26,8 +27,16 @@ class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T]) extend
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
 
   protected var exception: Option[Throwable] = None
-  protected var source:Option[Source[T]] = None
+  protected var source: Option[Source[T]] = None
   protected var ended = false
+
+  protected def sendEnd():Unit = {
+    var a = nodes.poll()
+    while (a != null) {
+      a << End(exception)
+      a = nodes.poll()
+    }
+  }
 
   override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
     case Next(v) =>
@@ -35,23 +44,49 @@ class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T]) extend
       if (nodes.isEmpty) throw new IllegalStateException("no workers found for " + v)
       if (source.isDefined) throw new IllegalStateException("dropped value " + v)
 
-      val r = fn.apply(v.asInstanceOf[F])
-
-      var hanNext = true
-      while (hanNext && !nodes.isEmpty){
-        r.next() match {
-          case Some(v) =>
-            val n = nodes.poll()
-            n << Next(v)
-          case None =>
-            hanNext = false
-        }
+      var opt:Option[Source[T]] = None
+      try{
+        val r = fn.apply(v.asInstanceOf[F])
+        opt = Some(r)
+      }catch{
+        case NonFatal(ex) =>
+          exception = Some(ex)
       }
 
-      if(hanNext){
-        source = Some(r)
-      }else if(!hanNext && !nodes.isEmpty){
-        prev.ask(HasNext).whenComplete(this)
+      if(exception.isDefined){
+        sendEnd()
+      }else {
+        var hanNext = true
+        while (exception.isEmpty && hanNext && !nodes.isEmpty) {
+          var optVal:Option[Option[T]] = None
+          try{
+            val r = opt.get.next()
+            optVal = Some(r)
+          }catch{
+            case NonFatal(ex) =>
+              exception = Some(ex)
+          }
+
+          if(exception.isEmpty) {
+            optVal.get match {
+              case Some(v) =>
+                val n = nodes.poll()
+                n << Next(v)
+              case None =>
+                hanNext = false
+            }
+          }
+        }
+
+        if(exception.isDefined){
+          sendEnd()
+        }else {
+          if (hanNext) {
+            source = Some(opt.get)
+          } else if (!hanNext && !nodes.isEmpty) {
+            prev.ask(HasNext).whenComplete(this)
+          }
+        }
       }
 
     case HasNext =>
@@ -79,11 +114,7 @@ class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T]) extend
       if(ex.isDefined) exception = ex
       else ended = true
 
-      var a = nodes.poll()
-      while (a != null) {
-        a << End(exception)
-        a = nodes.poll()
-      }
+      sendEnd()
   }
 
 
