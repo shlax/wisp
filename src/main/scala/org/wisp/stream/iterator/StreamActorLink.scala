@@ -60,6 +60,7 @@ abstract class StreamActorLink extends Consumer[Message], StreamException{
 
   protected def autoClose(c:Any, flush:Boolean, block: => Unit):Unit = {
     var e: Throwable = null
+
     try{
       block
       if(flush) {
@@ -68,22 +69,24 @@ abstract class StreamActorLink extends Consumer[Message], StreamException{
     }catch{
       case NonFatal(ex) =>
         e = ex
-    }finally {
-      c match{
-        case ac:AutoCloseable =>
-          try{
-            ac.close()
-          }catch{
-            case NonFatal(ex) =>
-              if(e != null) e.addSuppressed(ex)
-              else e = ex
-          }
-        case _ =>
-      }
     }
+
+    c match{
+      case ac:AutoCloseable =>
+        try{
+          ac.close()
+        }catch{
+          case NonFatal(ex) =>
+            if(e != null) e.addSuppressed(ex)
+            else e = ex
+        }
+      case _ =>
+    }
+
     if(e != null){
       throw e
     }
+
   }
 
 }
