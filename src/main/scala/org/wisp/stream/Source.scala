@@ -6,14 +6,14 @@ import java.util.function.{Consumer, Predicate}
 object Source{
 
   extension[E](i: util.Iterator[E]){
-    def asSource: Source[E] = {
-      () => if (i.hasNext) Some(i.next()) else None
+    def asSource: Source[E] = { () =>
+      if (i.hasNext) Some(i.next()) else None
     }
   }
 
   extension[E](i: util.Enumeration[E]){
-    def asSource: Source[E] = {
-      () => if (i.hasMoreElements) Some(i.nextElement()) else None
+    def asSource: Source[E] = { () =>
+      if (i.hasMoreElements) Some(i.nextElement()) else None
     }
   }
 
