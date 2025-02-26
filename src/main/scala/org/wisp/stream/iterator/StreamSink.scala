@@ -31,10 +31,12 @@ class StreamSink[T](prev:ActorLink, sink:Consumer[T]) extends StreamActorLink, B
             autoClose(sink, Some(exc))
           }
       }
-    case End =>
-      var e: Throwable = null
+    case End(ex) =>
+      var e: Throwable = ex.orNull
       try{
-        autoFlush(sink)
+        if(e == null){
+          autoFlush(sink)
+        }
       }catch{
         case NonFatal(exc) =>
           e = exc
@@ -54,18 +56,6 @@ class StreamSink[T](prev:ActorLink, sink:Consumer[T]) extends StreamActorLink, B
       }else if (sinkClosed.compareAndSet(false, true)) {
         completed.completeExceptionally(e)
       }
-
-  }
-
-  override def accept(t: Message, u: Throwable): Unit = {
-    if(u != null){
-      if(sinkClosed.compareAndSet(false, true)){
-        completed.completeExceptionally(u)
-        autoClose(sink, Some(u))
-      }
-    }else{
-      accept(t)
-    }
   }
 
 }

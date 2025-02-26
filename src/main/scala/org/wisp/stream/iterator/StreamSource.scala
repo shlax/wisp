@@ -12,14 +12,14 @@ class StreamSource[T](src:Source[T]) extends StreamActorLink, ActorLink{
   override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
     case HasNext =>
       if (ended) {
-        sender << End
+        sender << End()
       } else {
         val n = src.next()
         if (n.isDefined) {
           sender << Next(n.get)
         } else {
           ended = true
-          sender << End
+          sender << End()
         }
       }
   }

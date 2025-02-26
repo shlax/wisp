@@ -31,7 +31,7 @@ class ForEachSource[T](it:Source[T]) extends StreamActorLink, ActorLink, Runnabl
     ended = true
     var a = nodes.poll()
     while (a != null) {
-      a << End
+      a << End()
       a = nodes.poll()
     }
   }
@@ -39,7 +39,7 @@ class ForEachSource[T](it:Source[T]) extends StreamActorLink, ActorLink, Runnabl
   override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
     case HasNext =>
       if (ended) {
-        sender << End
+        sender << End()
       } else {
         nodes.add(sender)
         condition.signal()

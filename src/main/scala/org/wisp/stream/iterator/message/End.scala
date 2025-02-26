@@ -1,3 +1,3 @@
 package org.wisp.stream.iterator.message
 
-case object End extends ResponseMessage
+case class End(exception: Option[Throwable] = None) extends ResponseMessage

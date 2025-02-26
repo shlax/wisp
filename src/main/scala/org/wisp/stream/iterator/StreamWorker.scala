@@ -1,15 +1,17 @@
 package org.wisp.stream.iterator
 
-import org.wisp.{Actor, ActorLink, Inbox}
+import org.wisp.{Actor, ActorLink, Inbox, Message}
 import org.wisp.stream.iterator.message.*
 
 import java.util
+import java.util.function.BiConsumer
 
-class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => T) extends Actor(inbox){
+class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => T) extends Actor(inbox), StreamException{
 
   protected val nodes:util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
 
+  protected var exception: Option[Throwable] = None
   protected var ended = false
 
   override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
@@ -23,21 +25,28 @@ class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => T) extends Actor(
       n << Next(r)
 
     case HasNext =>
-      if (ended) {
-        from << End
-      } else {
-        nodes.add(from)
-        prev.ask(HasNext).whenComplete(inbox.system >> this)
+      if(exception.isDefined){
+        from << End(exception)
+      }else {
+        if (ended) {
+          from << End()
+        } else {
+          nodes.add(from)
+          prev.ask(HasNext).whenComplete(this)
+        }
       }
 
-    case End =>
-      ended = true
+    case End(ex) =>
+      if(ex.isDefined) exception = ex
+      else ended = true
 
       var a = nodes.poll()
       while (a != null) {
-        a << End
+        a << End(exception)
         a = nodes.poll()
       }
   }
+
+
 
 }

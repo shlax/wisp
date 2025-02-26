@@ -53,22 +53,18 @@ class RunnableSink[T](prev:ActorLink, sink:Consumer[T])
 
       value = Some(v.asInstanceOf[T])
       condition.signal()
-    case End =>
-      if (ended) throw new IllegalStateException("ended")
-
-      ended = true
-      condition.signal()
-  }
-
-  override def accept(t: Message, u: Throwable): Unit = {
-    if(u != null){
-      lock.withLock{
-        exception = Some(u)
+    case End(ex) =>
+      if(ex.isDefined){
+        exception = ex
         condition.signal()
+      }else{
+        val wasEnded = ended
+        ended = true
+        condition.signal()
+        if(wasEnded){
+          throw new IllegalStateException("ended")
+        }
       }
-    }else{
-      accept(t)
-    }
   }
 
 }

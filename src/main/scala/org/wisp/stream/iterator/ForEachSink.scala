@@ -45,14 +45,14 @@ class ForEachSink[F, T](src:Source[F], sink:Consumer[T])(link: ActorLink => Acto
         var a = nodes.poll()
         while (a != null) {
           if (inputEnded) {
-            a << End
+            a << End()
           } else {
             src.next() match {
               case Some(v) =>
                 a << Next(v)
               case None =>
                 inputEnded = true
-                a << End
+                a << End()
             }
           }
           a = nodes.poll()
@@ -73,7 +73,7 @@ class ForEachSink[F, T](src:Source[F], sink:Consumer[T])(link: ActorLink => Acto
   override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
     case HasNext =>
       if (inputEnded) {
-        sender << End
+        sender << End()
       } else {
         nodes.add(sender)
         condition.signal()
@@ -84,21 +84,18 @@ class ForEachSink[F, T](src:Source[F], sink:Consumer[T])(link: ActorLink => Acto
 
       value = Some(v.asInstanceOf[T])
       condition.signal()
-    case End =>
-      if(ended) throw new IllegalStateException("ended")
-      ended = true
-      condition.signal()
-  }
-
-  override def accept(t: Message, u: Throwable): Unit = {
-    if(u != null){
-      lock.withLock{
-        exception = Some(u)
+    case End(ex) =>
+      if(ex.isDefined){
+        exception = ex
         condition.signal()
+      }else{
+        val wasEnded = ended
+        ended = true
+        condition.signal()
+        if(wasEnded){
+          throw new IllegalStateException("ended")
+        }
       }
-    }else{
-      accept(t)
-    }
   }
 
 }

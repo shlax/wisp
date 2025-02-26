@@ -2,16 +2,20 @@ package org.wisp.stream.iterator
 
 import org.wisp.exceptions.ExceptionHandler
 import org.wisp.stream.iterator.message.{End, HasNext, IteratorMessage, Next}
-import org.wisp.ActorLink
+import org.wisp.{ActorLink, Message}
+import org.wisp.lock.*
 
 import java.util
+import java.util.function.BiConsumer
 import scala.collection.mutable
 
-class ZipStream(eh:ExceptionHandler, prev:Iterable[ActorLink]) extends StreamActorLink, ActorLink{
+class ZipStream(eh:ExceptionHandler, prev:Iterable[ActorLink]) extends StreamActorLink, ActorLink, BiConsumer[Message, Throwable]{
   def this(handler:ExceptionHandler, l:ActorLink*) = this(handler, l)
 
   protected val nodes: util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
+
+  protected var exception: Option[Throwable] = None
 
   protected class State(val link:ActorLink){
     protected var value:Option[Any] = None
@@ -30,7 +34,7 @@ class ZipStream(eh:ExceptionHandler, prev:Iterable[ActorLink]) extends StreamAct
     def requestNext():Unit = {
       if (!ended && !requested && value.isEmpty) {
         requested = true
-        link.ask(HasNext).whenComplete(eh >> ZipStream.this)
+        link.ask(HasNext).whenComplete(ZipStream.this)
       }
     }
 
@@ -84,30 +88,45 @@ class ZipStream(eh:ExceptionHandler, prev:Iterable[ActorLink]) extends StreamAct
 
   override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
     case HasNext =>
-      select(state.values) match {
-        case Some(n) =>
-          n.send(sender)
+      if(exception.isDefined){
+        sender << End(exception)
+      }else {
+        select(state.values) match {
+          case Some(n) =>
+            n.send(sender)
 
-        case None =>
-          if(state.values.forall(_.isFinished)){
-            sender << End
-          }else{
-            nodes.add(sender)
-            for(x <- state.values) x.requestNext()
-          }
+          case None =>
+            if (state.values.forall(_.isFinished)) {
+              sender << End()
+            } else {
+              nodes.add(sender)
+              for (x <- state.values) x.requestNext()
+            }
+        }
       }
 
     case Next(v) =>
       state(sender).next(v)
 
-    case End =>
-      state(sender).end()
+    case End(ex) =>
+      if(ex.isDefined){
+        exception = ex
 
-      if(state.values.forall(_.isFinished)){
         var a = nodes.poll()
         while (a != null) {
-          a << End
+          a << End(ex)
           a = nodes.poll()
+        }
+
+      }else {
+        state(sender).end()
+
+        if (state.values.forall(_.isFinished)) {
+          var a = nodes.poll()
+          while (a != null) {
+            a << End()
+            a = nodes.poll()
+          }
         }
       }
 

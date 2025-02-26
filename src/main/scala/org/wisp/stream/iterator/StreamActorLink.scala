@@ -6,13 +6,14 @@ import org.wisp.{ActorLink, Message}
 
 import java.io.Flushable
 import java.util.concurrent.locks.ReentrantLock
-import java.util.function.Consumer
+import java.util.function.{BiConsumer, Consumer}
 import scala.util.control.NonFatal
 
-abstract class StreamActorLink extends Consumer[Message]{
+abstract class StreamActorLink extends Consumer[Message], StreamException{
 
   protected val lock = new ReentrantLock()
 
+  /** method is running with lock */
   def accept(from:ActorLink): PartialFunction[IteratorMessage, Unit]
 
   override def accept(t: Message): Unit = {
