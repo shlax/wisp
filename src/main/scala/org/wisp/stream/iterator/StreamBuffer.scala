@@ -2,11 +2,8 @@ package org.wisp.stream.iterator
 
 import org.wisp.{ActorLink, Message}
 import org.wisp.stream.iterator.message.*
-import org.wisp.lock.*
-
 import java.util
 import java.util.function.BiConsumer
-import scala.util.control.NonFatal
 
 class StreamBuffer(prev:ActorLink, size:Int) extends StreamActorLink, ActorLink, BiConsumer[Message, Throwable]{
 

@@ -2,7 +2,6 @@ package org.wisp.stream.iterator
 
 import org.wisp.stream.iterator.message.{End, HasNext, IteratorMessage, Next}
 import org.wisp.{ActorLink, Message}
-import org.wisp.lock.*
 
 import java.util
 import java.util.function.BiConsumer

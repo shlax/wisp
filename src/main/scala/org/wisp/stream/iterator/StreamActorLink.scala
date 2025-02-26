@@ -6,7 +6,7 @@ import org.wisp.{ActorLink, Message}
 
 import java.io.Flushable
 import java.util.concurrent.locks.ReentrantLock
-import java.util.function.{BiConsumer, Consumer}
+import java.util.function.Consumer
 import scala.util.control.NonFatal
 
 abstract class StreamActorLink extends Consumer[Message], StreamException{

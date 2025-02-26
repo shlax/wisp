@@ -1,9 +1,8 @@
 package org.wisp.stream.iterator
 
 import org.wisp.stream.Source
-import org.wisp.{ActorLink, Message}
+import org.wisp.ActorLink
 import org.wisp.stream.iterator.message.*
-import org.wisp.lock.*
 
 import scala.util.control.NonFatal
 

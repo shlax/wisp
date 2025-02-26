@@ -2,11 +2,10 @@ package org.wisp.stream.iterator
 
 import org.wisp.stream.Source
 import org.wisp.stream.Source.*
-import org.wisp.{Actor, ActorLink, Inbox, Message}
+import org.wisp.{Actor, ActorLink, Inbox}
 import org.wisp.stream.iterator.message.*
 
 import java.util
-import java.util.function.BiConsumer
 import scala.util.control.NonFatal
 
 object StreamWorker {
