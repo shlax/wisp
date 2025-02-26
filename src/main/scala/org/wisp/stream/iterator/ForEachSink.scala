@@ -10,6 +10,7 @@ import java.util.function
 import org.wisp.lock.*
 
 import java.util.concurrent.locks.Condition
+import scala.util.control.NonFatal
 
 class ForEachSink[F, T](src:Source[F], sink:Consumer[T])(link: ActorLink => ActorLink)
   extends StreamActorLink, ActorLink, BiConsumer[Message, Throwable], Runnable {
@@ -20,8 +21,8 @@ class ForEachSink[F, T](src:Source[F], sink:Consumer[T])(link: ActorLink => Acto
   protected val condition: Condition = lock.newCondition()
   protected val prev: ActorLink = link.apply(this)
 
-  protected var value: Option[T] = None
   protected var exception: Option[Throwable] = None
+  protected var value: Option[T] = None
 
   protected var inputEnded = false
   protected var ended = false
@@ -47,12 +48,25 @@ class ForEachSink[F, T](src:Source[F], sink:Consumer[T])(link: ActorLink => Acto
           if (inputEnded) {
             a << End()
           } else {
-            src.next() match {
-              case Some(v) =>
-                a << Next(v)
-              case None =>
-                inputEnded = true
-                a << End()
+            var n:Option[F] = None
+            if(exception.isEmpty) {
+              try {
+                n = src.next()
+              } catch {
+                case NonFatal(ex) =>
+                  exception = Some(ex)
+              }
+            }
+            if(exception.isDefined){
+              a << End(exception)
+            }else {
+              n match {
+                case Some(v) =>
+                  a << Next(v)
+                case None =>
+                  inputEnded = true
+                  a << End()
+              }
             }
           }
           a = nodes.poll()
@@ -72,18 +86,24 @@ class ForEachSink[F, T](src:Source[F], sink:Consumer[T])(link: ActorLink => Acto
 
   override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
     case HasNext =>
-      if (inputEnded) {
-        sender << End()
-      } else {
-        nodes.add(sender)
-        condition.signal()
+      if(exception.isDefined){
+        sender << End(exception)
+      }else {
+        if (inputEnded) {
+          sender << End()
+        } else {
+          nodes.add(sender)
+          condition.signal()
+        }
       }
+
     case Next(v) =>
       if(ended) throw new IllegalStateException("ended")
       if(value.isDefined) throw new IllegalStateException("dropped value: "+v)
 
       value = Some(v.asInstanceOf[T])
       condition.signal()
+
     case End(ex) =>
       if(ex.isDefined){
         exception = ex
