@@ -16,7 +16,7 @@ class HelloStreamWorker {
       val data = Seq(0,1,2,3,4,5).asSource
       val src = StreamSource(data)
 
-      val w = sys.create( i => StreamWorker(src, i, { q =>
+      val w = sys.create( i => StreamWorker.map(src, i, { q =>
         Thread.sleep(Random.nextInt(50))
         "w:" + Thread.currentThread().threadId + ":" + q
       }))
