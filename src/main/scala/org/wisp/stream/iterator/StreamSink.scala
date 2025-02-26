@@ -26,25 +26,41 @@ class StreamSink[T](prev:ActorLink, sink:Consumer[T]) extends StreamActorLink, B
         prev.ask(HasNext).whenComplete(this)
       }catch{
         case NonFatal(exc) =>
-          completed.completeExceptionally(exc)
           if(sinkClosed.compareAndSet(false, true)){
+            completed.completeExceptionally(exc)
             autoClose(sink, Some(exc))
           }
       }
     case End =>
-      val c = completed.complete(null)
-      if(sinkClosed.compareAndSet(false, true)){
-        autoClose(sink, None)
+      var e: Throwable = null
+      try{
+        autoFlush(sink)
+      }catch{
+        case NonFatal(exc) =>
+          e = exc
+      }finally {
+        if(sinkClosed.compareAndSet(false, true)){
+          try {
+            autoClose(sink, Option(e))
+          } catch {
+            case NonFatal(exc) =>
+              e = exc
+          }
+        }
       }
-      if(!c){
-        throw new IllegalStateException("ended")
+      if(e == null){
+        val c = completed.complete(null)
+        if (!c) throw new IllegalStateException("ended")
+      }else if (sinkClosed.compareAndSet(false, true)) {
+        completed.completeExceptionally(e)
       }
+
   }
 
   override def accept(t: Message, u: Throwable): Unit = {
     if(u != null){
-      completed.completeExceptionally(u)
       if(sinkClosed.compareAndSet(false, true)){
+        completed.completeExceptionally(u)
         autoClose(sink, Some(u))
       }
     }else{

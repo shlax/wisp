@@ -24,7 +24,7 @@ class HelloSink {
     val data = Seq(("a", 1), ("a", 2), ("b", 3), ("b", 4)).asSource
 
     Sink(data){ f =>
-      f.groupBy(_._1, (c:Option[List[Int]], i:(String,Int)) => {
+      f.filter(_._2 < 10).groupBy(_._1, (c:Option[List[Int]], i:(String,Int)) => {
         i._2 :: c.getOrElse(Nil)
       } ).map(println)
     }

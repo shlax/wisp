@@ -21,8 +21,8 @@ object using {
           ac.close()
         }catch{
           case NonFatal(ex) =>
-            if(e != null) ex.addSuppressed(e)
-            e = ex
+            if(e != null) e.addSuppressed(ex)
+            else e = ex
         }
       }
       if (e != null) {

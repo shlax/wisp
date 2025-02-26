@@ -4,6 +4,7 @@ import org.wisp.lock.*
 import org.wisp.stream.iterator.message.IteratorMessage
 import org.wisp.{ActorLink, Message}
 
+import java.io.Flushable
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
 import scala.util.control.NonFatal
@@ -19,6 +20,14 @@ abstract class StreamActorLink extends Consumer[Message]{
     lock.withLock{ f.apply(t.value.asInstanceOf[IteratorMessage]) }
   }
 
+  protected def autoFlush(c: Consumer[?]):Unit = {
+    c match {
+      case f: Flushable =>
+        f.flush()
+      case _ =>
+    }
+  }
+
   protected def autoClose(c: Consumer[?], tr: Option[Throwable]): Unit = {
     c match {
       case ac: AutoCloseable =>
@@ -26,8 +35,13 @@ abstract class StreamActorLink extends Consumer[Message]{
           ac.close()
         } catch {
           case NonFatal(ex) =>
-            for(e <- tr) ex.addSuppressed(e)
-            throw ex
+            if(tr.isDefined){
+              val e = tr.get
+              e.addSuppressed(ex)
+              throw e
+            }else {
+              throw ex
+            }
         }
       case _ =>
         for(e <- tr) throw e
@@ -38,6 +52,7 @@ abstract class StreamActorLink extends Consumer[Message]{
     var e: Throwable = null
     try{
       block
+      autoFlush(c)
     }catch{
       case NonFatal(ex) =>
         e = ex
@@ -48,8 +63,8 @@ abstract class StreamActorLink extends Consumer[Message]{
             ac.close()
           }catch{
             case NonFatal(ex) =>
-              if(e != null) ex.addSuppressed(e)
-              e = ex
+              if(e != null) e.addSuppressed(ex)
+              else e = ex
           }
         case _ =>
       }
