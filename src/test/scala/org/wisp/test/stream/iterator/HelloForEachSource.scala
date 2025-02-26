@@ -22,12 +22,10 @@ class HelloForEachSource {
       val src = ForEachSource(data)
 
       val w = sys.create(i => StreamWorker.map(src, i){ q =>
-        Thread.sleep(Random.nextInt(50))
         "w:" + Thread.currentThread().threadId + ":" + q
       })
 
       val cf = StreamSink(w, println(_)).start()
-      Thread.sleep(50)
       println("start")
 
       src.run()

@@ -31,9 +31,8 @@ class HelloRemote {
       val c = use(UdpClient())
       val l = RemoteLink(c, adr, "echo")
 
-      l << "Hello"
-      Thread.sleep(50)
-      l << "world"
+      l << "ab"
+      l << "cd"
 
       cd.await(3, TimeUnit.SECONDS)
       println()

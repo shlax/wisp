@@ -18,13 +18,11 @@ class HelloZipStream {
 
       val w1 = sys.create(i => StreamWorker.map(src, i){ q =>
         println("w1:start")
-        Thread.sleep(Random.nextInt(100))
         "w1:" + Thread.currentThread().threadId + ":" + q
       })
 
       val w2 = sys.create(i => StreamWorker.map(src, i){ q =>
         println("w2:start")
-        Thread.sleep(Random.nextInt(50))
         "w2:" + Thread.currentThread().threadId + ":" + q
       })
 
