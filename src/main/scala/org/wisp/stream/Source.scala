@@ -47,6 +47,7 @@ object Source{
 
 }
 
+@FunctionalInterface
 trait Source[T] {
 
   /** {{{if(hasNext) Some(next()) else None}}} */
