@@ -1,11 +1,10 @@
 package org.wisp.stream.iterator
 
-import org.wisp.{ActorLink, Message}
+import org.wisp.ActorLink
 import org.wisp.stream.iterator.message.*
 import java.util
-import java.util.function.BiConsumer
 
-class StreamBuffer(prev:ActorLink, size:Int) extends StreamActorLink, ActorLink, BiConsumer[Message, Throwable]{
+class StreamBuffer(prev:ActorLink, size:Int) extends StreamActorLink, ActorLink{
 
   protected val queue:util.Queue[Any] = createQueue()
   protected def createQueue(): util.Queue[Any] = { util.LinkedList[Any]() }

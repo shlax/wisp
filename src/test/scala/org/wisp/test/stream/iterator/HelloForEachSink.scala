@@ -1,8 +1,9 @@
 package org.wisp.test.stream.iterator
 
 import org.junit.jupiter.api.{Assertions, Test}
+import org.wisp.stream.Sink
 import org.wisp.{ActorLink, ActorSystem}
-import org.wisp.stream.iterator.{StreamWorker, ForEachSink}
+import org.wisp.stream.iterator.{ForEachSink, StreamWorker}
 import org.wisp.using.*
 import org.wisp.stream.Source.*
 
@@ -20,7 +21,7 @@ class HelloForEachSink {
         "s[" + Thread.currentThread().threadId + "]:" + i
       }
 
-      val sink = new Consumer[Any]{
+      val sink = new Sink[Any]{
         override def accept(t: Any): Unit = {
           Assertions.assertTrue(Thread.currentThread().threadId == tId)
           println("d[" + Thread.currentThread().threadId + "]:" + t)

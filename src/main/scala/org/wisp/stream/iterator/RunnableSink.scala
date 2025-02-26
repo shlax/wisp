@@ -3,12 +3,11 @@ package org.wisp.stream.iterator
 import org.wisp.{ActorLink, Message}
 import org.wisp.stream.iterator.message.{End, HasNext, IteratorMessage, Next}
 import org.wisp.lock.*
+import org.wisp.stream.Sink
 
 import java.util.concurrent.locks.Condition
-import java.util.function.{BiConsumer, Consumer}
 
-class RunnableSink[T](prev:ActorLink, sink:Consumer[T])
-  extends StreamActorLink, BiConsumer[Message, Throwable], Runnable{
+class RunnableSink[T](prev:ActorLink, sink:Sink[T]) extends StreamActorLink, Runnable{
 
   protected val condition: Condition = lock.newCondition()
 

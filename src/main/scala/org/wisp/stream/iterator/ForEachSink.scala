@@ -1,19 +1,16 @@
 package org.wisp.stream.iterator
 
-import org.wisp.{ActorLink, Message}
-import org.wisp.stream.Source
+import org.wisp.ActorLink
+import org.wisp.stream.{Sink, Source}
 import org.wisp.stream.iterator.message.{End, HasNext, IteratorMessage, Next}
 
 import java.util
-import java.util.function.{BiConsumer, Consumer}
-import java.util.function
 import org.wisp.lock.*
 
 import java.util.concurrent.locks.Condition
 import scala.util.control.NonFatal
 
-class ForEachSink[F, T](src:Source[F], sink:Consumer[T])(link: ActorLink => ActorLink)
-  extends StreamActorLink, ActorLink, BiConsumer[Message, Throwable], Runnable {
+class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLink) extends StreamActorLink, ActorLink, Runnable {
 
   protected val nodes: util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }

@@ -1,14 +1,14 @@
 package org.wisp.stream.iterator
 
+import org.wisp.stream.Sink
 import org.wisp.{ActorLink, Message}
 import org.wisp.stream.iterator.message.*
 
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.function.{BiConsumer, Consumer}
 import scala.util.control.NonFatal
 
-class StreamSink[T](prev:ActorLink, sink:Consumer[T]) extends StreamActorLink, BiConsumer[Message, Throwable]{
+class StreamSink[T](prev:ActorLink, sink:Sink[T]) extends StreamActorLink{
 
   protected val completed:CompletableFuture[Void] = CompletableFuture[Void]
   protected val sinkClosed = AtomicBoolean(false)
@@ -35,7 +35,7 @@ class StreamSink[T](prev:ActorLink, sink:Consumer[T]) extends StreamActorLink, B
       var e: Throwable = ex.orNull
       try{
         if(e == null){
-          autoFlush(sink)
+          sink.flush()
         }
       }catch{
         case NonFatal(exc) =>

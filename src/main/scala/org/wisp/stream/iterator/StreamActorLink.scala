@@ -1,7 +1,7 @@
 package org.wisp.stream.iterator
 
 import org.wisp.lock.*
-import org.wisp.stream.Source
+import org.wisp.stream.{Sink, Source}
 import org.wisp.stream.iterator.message.IteratorMessage
 import org.wisp.{ActorLink, Message}
 
@@ -22,65 +22,51 @@ abstract class StreamActorLink extends Consumer[Message], StreamException{
     lock.withLock{ f.apply(t.value.asInstanceOf[IteratorMessage]) }
   }
 
-  protected def autoFlush(c: Any):Unit = {
-    c match {
-      case f: Flushable =>
-        f.flush()
-      case _ =>
-    }
-  }
-
-  protected def autoClose(c: Any, tr: Option[Throwable]): Unit = {
-    c match {
-      case ac: AutoCloseable =>
-        try {
-          ac.close()
-        } catch {
-          case NonFatal(ex) =>
-            if(tr.isDefined){
-              val e = tr.get
-              e.addSuppressed(ex)
-              throw e
-            }else {
-              throw ex
-            }
+  protected def autoClose(c: AutoCloseable, tr: Option[Throwable]): Unit = {
+    try {
+      c.close()
+    } catch {
+      case NonFatal(ex) =>
+        if (tr.isDefined) {
+          val e = tr.get
+          e.addSuppressed(ex)
+          throw e
+        } else {
+          throw ex
         }
-      case _ =>
-        for(e <- tr) throw e
     }
+
+    for(e <- tr){
+      throw e
+    }
+
   }
 
-  protected def autoClose(c:Consumer[?])(block: => Unit):Unit = {
-    autoClose(c, true, block)
+  protected def autoClose(c:Sink[?])(block: => Unit):Unit = {
+    autoClose(c, Some(c), block)
   }
 
   protected def autoClose(c: Source[?])(block: => Unit): Unit = {
-    autoClose(c, false, block)
+    autoClose(c, None, block)
   }
 
-  protected def autoClose(c:Any, flush:Boolean, block: => Unit):Unit = {
+  protected def autoClose(c:AutoCloseable, flush:Option[Flushable], block: => Unit):Unit = {
     var e: Throwable = null
 
     try{
       block
-      if(flush) {
-        autoFlush(c)
-      }
+      for(f <- flush) f.flush()
     }catch{
       case NonFatal(ex) =>
         e = ex
     }
 
-    c match{
-      case ac:AutoCloseable =>
-        try{
-          ac.close()
-        }catch{
-          case NonFatal(ex) =>
-            if(e != null) e.addSuppressed(ex)
-            else e = ex
-        }
-      case _ =>
+    try{
+      c.close()
+    }catch{
+      case NonFatal(ex) =>
+        if(e != null) e.addSuppressed(ex)
+        else e = ex
     }
 
     if(e != null){

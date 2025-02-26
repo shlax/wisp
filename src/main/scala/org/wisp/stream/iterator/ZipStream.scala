@@ -1,13 +1,12 @@
 package org.wisp.stream.iterator
 
 import org.wisp.stream.iterator.message.{End, HasNext, IteratorMessage, Next}
-import org.wisp.{ActorLink, Message}
+import org.wisp.ActorLink
 
 import java.util
-import java.util.function.BiConsumer
 import scala.collection.mutable
 
-class ZipStream(prev:Iterable[ActorLink]) extends StreamActorLink, ActorLink, BiConsumer[Message, Throwable]{
+class ZipStream(prev:Iterable[ActorLink]) extends StreamActorLink, ActorLink{
   def this(l:ActorLink*) = this(l)
 
   protected val nodes: util.Queue[ActorLink] = createNodes()
