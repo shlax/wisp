@@ -22,10 +22,10 @@ class HelloStreamBuffer {
 
       val b = StreamBuffer(src, 3)
 
-      val w = sys.create(i => StreamWorker.map(b, i, { q =>
+      val w = sys.create(i => StreamWorker.map(b, i){ q =>
         Thread.sleep(Random.nextInt(50))
         "w:" + Thread.currentThread().threadId + ":" + q
-      }))
+      })
 
       StreamSink(w, println(_)).start().get()
 

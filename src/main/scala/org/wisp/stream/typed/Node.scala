@@ -9,12 +9,12 @@ import java.util.function.Consumer
 class Node[T](val graph: Graph, val link: ActorLink) {
 
   def map[V](fn: T => V): Node[V] = {
-    val r = graph.system.create( i => StreamWorker.map(link, i, fn) )
+    val r = graph.system.create( i => StreamWorker.map(link, i)(fn) )
     graph.node(r)
   }
 
   def flatMap[V](fn: T => Source[V]): Node[V] = {
-    val r = graph.system.create(i => StreamWorker.flatMap(link, i, fn))
+    val r = graph.system.create(i => StreamWorker.flatMap(link, i)(fn) )
     graph.node(r)
   }
 
