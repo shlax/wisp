@@ -117,6 +117,4 @@ class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T]) extend
       sendEnd()
   }
 
-
-
 }
