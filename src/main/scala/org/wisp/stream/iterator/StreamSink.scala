@@ -1,7 +1,7 @@
 package org.wisp.stream.iterator
 
 import org.wisp.stream.Sink
-import org.wisp.{ActorLink, Message}
+import org.wisp.ActorLink
 import org.wisp.stream.iterator.message.*
 
 import java.util.concurrent.CompletableFuture
@@ -32,30 +32,30 @@ class StreamSink[T](prev:ActorLink, sink:Sink[T]) extends StreamActorLink{
           }
       }
     case End(ex) =>
-      var e: Throwable = ex.orNull
+      var err = ex
       try{
-        if(e == null){
+        if(err.isEmpty){
           sink.flush()
         }
       }catch{
         case NonFatal(exc) =>
-          e = exc
+          err = Some(exc)
       }
       
       if(sinkClosed.compareAndSet(false, true)){
         try {
-          autoClose(sink, Option(e))
+          autoClose(sink, err)
         } catch {
           case NonFatal(exc) =>
-            e = exc
+            err = Some(exc)
         }
       }
 
-      if(e == null){
+      if(err.isEmpty){
         val c = completed.complete(null)
         if (!c) throw new IllegalStateException("ended")
       }else if (sinkClosed.compareAndSet(false, true)) {
-        completed.completeExceptionally(e)
+        completed.completeExceptionally(err.get)
       }
   }
 

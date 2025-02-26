@@ -52,15 +52,15 @@ abstract class StreamActorLink extends Consumer[Message], StreamException{
 
   protected def autoClose(c:AutoCloseable, flush:Option[Flushable], block: => Unit):Unit = {
     var e: Throwable = null
-
     try{
       block
-      for(f <- flush) f.flush()
+      for(f <- flush){
+        f.flush()
+      }
     }catch{
       case NonFatal(ex) =>
         e = ex
     }
-
     try{
       c.close()
     }catch{
@@ -68,11 +68,9 @@ abstract class StreamActorLink extends Consumer[Message], StreamException{
         if(e != null) e.addSuppressed(ex)
         else e = ex
     }
-
     if(e != null){
       throw e
     }
-
   }
 
 }
