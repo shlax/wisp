@@ -48,17 +48,25 @@ object Source{
 }
 
 @FunctionalInterface
-trait Source[T] {
+trait Source[T] extends AutoCloseable{
 
   /** {{{if(hasNext) Some(next()) else None}}} */
   def next():Option[T]
 
+  override def close(): Unit = {}
+
   def map[R](f: T => R): Source[R] = {
     val self = this
     new Source[R](){
+
       def next():Option[R] = {
         self.next().map( i => f.apply(i) )
       }
+
+      override def close(): Unit = {
+        self.close()
+      }
+
     }
   }
 
@@ -86,12 +94,18 @@ trait Source[T] {
         }
         r
       }
+
+      override def close(): Unit = {
+        self.close()
+      }
+
     }
   }
 
   def filter[E >: T](p:Predicate[E]): Source[T] = {
     val self = this
     new Source[T]() {
+
       def next(): Option[T] = {
         var n = self.next()
         while (n.isDefined && !p.test(n.get)){
@@ -99,6 +113,11 @@ trait Source[T] {
         }
         n
       }
+
+      override def close(): Unit = {
+        self.close()
+      }
+
     }
   }
 
@@ -131,6 +150,11 @@ trait Source[T] {
         }
         r
       }
+
+      override def close(): Unit = {
+        self.close()
+      }
+
     }
   }
 
