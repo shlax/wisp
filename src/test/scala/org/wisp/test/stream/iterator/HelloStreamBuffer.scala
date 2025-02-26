@@ -20,7 +20,7 @@ class HelloStreamBuffer {
         i
       })
 
-      val b = StreamBuffer(sys, src, 3)
+      val b = StreamBuffer(src, 3)
 
       val w = sys.create(i => StreamWorker(b, i, { q =>
         Thread.sleep(Random.nextInt(50))

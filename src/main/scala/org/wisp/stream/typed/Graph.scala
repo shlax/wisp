@@ -17,7 +17,7 @@ class Graph(val system:ActorSystem){
   }
 
   def zip[T](nodes: Iterable[Node[? <: T]]): Node[T] = {
-    val r = ZipStream(system, nodes.map(_.link))
+    val r = ZipStream(nodes.map(_.link))
     node(r)
   }
 

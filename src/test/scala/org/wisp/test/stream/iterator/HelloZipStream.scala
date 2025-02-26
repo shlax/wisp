@@ -28,7 +28,7 @@ class HelloZipStream {
         "w2:" + Thread.currentThread().threadId + ":" + q
       }))
 
-      val r = ZipStream(sys, w1, w2)
+      val r = ZipStream(w1, w2)
 
       StreamSink(r, println(_)).start().get()
 

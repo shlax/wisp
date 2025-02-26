@@ -17,7 +17,7 @@ class Node[T](val graph: Graph, val link: ActorLink) {
   }
 
   def buffer(size:Int) : Node[T] = {
-    val r = StreamBuffer(graph.system ,link, size)
+    val r = StreamBuffer(link, size)
     graph.node(r)
   }
 

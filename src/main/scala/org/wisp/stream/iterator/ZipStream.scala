@@ -1,6 +1,5 @@
 package org.wisp.stream.iterator
 
-import org.wisp.exceptions.ExceptionHandler
 import org.wisp.stream.iterator.message.{End, HasNext, IteratorMessage, Next}
 import org.wisp.{ActorLink, Message}
 import org.wisp.lock.*
@@ -9,8 +8,8 @@ import java.util
 import java.util.function.BiConsumer
 import scala.collection.mutable
 
-class ZipStream(eh:ExceptionHandler, prev:Iterable[ActorLink]) extends StreamActorLink, ActorLink, BiConsumer[Message, Throwable]{
-  def this(handler:ExceptionHandler, l:ActorLink*) = this(handler, l)
+class ZipStream(prev:Iterable[ActorLink]) extends StreamActorLink, ActorLink, BiConsumer[Message, Throwable]{
+  def this(l:ActorLink*) = this(l)
 
   protected val nodes: util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }

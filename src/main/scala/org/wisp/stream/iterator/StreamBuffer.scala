@@ -1,6 +1,5 @@
 package org.wisp.stream.iterator
 
-import org.wisp.exceptions.ExceptionHandler
 import org.wisp.{ActorLink, Message}
 import org.wisp.stream.iterator.message.*
 import org.wisp.lock.*
@@ -9,7 +8,7 @@ import java.util
 import java.util.function.BiConsumer
 import scala.util.control.NonFatal
 
-class StreamBuffer(eh: ExceptionHandler, prev:ActorLink, size:Int) extends StreamActorLink, ActorLink, BiConsumer[Message, Throwable]{
+class StreamBuffer(prev:ActorLink, size:Int) extends StreamActorLink, ActorLink, BiConsumer[Message, Throwable]{
 
   protected val queue:util.Queue[Any] = createQueue()
   protected def createQueue(): util.Queue[Any] = { util.LinkedList[Any]() }
