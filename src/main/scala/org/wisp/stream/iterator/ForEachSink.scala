@@ -32,55 +32,56 @@ class ForEachSink[F, T](src:Source[F], sink:Consumer[T])(link: ActorLink => Acto
   }
 
   override def run(): Unit = lock.withLock {
-    autoClose(sink) {
-      next()
+    autoClose(src){
+      autoClose(sink) {
+        next()
 
-      while (!ended && exception.isEmpty) {
+        while (!ended && exception.isEmpty) {
 
-        for (v <- value) {
-          value = None
-          sink.accept(v)
-          next()
-        }
-
-        var a = nodes.poll()
-        while (a != null) {
-          if (inputEnded) {
-            a << End()
-          } else {
-            var n:Option[F] = None
-            if(exception.isEmpty) {
-              try {
-                n = src.next()
-              } catch {
-                case NonFatal(ex) =>
-                  exception = Some(ex)
-              }
-            }
-            if(exception.isDefined){
-              a << End(exception)
-            }else {
-              n match {
-                case Some(v) =>
-                  a << Next(v)
-                case None =>
-                  inputEnded = true
-                  a << End()
-              }
-            }
+          for (v <- value) {
+            value = None
+            sink.accept(v)
+            next()
           }
-          a = nodes.poll()
+
+          var a = nodes.poll()
+          while (a != null) {
+            if (inputEnded) {
+              a << End()
+            } else {
+              var n: Option[F] = None
+              if (exception.isEmpty) {
+                try {
+                  n = src.next()
+                } catch {
+                  case NonFatal(ex) =>
+                    exception = Some(ex)
+                }
+              }
+              if (exception.isDefined) {
+                a << End(exception)
+              } else {
+                n match {
+                  case Some(v) =>
+                    a << Next(v)
+                  case None =>
+                    inputEnded = true
+                    a << End()
+                }
+              }
+            }
+            a = nodes.poll()
+          }
+
+          if (!ended && exception.isEmpty) {
+            condition.await()
+          }
         }
 
-        if (!ended && exception.isEmpty) {
-          condition.await()
+        for (e <- exception) {
+          throw e
         }
       }
-
-      for (e <- exception) {
-        throw e
-      }
-
     }
   }
 

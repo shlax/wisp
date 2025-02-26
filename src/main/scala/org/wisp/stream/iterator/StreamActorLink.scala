@@ -1,6 +1,7 @@
 package org.wisp.stream.iterator
 
 import org.wisp.lock.*
+import org.wisp.stream.Source
 import org.wisp.stream.iterator.message.IteratorMessage
 import org.wisp.{ActorLink, Message}
 
@@ -21,7 +22,7 @@ abstract class StreamActorLink extends Consumer[Message], StreamException{
     lock.withLock{ f.apply(t.value.asInstanceOf[IteratorMessage]) }
   }
 
-  protected def autoFlush(c: Consumer[?]):Unit = {
+  protected def autoFlush(c: Any):Unit = {
     c match {
       case f: Flushable =>
         f.flush()
@@ -29,7 +30,7 @@ abstract class StreamActorLink extends Consumer[Message], StreamException{
     }
   }
 
-  protected def autoClose(c: Consumer[?], tr: Option[Throwable]): Unit = {
+  protected def autoClose(c: Any, tr: Option[Throwable]): Unit = {
     c match {
       case ac: AutoCloseable =>
         try {
@@ -50,10 +51,20 @@ abstract class StreamActorLink extends Consumer[Message], StreamException{
   }
 
   protected def autoClose(c:Consumer[?])(block: => Unit):Unit = {
+    autoClose(c, true, block)
+  }
+
+  protected def autoClose(c: Source[?])(block: => Unit): Unit = {
+    autoClose(c, false, block)
+  }
+
+  protected def autoClose(c:Any, flush:Boolean, block: => Unit):Unit = {
     var e: Throwable = null
     try{
       block
-      autoFlush(c)
+      if(flush) {
+        autoFlush(c)
+      }
     }catch{
       case NonFatal(ex) =>
         e = ex

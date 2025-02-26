@@ -10,7 +10,7 @@ import org.wisp.lock.*
 import java.util.concurrent.locks.Condition
 import scala.util.control.NonFatal
 
-class ForEachSource[T](it:Source[T]) extends StreamActorLink, ActorLink, Runnable {
+class ForEachSource[T](src:Source[T]) extends StreamActorLink, ActorLink, Runnable {
 
   protected val nodes:util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
@@ -20,32 +20,33 @@ class ForEachSource[T](it:Source[T]) extends StreamActorLink, ActorLink, Runnabl
   protected var ended = false
 
   override def run():Unit = lock.withLock {
-    var e:Option[Throwable] = None
-    try {
-      it.forEach { e =>
-        var a = nodes.poll()
-        while (a == null) {
-          condition.await()
-          a = nodes.poll()
+    autoClose(src) {
+      var e: Option[Throwable] = None
+      try {
+        src.forEach { e =>
+          var a = nodes.poll()
+          while (a == null) {
+            condition.await()
+            a = nodes.poll()
+          }
+          a << Next(e)
         }
-        a << Next(e)
+      } catch {
+        case NonFatal(ex) =>
+          e = Some(ex)
       }
-    }catch{
-      case NonFatal(ex) =>
-        e = Some(ex)
-    }
 
-    ended = true
-    var a = nodes.poll()
-    while (a != null) {
-      a << End(e)
-      a = nodes.poll()
-    }
+      ended = true
+      var a = nodes.poll()
+      while (a != null) {
+        a << End(e)
+        a = nodes.poll()
+      }
 
-    if(e.isDefined){
-      throw e.get
+      if (e.isDefined) {
+        throw e.get
+      }
     }
-
   }
 
   override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
