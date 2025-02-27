@@ -4,8 +4,6 @@ import org.wisp.{ActorLink, ActorSystem}
 import org.wisp.stream.{Sink, Source}
 import org.wisp.stream.iterator.{ForEachSink, ForEachSource, StreamSource, ZipStream}
 
-import org.wisp.Consumer
-
 class StreamGraph(val system:ActorSystem){
 
   def node[T](link: ActorLink): StreamNode[T] = {
