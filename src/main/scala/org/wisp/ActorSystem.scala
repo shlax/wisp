@@ -6,8 +6,8 @@ import scala.util.control.NonFatal
 
 class ActorSystem(inboxCapacity:Int = 3) extends ExecutionContext, AutoCloseable{
 
-  val executor: ExecutionContextExecutorService = createExecutorService()
-  protected def createExecutorService() : ExecutionContextExecutorService = {
+  val executor: ExecutionContextExecutorService = createExecutor()
+  protected def createExecutor() : ExecutionContextExecutorService = {
     ExecutionContext.fromExecutorService( Executors.newVirtualThreadPerTaskExecutor() )
   }
 
@@ -28,7 +28,7 @@ class ActorSystem(inboxCapacity:Int = 3) extends ExecutionContext, AutoCloseable
 
   def as[R](fn: ExecutionContext ?=> ActorSystem => R ):R = {
     given ExecutionContext = this
-    val f : ActorSystem => R = fn
+    val f: ActorSystem => R = fn
     f.apply(this)
   }
 
