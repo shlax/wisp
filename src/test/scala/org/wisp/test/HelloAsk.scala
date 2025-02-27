@@ -19,7 +19,7 @@ class HelloAsk {
 
   @Test
   def test():Unit = {
-    ActorSystem() | { implicit sys =>
+    ActorSystem() |? { sys =>
 
       val hello = sys.create(HelloActor(_))
       hello.ask("world").future.onComplete { e =>

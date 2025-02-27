@@ -5,7 +5,7 @@ import org.wisp.ActorLink
 import java.util.concurrent.{Callable, Executors, ScheduledExecutorService, ScheduledFuture, TimeUnit}
 import scala.concurrent.duration.Duration
 
-class Timer() extends AutoCloseable{
+class Timer extends AutoCloseable{
 
   protected val service: ScheduledExecutorService = createService()
   protected def createService(): ScheduledExecutorService = {
