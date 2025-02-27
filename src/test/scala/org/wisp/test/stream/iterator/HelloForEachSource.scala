@@ -13,7 +13,7 @@ class HelloForEachSource {
 
   @Test
   def test(): Unit = {
-    ActorSystem() |? { sys =>
+    ActorSystem() | ( _.as { sys =>
 
       val tId = Thread.currentThread().threadId
 
@@ -33,7 +33,7 @@ class HelloForEachSource {
       src.run()
       Await.ready(p.future, 1.second)
 
-    }
+    })
   }
 
 }

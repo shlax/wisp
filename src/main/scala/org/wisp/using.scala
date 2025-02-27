@@ -6,14 +6,6 @@ import scala.util.control.NonFatal
 object using {
 
   extension [T <: AutoCloseable](ac: T) {
-    @targetName("withGivenClose")
-    inline def |? [R](inline fn: T ?=> T => R ): R = {
-      given gVal: T = ac
-      ac | fn.apply
-    }
-  }
-
-  extension [T <: AutoCloseable](ac: T) {
     @targetName("autoClose")
     inline def | [R](inline f: T => R): R = {
       var r:Option[R] = None

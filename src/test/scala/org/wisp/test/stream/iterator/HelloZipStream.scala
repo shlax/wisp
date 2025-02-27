@@ -13,7 +13,7 @@ class HelloZipStream {
 
   @Test
   def test():Unit = {
-    ActorSystem() |? { sys =>
+    ActorSystem() | ( _.as { sys =>
 
       val data = Seq(0, 1, 2, 3, 4).asSource
       val src = StreamSource(data)
@@ -33,7 +33,8 @@ class HelloZipStream {
       val p = StreamSink(r, println(_)).start()
       Await.ready(p.future, 1.second)
 
-    }
+    })
+
   }
 
 }

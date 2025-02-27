@@ -13,7 +13,7 @@ class HelloForEachSink {
 
   @Test
   def test():Unit = {
-    ActorSystem() |? { sys =>
+    ActorSystem() | ( _.as { sys =>
 
       val tId = Thread.currentThread().threadId
 
@@ -37,7 +37,7 @@ class HelloForEachSink {
 
       src.run()
 
-    }
+    })
   }
 
 }

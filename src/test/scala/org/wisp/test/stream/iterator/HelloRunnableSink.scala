@@ -12,7 +12,7 @@ class HelloRunnableSink {
 
   @Test
   def test(): Unit = {
-    ActorSystem() |? { sys =>
+    ActorSystem() | ( _.as { sys =>
 
       val data = Seq(0, 1, 2, 3, 4, 5).asSource
 
@@ -24,7 +24,7 @@ class HelloRunnableSink {
 
       RunnableSink(w, println(_)).run()
 
-    }
+    })
   }
 
 }
