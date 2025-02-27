@@ -1,6 +1,6 @@
 package org.wisp.remote
 
-import org.wisp.remote.exceptions.UnsupportedAskException
+import org.wisp.remote.exceptions.RemoteAskException
 import org.wisp.{ActorLink, Message}
 
 import java.net.SocketAddress
@@ -13,7 +13,7 @@ class RemoteLink(c: UdpClient, adr:SocketAddress, path:String) extends ActorLink
   }
 
   override def ask(v:Any) : CompletableFuture[Message] = {
-    throw UnsupportedAskException(v)
+    throw RemoteAskException(v)
   }
   
 }

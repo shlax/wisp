@@ -1,6 +1,6 @@
 package org.wisp.remote
 
-import org.wisp.remote.exceptions.UnsupportedAskException
+import org.wisp.remote.exceptions.RemoteAskException
 import org.wisp.{ActorLink, Message}
 import org.wisp.using.*
 
@@ -77,7 +77,7 @@ class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extend
         }
 
         override def ask(v: Any): CompletableFuture[Message] = {
-          throw UnsupportedAskException(v)
+          throw RemoteAskException(v)
         }
       }, rm.value) )
   }
