@@ -4,7 +4,7 @@ import org.wisp.{ActorLink, ActorSystem}
 import org.wisp.stream.{Sink, Source}
 import org.wisp.stream.iterator.{ForEachSink, ForEachSource, StreamSource, ZipStream}
 
-import java.util.function.Consumer
+import org.wisp.Consumer
 
 class StreamGraph(val system:ActorSystem){
 

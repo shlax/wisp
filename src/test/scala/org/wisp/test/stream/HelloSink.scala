@@ -4,8 +4,6 @@ import org.junit.jupiter.api.Test
 import org.wisp.stream.{Sink, SinkTree}
 import org.wisp.stream.Source.*
 
-import java.util.function.Consumer
-
 class HelloSink {
 
   @Test

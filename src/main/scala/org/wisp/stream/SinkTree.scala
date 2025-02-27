@@ -1,9 +1,8 @@
 package org.wisp.stream
 
-import org.wisp.ActorLink
+import org.wisp.{ActorLink, Consumer}
 
 import java.util
-import java.util.function.{Consumer, Predicate}
 import scala.annotation.targetName
 import scala.jdk.CollectionConverters.*
 
@@ -95,11 +94,11 @@ class SinkTree[T](val from:Option[SinkTree[?]] = None) extends Sink[T] {
     nf
   }
 
-  def filter[E >: T](fn: Predicate[E]): SinkTree[T] = {
+  def filter[E >: T](fn: E => Boolean): SinkTree[T] = {
     val nf = new SinkTree[T]
     to(new SinkTree[T](nf){
       override def accept(e: T): Unit = {
-        if(fn.test(e)) nf.accept(e)
+        if(fn.apply(e)) nf.accept(e)
         super.accept(e)
       }
     })

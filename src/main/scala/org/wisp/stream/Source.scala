@@ -1,7 +1,8 @@
 package org.wisp.stream
 
+import org.wisp.Consumer
+
 import java.{lang, util}
-import java.util.function.{Consumer, Predicate}
 
 object Source{
 
@@ -48,7 +49,7 @@ object Source{
 }
 
 @FunctionalInterface
-trait Source[T]{
+trait Source[+T]{
 
   /** {{{if(hasNext) Some(next()) else None}}} */
   def next():Option[T]
@@ -92,13 +93,13 @@ trait Source[T]{
     }
   }
 
-  def filter[E >: T](p:Predicate[E]): Source[T] = {
+  def filter[E >: T](p: E => Boolean): Source[T] = {
     val self = this
     new Source[T]() {
 
       def next(): Option[T] = {
         var n = self.next()
-        while (n.isDefined && !p.test(n.get)){
+        while (n.isDefined && !p.apply(n.get)){
           n = self.next()
         }
         n

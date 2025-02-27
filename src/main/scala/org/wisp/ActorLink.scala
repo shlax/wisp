@@ -3,7 +3,7 @@ package org.wisp
 import org.wisp.exceptions.UndeliveredException
 
 import java.util.concurrent.CompletableFuture
-import java.util.function.Consumer
+import org.wisp.Consumer
 import scala.annotation.targetName
 
 @FunctionalInterface

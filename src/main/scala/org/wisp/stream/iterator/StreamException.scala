@@ -1,10 +1,10 @@
 package org.wisp.stream.iterator
 
 import org.wisp.exceptions.UndeliveredException
-import org.wisp.{ActorLink, Message}
+import org.wisp.{ActorLink, Consumer, Message}
 import org.wisp.stream.iterator.message.End
 
-import java.util.function.{BiConsumer, Consumer}
+import java.util.function.BiConsumer
 
 trait StreamException extends Consumer[Message], BiConsumer[Message, Throwable]{
 

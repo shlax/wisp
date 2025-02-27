@@ -7,8 +7,6 @@ import org.wisp.stream.iterator.{ForEachSink, StreamWorker}
 import org.wisp.using.*
 import org.wisp.stream.Source.*
 
-import java.util.function.Consumer
-
 class HelloForEachSink {
 
   @Test
