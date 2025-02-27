@@ -11,7 +11,7 @@ import java.util.concurrent.locks.Condition
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
-class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLink)(implicit executor: ExecutionContext)
+class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLink)(using executor: ExecutionContext)
   extends StreamActorLink, ActorLink, Runnable {
 
   protected val nodes: util.Queue[ActorLink] = createNodes()

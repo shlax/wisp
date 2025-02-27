@@ -6,7 +6,7 @@ import org.wisp.stream.iterator.message.*
 import java.util
 import scala.concurrent.ExecutionContext
 
-class StreamBuffer(prev:ActorLink, size:Int)(implicit executor: ExecutionContext) extends StreamActorLink, ActorLink{
+class StreamBuffer(prev:ActorLink, size:Int)(using executor: ExecutionContext) extends StreamActorLink, ActorLink{
 
   protected val queue:util.Queue[Any] = createQueue()
   protected def createQueue(): util.Queue[Any] = { util.LinkedList[Any]() }

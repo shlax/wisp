@@ -11,17 +11,17 @@ import scala.util.control.NonFatal
 
 object StreamWorker {
 
-  def map[F, T](prev:ActorLink, inbox:Inbox, fn: F => T)(implicit executor: ExecutionContext) : StreamWorker[F, T] = {
+  def map[F, T](prev:ActorLink, inbox:Inbox, fn: F => T)(using executor: ExecutionContext) : StreamWorker[F, T] = {
     StreamWorker(prev, inbox, i => Option(fn.apply(i)).asSource )
   }
 
-  def flatMap[F, T](prev: ActorLink, inbox: Inbox, fn: F => Source[T])(implicit executor: ExecutionContext): StreamWorker[F, T] = {
+  def flatMap[F, T](prev: ActorLink, inbox: Inbox, fn: F => Source[T])(using executor: ExecutionContext): StreamWorker[F, T] = {
     StreamWorker(prev, inbox, fn)
   }
 
 }
 
-class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T])(implicit executor: ExecutionContext) extends Actor(inbox), StreamException{
+class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T])(using executor: ExecutionContext) extends Actor(inbox), StreamException{
 
   protected val nodes:util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }

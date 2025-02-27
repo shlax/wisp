@@ -7,8 +7,8 @@ import java.util
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 
-class ZipStream(prev:Iterable[ActorLink])(implicit executor: ExecutionContext) extends StreamActorLink, ActorLink{
-  def this(l:ActorLink*)(implicit executor: ExecutionContext) = this(l)
+class ZipStream(prev:Iterable[ActorLink])(using executor: ExecutionContext) extends StreamActorLink, ActorLink{
+  def this(l:ActorLink*)(using executor: ExecutionContext) = this(l)
 
   protected val nodes: util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }

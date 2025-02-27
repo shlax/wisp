@@ -6,7 +6,7 @@ import org.wisp.stream.iterator.{ForEachSink, ForEachSource, StreamSource, ZipSt
 
 import scala.concurrent.ExecutionContext
 
-class StreamGraph(val system:ActorSystem)(implicit executor: ExecutionContext){
+class StreamGraph(val system:ActorSystem)(using executor: ExecutionContext){
 
   def node[T](link: ActorLink): StreamNode[T] = {
     StreamNode(this, link)

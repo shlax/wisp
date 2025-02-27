@@ -6,7 +6,7 @@ import org.wisp.stream.iterator.{StreamBuffer, StreamSink, StreamWorker}
 
 import scala.concurrent.ExecutionContext
 
-class StreamNode[T](val graph: StreamGraph, val link: ActorLink)(implicit executor: ExecutionContext) {
+class StreamNode[T](val graph: StreamGraph, val link: ActorLink)(using executor: ExecutionContext) {
 
   def map[V](fn: T => V): StreamNode[V] = {
     val r = graph.system.create( i => StreamWorker.map(link, i, fn) )

@@ -7,7 +7,7 @@ import org.wisp.stream.iterator.message.*
 import scala.concurrent.{ExecutionContext, Promise}
 import scala.util.control.NonFatal
 
-class StreamSink[T](prev:ActorLink, sink:Sink[T])(implicit executor: ExecutionContext) extends StreamActorLink{
+class StreamSink[T](prev:ActorLink, sink:Sink[T])(using executor: ExecutionContext) extends StreamActorLink{
 
   protected val completed:Promise[Null] = Promise[Null]()
 
