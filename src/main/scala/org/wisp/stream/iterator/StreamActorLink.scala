@@ -1,11 +1,10 @@
 package org.wisp.stream.iterator
 
 import org.wisp.lock.*
-import org.wisp.stream.{Sink, Source}
+import org.wisp.stream.Sink
 import org.wisp.stream.iterator.message.IteratorMessage
 import org.wisp.{ActorLink, Message}
 
-import java.io.Flushable
 import java.util.concurrent.locks.ReentrantLock
 import org.wisp.Consumer
 import scala.util.control.NonFatal
@@ -22,7 +21,7 @@ abstract class StreamActorLink extends Consumer[Message], StreamException{
     lock.withLock{ f.apply(t.value.asInstanceOf[IteratorMessage]) }
   }
 
-  protected def flush(c: Flushable, tr: Option[Throwable]): Unit = {
+  protected def flush(c: Sink[?], tr: Option[Throwable]): Unit = {
     if(tr.isDefined){
       throw tr.get
     }
