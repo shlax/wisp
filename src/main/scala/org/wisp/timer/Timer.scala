@@ -5,12 +5,11 @@ import org.wisp.ActorLink
 import java.util.concurrent.{Callable, Executors, ScheduledExecutorService, ScheduledFuture, TimeUnit}
 import scala.concurrent.duration.Duration
 
-class Timer(ses:Option[ScheduledExecutorService], cls:Boolean) extends AutoCloseable{
-  def this(s:Option[ScheduledExecutorService] = None) = this(s, s.isEmpty)
+class Timer() extends AutoCloseable{
 
-  protected val service: ScheduledExecutorService = createService(ses)
-  protected def createService(os:Option[ScheduledExecutorService]): ScheduledExecutorService = {
-    os.getOrElse( Executors.newSingleThreadScheduledExecutor() )
+  protected val service: ScheduledExecutorService = createService()
+  protected def createService(): ScheduledExecutorService = {
+    Executors.newSingleThreadScheduledExecutor()
   }
 
   def schedule[V](link:ActorLink, delay:Duration, value: => V): ScheduledFuture[V] = {
@@ -36,9 +35,7 @@ class Timer(ses:Option[ScheduledExecutorService], cls:Boolean) extends AutoClose
   }
 
   override def close(): Unit = {
-    if(cls) {
-      service.close()
-    }
+    service.close()
   }
 
 }

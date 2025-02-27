@@ -5,6 +5,7 @@ import org.wisp.{Actor, ActorLink, ActorSystem, Inbox, Message}
 import org.wisp.using.*
 
 import java.util.concurrent.CountDownLatch
+import scala.concurrent.ExecutionContextExecutorService
 
 class HelloAsk {
 
@@ -18,10 +19,11 @@ class HelloAsk {
 
   @Test
   def test():Unit = {
-    ActorSystem() | { sys =>
+    ActorSystem() | { implicit sys =>
+
       val hello = sys.create(HelloActor(_))
-      hello.ask("world").whenComplete { (m, e) =>
-        println(m.value)
+      hello.ask("world").future.onComplete { e =>
+        println(e.get.value)
         cd.countDown()
       }
 

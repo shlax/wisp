@@ -3,14 +3,16 @@ package org.wisp.stream.iterator
 import org.wisp.ActorLink
 import org.wisp.stream.{Sink, Source}
 import org.wisp.stream.iterator.message.{End, HasNext, IteratorMessage, Next}
-
-import java.util
 import org.wisp.lock.*
 
+import java.util
 import java.util.concurrent.locks.Condition
+
+import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
-class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLink) extends StreamActorLink, ActorLink, Runnable {
+class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLink)(implicit executor: ExecutionContext)
+  extends StreamActorLink, ActorLink, Runnable {
 
   protected val nodes: util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
@@ -25,7 +27,7 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLin
   protected var ended = false
 
   protected def next(): Unit = {
-    prev.ask(HasNext).whenComplete(this)
+    prev.ask(HasNext).future.onComplete(accept)
   }
 
   override def run(): Unit = lock.withLock {

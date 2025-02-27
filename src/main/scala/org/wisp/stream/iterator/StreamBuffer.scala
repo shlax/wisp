@@ -2,9 +2,11 @@ package org.wisp.stream.iterator
 
 import org.wisp.ActorLink
 import org.wisp.stream.iterator.message.*
-import java.util
 
-class StreamBuffer(prev:ActorLink, size:Int) extends StreamActorLink, ActorLink{
+import java.util
+import scala.concurrent.ExecutionContext
+
+class StreamBuffer(prev:ActorLink, size:Int)(implicit executor: ExecutionContext) extends StreamActorLink, ActorLink{
 
   protected val queue:util.Queue[Any] = createQueue()
   protected def createQueue(): util.Queue[Any] = { util.LinkedList[Any]() }
@@ -21,7 +23,7 @@ class StreamBuffer(prev:ActorLink, size:Int) extends StreamActorLink, ActorLink{
     val req = if(requested) 1 else 0
     if (!ended && queue.size() + req < size) {
       requested = true
-      prev.ask(HasNext).whenComplete(this)
+      prev.ask(HasNext).future.onComplete(accept)
     }
   }
 

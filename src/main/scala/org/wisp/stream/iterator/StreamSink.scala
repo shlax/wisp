@@ -4,49 +4,49 @@ import org.wisp.stream.Sink
 import org.wisp.ActorLink
 import org.wisp.stream.iterator.message.*
 
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.atomic.AtomicBoolean
+import scala.concurrent.{ExecutionContext, Promise}
 import scala.util.control.NonFatal
 
-class StreamSink[T](prev:ActorLink, sink:Sink[T]) extends StreamActorLink{
+class StreamSink[T](prev:ActorLink, sink:Sink[T])(implicit executor: ExecutionContext) extends StreamActorLink{
 
-  protected val completed:CompletableFuture[Void] = CompletableFuture[Void]
-  protected val sinkClosed = AtomicBoolean(false)
+  protected val completed:Promise[Null] = Promise[Null]()
 
-  def start(): CompletableFuture[Void] = {
-    prev.ask(HasNext).whenComplete(this)
+  def start(): Promise[Null] = {
+    prev.ask(HasNext).future.onComplete(accept)
     completed
   }
 
   override def accept(from: ActorLink): PartialFunction[IteratorMessage, Unit] = {
+
     case Next(v) =>
-      if(completed.isDone) throw new IllegalStateException("ended")
+      if(completed.isCompleted) throw new IllegalStateException("ended")
       try {
         sink.accept(v.asInstanceOf[T])
-        prev.ask(HasNext).whenComplete(this)
+        prev.ask(HasNext).future.onComplete(accept)
       }catch{
         case NonFatal(exc) =>
-          if(sinkClosed.compareAndSet(false, true)){
-            completed.completeExceptionally(exc)
-          }
+          completed.failure(exc)
       }
+
     case End(ex) =>
       var err = ex
-      try{
-        if(err.isEmpty){
+
+      if(err.isEmpty) {
+        try {
           sink.flush()
+        } catch {
+          case NonFatal(exc) =>
+            err = Some(exc)
         }
-      }catch{
-        case NonFatal(exc) =>
-          err = Some(exc)
       }
       
       if(err.isEmpty){
-        val c = completed.complete(null)
+        val c = completed.trySuccess(null)
         if (!c) throw new IllegalStateException("ended")
-      }else if (sinkClosed.compareAndSet(false, true)) {
-        completed.completeExceptionally(err.get)
+      }else {
+        completed.failure(err.get)
       }
+
   }
 
 }

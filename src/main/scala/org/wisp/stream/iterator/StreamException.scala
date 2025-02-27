@@ -4,16 +4,17 @@ import org.wisp.exceptions.UndeliveredException
 import org.wisp.{ActorLink, Consumer, Message}
 import org.wisp.stream.iterator.message.End
 
-import java.util.function.BiConsumer
+import scala.util.{Failure, Success, Try}
 
-trait StreamException extends Consumer[Message], BiConsumer[Message, Throwable]{
+trait StreamException extends Consumer[Message]{
 
-  override def accept(t: Message, u: Throwable): Unit = {
-    if (u != null) {
-      val end = End(Some(u))
-      accept(Message( x => { throw UndeliveredException(x) }, end))
-    } else {
-      accept(t)
+  def accept(t: Try[Message]): Unit = {
+    t match{
+      case Success(v) =>
+        accept(v)
+      case Failure(u) =>
+        val end = End(Some(u))
+        accept(Message( x => { throw UndeliveredException(x) }, end))
     }
   }
 

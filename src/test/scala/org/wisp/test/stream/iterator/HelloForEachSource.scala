@@ -3,16 +3,18 @@ package org.wisp.test.stream.iterator
 import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.ActorSystem
 import org.wisp.stream.Source.*
-import org.wisp.stream.iterator.{StreamWorker, StreamSink, ForEachSource}
+import org.wisp.stream.iterator.{ForEachSource, StreamSink, StreamWorker}
 import org.wisp.using.*
 
-import scala.util.Random
+import scala.concurrent.{Await, ExecutionContextExecutorService}
+import scala.concurrent.duration.*
 
 class HelloForEachSource {
 
   @Test
   def test(): Unit = {
-    ActorSystem() | { sys =>
+    ActorSystem() | { implicit sys =>
+
       val tId = Thread.currentThread().threadId
 
       val data = Seq(0, 1, 2, 3, 4, 5).asSource.map{ i =>
@@ -25,11 +27,11 @@ class HelloForEachSource {
         "w:" + Thread.currentThread().threadId + ":" + q
       ))
 
-      val cf = StreamSink(w, println(_)).start()
+      val p = StreamSink(w, println(_)).start()
       println("start")
 
       src.run()
-      cf.get()
+      Await.ready(p.future, 1.second)
 
     }
   }

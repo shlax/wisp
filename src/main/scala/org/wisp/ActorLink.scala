@@ -2,9 +2,8 @@ package org.wisp
 
 import org.wisp.exceptions.UndeliveredException
 
-import java.util.concurrent.CompletableFuture
-import org.wisp.Consumer
 import scala.annotation.targetName
+import scala.concurrent.Promise
 
 @FunctionalInterface
 trait ActorLink extends Consumer[Message]{
@@ -15,9 +14,9 @@ trait ActorLink extends Consumer[Message]{
     accept(msg)
   }
 
-  def ask(v:Any) : CompletableFuture[Message] = {
-    val cf = CompletableFuture[Message]()
-    val msg = Message( t => { if (!cf.complete(t)) throw UndeliveredException(t) }, v)
+  def ask(v:Any) : Promise[Message] = {
+    val cf = Promise[Message]()
+    val msg = Message( t => { if (!cf.trySuccess(t)) throw UndeliveredException(t) }, v)
     accept(msg)
     cf
   }

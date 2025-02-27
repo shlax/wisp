@@ -2,17 +2,19 @@ package org.wisp.test.stream.iterator
 
 import org.junit.jupiter.api.Test
 import org.wisp.ActorSystem
-import org.wisp.stream.iterator.{StreamWorker, StreamSink, StreamSource, StreamBuffer, ZipStream}
+import org.wisp.stream.iterator.{StreamSink, StreamSource, StreamWorker, ZipStream}
 import org.wisp.using.*
 import org.wisp.stream.Source.*
 
-import scala.util.Random
+import scala.concurrent.{Await, ExecutionContextExecutorService}
+import scala.concurrent.duration.*
 
 class HelloZipStream {
 
   @Test
   def test():Unit = {
-    ActorSystem() | { sys =>
+    ActorSystem() | { implicit sys =>
+
       val data = Seq(0, 1, 2, 3, 4).asSource
       val src = StreamSource(data)
 
@@ -28,7 +30,8 @@ class HelloZipStream {
 
       val r = ZipStream(w1, w2)
 
-      StreamSink(r, println(_)).start().get()
+      val p = StreamSink(r, println(_)).start()
+      Await.ready(p.future, 1.second)
 
     }
   }

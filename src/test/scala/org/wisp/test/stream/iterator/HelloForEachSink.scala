@@ -7,11 +7,14 @@ import org.wisp.stream.iterator.{ForEachSink, StreamWorker}
 import org.wisp.using.*
 import org.wisp.stream.Source.*
 
+import scala.concurrent.ExecutionContextExecutorService
+
 class HelloForEachSink {
 
   @Test
   def test():Unit = {
-    ActorSystem() | { sys =>
+    ActorSystem() | { implicit sys =>
+
       val tId = Thread.currentThread().threadId
 
       val data = Seq(0, 1, 2, 3, 4, 5).asSource.map { i =>

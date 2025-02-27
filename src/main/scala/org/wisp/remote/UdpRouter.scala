@@ -9,9 +9,10 @@ import java.net.SocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.AsynchronousCloseException
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.{CompletableFuture, ConcurrentHashMap, ConcurrentMap, Executor}
+import java.util.concurrent.{ConcurrentHashMap, ConcurrentMap}
+import scala.concurrent.{ExecutionContext, Promise}
 
-class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extends UdpClient(Some(address)), Runnable{
+class UdpRouter(address: SocketAddress, capacity:Int, executor: ExecutionContext) extends UdpClient(Some(address)), Runnable{
 
   protected val bindMap: ConcurrentMap[String, ActorLink] = createBindMap()
 
@@ -76,7 +77,7 @@ class UdpRouter(address: SocketAddress, capacity:Int, executor: Executor) extend
           }
         }
 
-        override def ask(v: Any): CompletableFuture[Message] = {
+        override def ask(v: Any): Promise[Message] = {
           throw RemoteAskException(v)
         }
       }, rm.value) )

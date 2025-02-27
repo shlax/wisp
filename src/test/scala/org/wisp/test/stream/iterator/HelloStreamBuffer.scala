@@ -4,15 +4,17 @@ import org.junit.jupiter.api.Test
 import org.wisp.ActorSystem
 import org.wisp.using.*
 import org.wisp.stream.Source.*
-import org.wisp.stream.iterator.{StreamSink, StreamSource, StreamBuffer, StreamWorker}
+import org.wisp.stream.iterator.{StreamBuffer, StreamSink, StreamSource, StreamWorker}
 
-import scala.util.Random
+import scala.concurrent.{Await, ExecutionContextExecutorService}
+import scala.concurrent.duration.*
 
 class HelloStreamBuffer {
 
   @Test
   def test():Unit = {
-    ActorSystem() | { sys =>
+    ActorSystem() | { implicit sys =>
+
       val data = Seq(0, 1, 2, 3, 4, 5).asSource
 
       val src = StreamSource(data.map { i =>
@@ -26,7 +28,8 @@ class HelloStreamBuffer {
         "w:" + Thread.currentThread().threadId + ":" + q
       ))
 
-      StreamSink(w, println(_)).start().get()
+      val p = StreamSink(w, println(_)).start()
+      Await.ready(p.future, 1.second)
 
     }
   }

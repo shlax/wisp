@@ -1,23 +1,29 @@
 package org.wisp
 
-import org.wisp.exceptions.ExceptionHandler
-
-import java.util.concurrent.{Executor, ExecutorService, Executors}
+import java.util.concurrent.{Executor, Executors}
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 import scala.util.control.NonFatal
 
-class ActorSystem(inboxCapacity:Int = 3) extends Executor, ExceptionHandler, AutoCloseable{
+class ActorSystem(inboxCapacity:Int = 3) extends ExecutionContext, AutoCloseable{
 
-  val executor: ExecutorService = Executors.newVirtualThreadPerTaskExecutor()
-  
+  val executor: ExecutionContextExecutorService = createExecutorService()
+  protected def createExecutorService() : ExecutionContextExecutorService = {
+    ExecutionContext.fromExecutorService( Executors.newVirtualThreadPerTaskExecutor() )
+  }
+
   override def execute(command: Runnable): Unit = {
     executor.execute(() => {
       try{
         command.run()
       }catch {
         case NonFatal(e) =>
-          onException(e)
+          reportFailure(e)
       }
     })
+  }
+
+  override def reportFailure(cause: Throwable): Unit = {
+    cause.printStackTrace()
   }
 
   def create[T <: Actor](fn: ActorFactory[T], inboxSize:Int = inboxCapacity):T = {

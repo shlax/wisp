@@ -6,8 +6,9 @@ import org.wisp.lock.*
 import org.wisp.stream.Sink
 
 import java.util.concurrent.locks.Condition
+import scala.concurrent.ExecutionContext
 
-class RunnableSink[T](prev:ActorLink, sink:Sink[T]) extends StreamActorLink, Runnable{
+class RunnableSink[T](prev:ActorLink, sink:Sink[T])(implicit executor: ExecutionContext) extends StreamActorLink, Runnable{
 
   protected val condition: Condition = lock.newCondition()
 
@@ -17,7 +18,7 @@ class RunnableSink[T](prev:ActorLink, sink:Sink[T]) extends StreamActorLink, Run
   protected var ended = false
 
   protected def next(): Unit = {
-    prev.ask(HasNext).whenComplete(this)
+    prev.ask(HasNext).future.onComplete(accept)
   }
 
   override def run(): Unit = lock.withLock {

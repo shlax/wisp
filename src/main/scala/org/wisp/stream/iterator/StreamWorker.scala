@@ -6,21 +6,22 @@ import org.wisp.{Actor, ActorLink, Inbox}
 import org.wisp.stream.iterator.message.*
 
 import java.util
+import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
 object StreamWorker {
 
-  def map[F, T](prev:ActorLink, inbox:Inbox, fn: F => T) : StreamWorker[F, T] = {
+  def map[F, T](prev:ActorLink, inbox:Inbox, fn: F => T)(implicit executor: ExecutionContext) : StreamWorker[F, T] = {
     StreamWorker(prev, inbox, i => Option(fn.apply(i)).asSource )
   }
 
-  def flatMap[F, T](prev: ActorLink, inbox: Inbox, fn: F => Source[T]): StreamWorker[F, T] = {
+  def flatMap[F, T](prev: ActorLink, inbox: Inbox, fn: F => Source[T])(implicit executor: ExecutionContext): StreamWorker[F, T] = {
     StreamWorker(prev, inbox, fn)
   }
 
 }
 
-class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T]) extends Actor(inbox), StreamException{
+class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T])(implicit executor: ExecutionContext) extends Actor(inbox), StreamException{
 
   protected val nodes:util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
@@ -83,7 +84,7 @@ class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T]) extend
           if (hanNext) {
             source = Some(opt.get)
           } else if (!hanNext && !nodes.isEmpty) {
-            prev.ask(HasNext).whenComplete(this)
+            prev.ask(HasNext).future.onComplete(accept)
           }
         }
       }
@@ -104,7 +105,7 @@ class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T]) extend
             from << Next(v.get)
           }else {
             nodes.add(from)
-            prev.ask(HasNext).whenComplete(this)
+            prev.ask(HasNext).future.onComplete(accept)
           }
         }
       }

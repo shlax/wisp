@@ -4,15 +4,16 @@ import org.junit.jupiter.api.Test
 import org.wisp.ActorSystem
 import org.wisp.using.*
 import org.wisp.stream.Source.*
-import org.wisp.stream.iterator.{RunnableSink, StreamBuffer, StreamSource, StreamWorker}
+import org.wisp.stream.iterator.{RunnableSink, StreamSource, StreamWorker}
 
-import scala.util.Random
+import scala.concurrent.ExecutionContextExecutorService
 
 class HelloRunnableSink {
 
   @Test
   def test(): Unit = {
-    ActorSystem() | { sys =>
+    ActorSystem() | { implicit sys =>
+
       val data = Seq(0, 1, 2, 3, 4, 5).asSource
 
       val src = StreamSource(data)

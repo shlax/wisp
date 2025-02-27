@@ -5,9 +5,10 @@ import org.wisp.ActorLink
 
 import java.util
 import scala.collection.mutable
+import scala.concurrent.ExecutionContext
 
-class ZipStream(prev:Iterable[ActorLink]) extends StreamActorLink, ActorLink{
-  def this(l:ActorLink*) = this(l)
+class ZipStream(prev:Iterable[ActorLink])(implicit executor: ExecutionContext) extends StreamActorLink, ActorLink{
+  def this(l:ActorLink*)(implicit executor: ExecutionContext) = this(l)
 
   protected val nodes: util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
@@ -31,7 +32,7 @@ class ZipStream(prev:Iterable[ActorLink]) extends StreamActorLink, ActorLink{
     def requestNext():Unit = {
       if (!ended && !requested && value.isEmpty) {
         requested = true
-        link.ask(HasNext).whenComplete(ZipStream.this)
+        link.ask(HasNext).future.onComplete(accept)
       }
     }
 
