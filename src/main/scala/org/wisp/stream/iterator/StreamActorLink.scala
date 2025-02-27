@@ -22,55 +22,18 @@ abstract class StreamActorLink extends Consumer[Message], StreamException{
     lock.withLock{ f.apply(t.value.asInstanceOf[IteratorMessage]) }
   }
 
-  protected def autoClose(c: AutoCloseable, tr: Option[Throwable]): Unit = {
+  protected def flush(c: Flushable, tr: Option[Throwable]): Unit = {
+    if(tr.isDefined){
+      throw tr.get
+    }
+
     try {
-      c.close()
+      c.flush()
     } catch {
       case NonFatal(ex) =>
-        if (tr.isDefined) {
-          val e = tr.get
-          e.addSuppressed(ex)
-          throw e
-        } else {
-          throw ex
-        }
+        throw ex
     }
 
-    for(e <- tr){
-      throw e
-    }
-
-  }
-
-  protected def autoClose(c:Sink[?])(block: => Unit):Unit = {
-    autoClose(c, Some(c), block)
-  }
-
-  protected def autoClose(c: Source[?])(block: => Unit): Unit = {
-    autoClose(c, None, block)
-  }
-
-  protected def autoClose(c:AutoCloseable, flush:Option[Flushable], block: => Unit):Unit = {
-    var e: Throwable = null
-    try{
-      block
-      for(f <- flush){
-        f.flush()
-      }
-    }catch{
-      case NonFatal(ex) =>
-        e = ex
-    }
-    try{
-      c.close()
-    }catch{
-      case NonFatal(ex) =>
-        if(e != null) e.addSuppressed(ex)
-        else e = ex
-    }
-    if(e != null){
-      throw e
-    }
   }
 
 }

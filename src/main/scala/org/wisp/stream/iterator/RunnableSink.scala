@@ -21,7 +21,6 @@ class RunnableSink[T](prev:ActorLink, sink:Sink[T]) extends StreamActorLink, Run
   }
 
   override def run(): Unit = lock.withLock {
-    autoClose(sink) {
       next()
 
       while (!ended && exception.isEmpty) {
@@ -38,11 +37,7 @@ class RunnableSink[T](prev:ActorLink, sink:Sink[T]) extends StreamActorLink, Run
 
       }
 
-      for (e <- exception) {
-        throw e
-      }
-
-    }
+      flush(sink, exception)
   }
 
   override def accept(from: ActorLink): PartialFunction[IteratorMessage, Unit] = {

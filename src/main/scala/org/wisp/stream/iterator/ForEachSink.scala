@@ -29,57 +29,52 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLin
   }
 
   override def run(): Unit = lock.withLock {
-    autoClose(src){
-      autoClose(sink) {
+    next()
+
+    while (!ended && exception.isEmpty) {
+
+      for (v <- value) {
+        value = None
+        sink.accept(v)
         next()
+      }
 
-        while (!ended && exception.isEmpty) {
-
-          for (v <- value) {
-            value = None
-            sink.accept(v)
-            next()
-          }
-
-          var a = nodes.poll()
-          while (a != null) {
-            if (inputEnded) {
-              a << End()
-            } else {
-              var n: Option[F] = None
-              if (exception.isEmpty) {
-                try {
-                  n = src.next()
-                } catch {
-                  case NonFatal(ex) =>
-                    exception = Some(ex)
-                }
-              }
-              if (exception.isDefined) {
-                a << End(exception)
-              } else {
-                n match {
-                  case Some(v) =>
-                    a << Next(v)
-                  case None =>
-                    inputEnded = true
-                    a << End()
-                }
-              }
+      var a = nodes.poll()
+      while (a != null) {
+        if (inputEnded) {
+          a << End()
+        } else {
+          var n: Option[F] = None
+          if (exception.isEmpty) {
+            try {
+              n = src.next()
+            } catch {
+              case NonFatal(ex) =>
+                exception = Some(ex)
             }
-            a = nodes.poll()
           }
-
-          if (!ended && exception.isEmpty) {
-            condition.await()
+          if (exception.isDefined) {
+            a << End(exception)
+          } else {
+            n match {
+              case Some(v) =>
+                a << Next(v)
+              case None =>
+                inputEnded = true
+                a << End()
+            }
           }
         }
+        a = nodes.poll()
+      }
 
-        for (e <- exception) {
-          throw e
-        }
+      if (!ended && exception.isEmpty) {
+        condition.await()
       }
     }
+
+    flush(sink, exception)
+
   }
 
   override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {

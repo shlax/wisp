@@ -20,32 +20,30 @@ class ForEachSource[T](src:Source[T]) extends StreamActorLink, ActorLink, Runnab
   protected var ended = false
 
   override def run():Unit = lock.withLock {
-    autoClose(src) {
-      var e: Option[Throwable] = None
-      try {
-        src.forEach { e =>
-          var a = nodes.poll()
-          while (a == null) {
-            condition.await()
-            a = nodes.poll()
-          }
-          a << Next(e)
+    var e: Option[Throwable] = None
+    try {
+      src.forEach { e =>
+        var a = nodes.poll()
+        while (a == null) {
+          condition.await()
+          a = nodes.poll()
         }
-      } catch {
-        case NonFatal(ex) =>
-          e = Some(ex)
+        a << Next(e)
       }
+    } catch {
+      case NonFatal(ex) =>
+        e = Some(ex)
+    }
 
-      ended = true
-      var a = nodes.poll()
-      while (a != null) {
-        a << End(e)
-        a = nodes.poll()
-      }
+    ended = true
+    var a = nodes.poll()
+    while (a != null) {
+      a << End(e)
+      a = nodes.poll()
+    }
 
-      if (e.isDefined) {
-        throw e.get
-      }
+    if (e.isDefined) {
+      throw e.get
     }
   }
 
