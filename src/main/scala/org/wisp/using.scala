@@ -8,9 +8,8 @@ object using {
   extension [T <: AutoCloseable](ac: T) {
     @targetName("withGivenClose")
     inline def |? [R](inline fn: T ?=> T => R ): R = {
-      given v: T = ac
-      val f: T => R = fn
-      ac | f
+      given gVal: T = ac
+      ac | fn.apply
     }
   }
 
@@ -20,8 +19,7 @@ object using {
       var r:Option[R] = None
       var e:Throwable = null
       try {
-        val x = f.apply(ac)
-        r = Some(x)
+        r = Some(f.apply(ac))
       }catch{
         case NonFatal(ex) =>
           e = ex
