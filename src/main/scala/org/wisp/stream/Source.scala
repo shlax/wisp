@@ -48,12 +48,10 @@ object Source{
 }
 
 @FunctionalInterface
-trait Source[T] extends AutoCloseable{
+trait Source[T]{
 
   /** {{{if(hasNext) Some(next()) else None}}} */
   def next():Option[T]
-
-  override def close(): Unit = {}
 
   def map[R](f: T => R): Source[R] = {
     val self = this
@@ -62,11 +60,7 @@ trait Source[T] extends AutoCloseable{
       def next():Option[R] = {
         self.next().map( i => f.apply(i) )
       }
-
-      override def close(): Unit = {
-        self.close()
-      }
-
+      
     }
   }
 
@@ -95,10 +89,6 @@ trait Source[T] extends AutoCloseable{
         r
       }
 
-      override def close(): Unit = {
-        self.close()
-      }
-
     }
   }
 
@@ -112,10 +102,6 @@ trait Source[T] extends AutoCloseable{
           n = self.next()
         }
         n
-      }
-
-      override def close(): Unit = {
-        self.close()
       }
 
     }
@@ -149,10 +135,6 @@ trait Source[T] extends AutoCloseable{
           }
         }
         r
-      }
-
-      override def close(): Unit = {
-        self.close()
       }
 
     }

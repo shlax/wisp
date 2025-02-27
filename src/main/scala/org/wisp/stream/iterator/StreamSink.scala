@@ -28,7 +28,6 @@ class StreamSink[T](prev:ActorLink, sink:Sink[T]) extends StreamActorLink{
         case NonFatal(exc) =>
           if(sinkClosed.compareAndSet(false, true)){
             completed.completeExceptionally(exc)
-            autoClose(sink, Some(exc))
           }
       }
     case End(ex) =>
@@ -42,15 +41,6 @@ class StreamSink[T](prev:ActorLink, sink:Sink[T]) extends StreamActorLink{
           err = Some(exc)
       }
       
-      if(sinkClosed.compareAndSet(false, true)){
-        try {
-          autoClose(sink, err)
-        } catch {
-          case NonFatal(exc) =>
-            err = Some(exc)
-        }
-      }
-
       if(err.isEmpty){
         val c = completed.complete(null)
         if (!c) throw new IllegalStateException("ended")

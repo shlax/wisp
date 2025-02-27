@@ -27,15 +27,6 @@ class StreamSource[T](src:Source[T]) extends StreamActorLink, ActorLink{
               exception = Some(e)
           }
 
-          if(n.isEmpty) {
-            try {
-              autoClose(src, exception)
-            } catch {
-              case NonFatal(e) =>
-                exception = Some(e)
-            }
-          }
-
           if(exception.isDefined){
             sender << End(exception)
           }else {

@@ -4,9 +4,8 @@ import java.io.Flushable
 import java.util.function.Consumer
 
 @FunctionalInterface
-trait Sink[T] extends Consumer[T], Flushable, AutoCloseable{
+trait Sink[T] extends Consumer[T], Flushable{
 
   override def flush(): Unit = {}
 
-  override def close(): Unit = {}
 }

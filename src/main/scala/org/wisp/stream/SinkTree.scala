@@ -9,22 +9,23 @@ import scala.annotation.targetName
 import scala.util.control.NonFatal
 import scala.jdk.CollectionConverters.*
 
-object SinkGraph {
+object SinkTree {
 
-  def apply[T](fn: Consumer[SinkGraph[T]]): SinkGraph[T] = {
-    val f = new SinkGraph[T]
+  def apply[T](fn: Consumer[SinkTree[T]]): SinkTree[T] = {
+    val f = new SinkTree[T]
     fn.accept(f)
     f
   }
 
-  def apply[T](fe: Source[T])(fn: Consumer[SinkGraph[T]]): Unit = {
-    apply(fn) | { f => f.forEach(fe) }
+  def apply[T](fe: Source[T])(fn: Consumer[SinkTree[T]]): Unit = {
+    val f = apply(fn)
+    f.forEach(fe)
   }
 
 }
 
-class SinkGraph[T](val from:Option[SinkGraph[?]] = None) extends Sink[T] {
-  def this(f:SinkGraph[?]) = this(Some(f))
+class SinkTree[T](val from:Option[SinkTree[?]] = None) extends Sink[T] {
+  def this(f:SinkTree[?]) = this(Some(f))
 
   protected val next = new util.LinkedList[Sink[? >: T]]
 
@@ -42,37 +43,9 @@ class SinkGraph[T](val from:Option[SinkGraph[?]] = None) extends Sink[T] {
     for(i <- next.asScala) i.flush()
   }
 
-  override def close(): Unit = {
-    var e:Throwable = null
-
-    for(i <- from){
-      try{
-        i.close()
-      }catch{
-        case NonFatal(ex) =>
-          e = ex
-      }
-    }
-
-    for (i <- next.asScala){
-      try {
-        i.close()
-      }catch {
-        case NonFatal(ex) =>
-          if(e != null) e.addSuppressed(ex)
-          else e = ex
-      }
-    }
-
-    if(e != null){
-      throw e
-    }
-
-  }
-
-  def map[R](fn: T => R) : SinkGraph[R] = {
-    val nf = new SinkGraph[R]
-    to(new SinkGraph[T](nf){
+  def map[R](fn: T => R) : SinkTree[R] = {
+    val nf = new SinkTree[R]
+    to(new SinkTree[T](nf){
       override def accept(e: T): Unit = {
         nf.accept(fn.apply(e))
         super.accept(e)
@@ -81,9 +54,9 @@ class SinkGraph[T](val from:Option[SinkGraph[?]] = None) extends Sink[T] {
     nf
   }
 
-  def flatMap[R](fn: Consumer[R] => Consumer[T]) : SinkGraph[R] = {
-    val nf = new SinkGraph[R]
-    to(new SinkGraph[T](nf){
+  def flatMap[R](fn: Consumer[R] => Consumer[T]) : SinkTree[R] = {
+    val nf = new SinkTree[R]
+    to(new SinkTree[T](nf){
       override def accept(e: T): Unit = {
         fn.apply(nf).accept(e)
         super.accept(e)
@@ -93,9 +66,9 @@ class SinkGraph[T](val from:Option[SinkGraph[?]] = None) extends Sink[T] {
   }
 
   // import scala.jdk.OptionConverters.*
-  def groupBy[K, E](keyFn: T => K, collectFn: (Option[E], T) => E): SinkGraph[E] = {
-    val nf = new SinkGraph[E]
-    to(new SinkGraph[T](nf){
+  def groupBy[K, E](keyFn: T => K, collectFn: (Option[E], T) => E): SinkTree[E] = {
+    val nf = new SinkTree[E]
+    to(new SinkTree[T](nf){
       protected var value: Option[E] = None
       protected var key: Option[K] = None
 
@@ -125,9 +98,9 @@ class SinkGraph[T](val from:Option[SinkGraph[?]] = None) extends Sink[T] {
     nf
   }
 
-  def filter[E >: T](fn: Predicate[E]): SinkGraph[T] = {
-    val nf = new SinkGraph[T]
-    to(new SinkGraph[T](nf){
+  def filter[E >: T](fn: Predicate[E]): SinkTree[T] = {
+    val nf = new SinkTree[T]
+    to(new SinkTree[T](nf){
       override def accept(e: T): Unit = {
         if(fn.test(e)) nf.accept(e)
         super.accept(e)
@@ -136,14 +109,14 @@ class SinkGraph[T](val from:Option[SinkGraph[?]] = None) extends Sink[T] {
     nf
   }
 
-  def to[E >: T](s: Sink[E]): SinkGraph[T] = {
+  def to[E >: T](s: Sink[E]): SinkTree[T] = {
     next.add(s)
     this
   }
 
-  def collect[F >: T, R](pf: PartialFunction[F, R]): SinkGraph[R] = {
-    val nf = new SinkGraph[R]
-    to(new SinkGraph[T](nf){
+  def collect[F >: T, R](pf: PartialFunction[F, R]): SinkTree[R] = {
+    val nf = new SinkTree[R]
+    to(new SinkTree[T](nf){
       override def accept(e: T): Unit = {
         if (pf.isDefinedAt(e)) nf.accept(pf.apply(e))
         super.accept(e)
@@ -152,12 +125,12 @@ class SinkGraph[T](val from:Option[SinkGraph[?]] = None) extends Sink[T] {
     nf
   }
 
-  def as[R](fn: SinkGraph[T] => R): R = {
+  def as[R](fn: SinkTree[T] => R): R = {
     fn.apply(this)
   }
 
   @targetName("sendTo")
-  def >> (ref:ActorLink): SinkGraph[T] = {
+  def >> (ref:ActorLink): SinkTree[T] = {
     to( (e: T) => { ref << e } )
   }
 
