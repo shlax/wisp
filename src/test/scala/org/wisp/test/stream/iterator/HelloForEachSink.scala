@@ -19,15 +19,15 @@ class HelloForEachSink {
         "s[" + Thread.currentThread().threadId + "]:" + i
       }
 
-      val sink = new Sink[Any]{
-        override def accept(t: Any): Unit = {
+      val sink = new Sink[String]{
+        override def accept(t: String): Unit = {
           Assertions.assertTrue(Thread.currentThread().threadId == tId)
           println("d[" + Thread.currentThread().threadId + "]:" + t)
         }
       }
 
       val src = ForEachSink(data, sink){ (ref:ActorLink) =>
-        sys.create(i => StreamWorker.map(ref, i){ q =>
+        sys.create(i => StreamWorker.map(ref, i){ (q :String) =>
           "w:" + Thread.currentThread().threadId + ":" + q
         })
       }
