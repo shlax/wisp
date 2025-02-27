@@ -21,9 +21,9 @@ class HelloForEachSource {
       }
       val src = ForEachSource(data)
 
-      val w = sys.create(i => StreamWorker.map(src, i){ q =>
+      val w = sys.create(i => StreamWorker.map(src, i, q =>
         "w:" + Thread.currentThread().threadId + ":" + q
-      })
+      ))
 
       val cf = StreamSink(w, println(_)).start()
       println("start")

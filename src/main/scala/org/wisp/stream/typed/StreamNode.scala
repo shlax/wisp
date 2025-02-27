@@ -7,12 +7,12 @@ import org.wisp.stream.iterator.{StreamBuffer, StreamSink, StreamWorker}
 class StreamNode[T](val graph: StreamGraph, val link: ActorLink) {
 
   def map[V](fn: T => V): StreamNode[V] = {
-    val r = graph.system.create( i => StreamWorker.map(link, i)(fn) )
+    val r = graph.system.create( i => StreamWorker.map(link, i, fn) )
     graph.node(r)
   }
 
   def flatMap[V](fn: T => Source[V]): StreamNode[V] = {
-    val r = graph.system.create(i => StreamWorker.flatMap(link, i)(fn) )
+    val r = graph.system.create(i => StreamWorker.flatMap(link, i, fn) )
     graph.node(r)
   }
 

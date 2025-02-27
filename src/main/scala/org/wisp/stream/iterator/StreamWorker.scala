@@ -10,11 +10,11 @@ import scala.util.control.NonFatal
 
 object StreamWorker {
 
-  def map[F, T](prev:ActorLink, inbox:Inbox)(fn: F => T) : StreamWorker[F, T] = {
+  def map[F, T](prev:ActorLink, inbox:Inbox, fn: F => T) : StreamWorker[F, T] = {
     StreamWorker(prev, inbox, i => Option(fn.apply(i)).asSource )
   }
 
-  def flatMap[F, T](prev: ActorLink, inbox: Inbox)(fn: F => Source[T]): StreamWorker[F, T] = {
+  def flatMap[F, T](prev: ActorLink, inbox: Inbox, fn: F => Source[T]): StreamWorker[F, T] = {
     StreamWorker(prev, inbox, fn)
   }
 

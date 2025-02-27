@@ -17,9 +17,9 @@ class HelloRunnableSink {
 
       val src = StreamSource(data)
 
-      val w = sys.create(i => StreamWorker.map(src, i){ q =>
+      val w = sys.create(i => StreamWorker.map(src, i, q =>
         "w:" + Thread.currentThread().threadId + ":" + q
-      })
+      ))
 
       RunnableSink(w, println(_)).run()
 
