@@ -1,12 +1,10 @@
 package org.wisp.stream
 
 import org.wisp.ActorLink
-import org.wisp.using.*
 
 import java.util
 import java.util.function.{Consumer, Predicate}
 import scala.annotation.targetName
-import scala.util.control.NonFatal
 import scala.jdk.CollectionConverters.*
 
 object SinkTree {
@@ -54,7 +52,7 @@ class SinkTree[T](val from:Option[SinkTree[?]] = None) extends Sink[T] {
     nf
   }
 
-  def flatMap[R](fn: Consumer[R] => Consumer[T]) : SinkTree[R] = {
+  def flatMap[R](fn: Sink[R] => Consumer[T]) : SinkTree[R] = {
     val nf = new SinkTree[R]
     to(new SinkTree[T](nf){
       override def accept(e: T): Unit = {
@@ -65,7 +63,6 @@ class SinkTree[T](val from:Option[SinkTree[?]] = None) extends Sink[T] {
     nf
   }
 
-  // import scala.jdk.OptionConverters.*
   def groupBy[K, E](keyFn: T => K, collectFn: (Option[E], T) => E): SinkTree[E] = {
     val nf = new SinkTree[E]
     to(new SinkTree[T](nf){
