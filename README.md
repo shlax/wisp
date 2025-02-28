@@ -1,1 +1,1 @@
-implementation of the actor model for jvm with remoting/cluster
+simple implementation of the actor model with streaming
