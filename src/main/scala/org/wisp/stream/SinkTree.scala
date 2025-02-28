@@ -77,7 +77,7 @@ class SinkTree[T](val from:Option[SinkTree[?]] = None) extends Sink[T] {
 
       override def flush(): Unit = {
         super.flush()
-        p.trySuccess(value)
+        p.success(value)
       }
 
     })

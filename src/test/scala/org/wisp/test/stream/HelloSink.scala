@@ -25,12 +25,12 @@ class HelloSink {
     val data = Seq(1, 2, 3).asSource
 
     val p:Promise[Int] = SinkTree(data){ f =>
-      f.fold(0, (a, b) => a + b)
+      val tmp = f.fold(0, (a, b) => a + b)
+      println(tmp.isCompleted)
+      tmp
     }
 
-    val f = p.future
-    Await.ready(f, 1.second)
-    println(f.value)
+    println(p.future.value)
 
   }
 
