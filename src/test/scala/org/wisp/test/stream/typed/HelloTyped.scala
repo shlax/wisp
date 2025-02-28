@@ -29,12 +29,12 @@ class HelloTyped {
 
     ActorSystem() | ( _.as { sys =>
 
-      val t = SinkTree[Int]( x => {
-        x.as{ y =>
-          y.map(i => i * 2 + 0).map("a:"+_).to(println)
-          y.map(i => i * 2 + 1).map("b:"+_).to(println)
+      val t = SinkTree[Int] { x =>
+        x.as { y =>
+          y.map(i => i * 2 + 0).map("a:" + _).to(println)
+          y.map(i => i * 2 + 1).map("b:" + _).to(println)
         }
-      })
+      }
 
       val p = StreamGraph(sys).from(data).map(i => i + 1).to(t).start()
       Await.result(p.future, 1.second)
