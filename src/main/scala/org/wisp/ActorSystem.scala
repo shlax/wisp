@@ -8,7 +8,7 @@ class ActorSystem(inboxCapacity:Int = 3) extends ExecutionContext, AutoCloseable
 
   val executor: ExecutionContextExecutorService = createExecutor()
   protected def createExecutor() : ExecutionContextExecutorService = {
-    ExecutionContext.fromExecutorService( Executors.newVirtualThreadPerTaskExecutor() )
+    ExecutionContext.fromExecutorService( Executors.newVirtualThreadPerTaskExecutor(), reportFailure )
   }
 
   override def execute(command: Runnable): Unit = {
@@ -16,8 +16,9 @@ class ActorSystem(inboxCapacity:Int = 3) extends ExecutionContext, AutoCloseable
       try{
         command.run()
       }catch {
-        case NonFatal(e) =>
-          reportFailure(e)
+        case NonFatal(ex) =>
+          reportFailure(ex)
+          throw ex
       }
     })
   }
