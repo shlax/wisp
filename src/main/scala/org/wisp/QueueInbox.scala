@@ -8,9 +8,9 @@ import scala.annotation.targetName
 import scala.util.control.NonFatal
 import org.wisp.lock.*
 
-class QueueInbox[T <: Actor](override val system: ActorSystem, inboxCapacity:Int, fn: ActorFactory[T]) extends Inbox {
+class QueueInbox[T <: Actor](override val system: ActorSystem, inboxCapacity:Int, fn: Inbox => T) extends Inbox {
 
-  val actor:T = fn.create(this)
+  val actor:T = fn.apply(this)
 
   protected val queue: util.Queue[Message] = createQueue(inboxCapacity)
   protected def createQueue(capacity:Int): util.Queue[Message] = { util.LinkedList[Message]() }

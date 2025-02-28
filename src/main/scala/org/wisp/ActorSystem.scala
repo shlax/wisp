@@ -32,7 +32,7 @@ class ActorSystem(inboxCapacity:Int = 3) extends ExecutionContext, AutoCloseable
     f.apply(this)
   }
 
-  def create[T <: Actor](fn: ActorFactory[T], inboxSize:Int = inboxCapacity):T = {
+  def create[T <: Actor](fn: Inbox => T, inboxSize:Int = inboxCapacity):T = {
     QueueInbox(this, inboxSize, fn).actor
   }
 
