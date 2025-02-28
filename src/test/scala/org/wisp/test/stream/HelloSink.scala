@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test
 import org.wisp.stream.{Sink, SinkTree}
 import org.wisp.stream.Source.*
 
+import scala.concurrent.{Await, Promise}
+import scala.concurrent.duration.*
+
 class HelloSink {
 
   @Test
@@ -18,14 +21,17 @@ class HelloSink {
   }
 
   @Test
-  def groupBy():Unit = {
-    val data = Seq(("a", 1), ("a", 2), ("b", 3), ("b", 4)).asSource
+  def fold():Unit = {
+    val data = Seq(1, 2, 3).asSource
 
-    SinkTree(data){ f =>
-      f.filter(_._2 < 10).groupBy(_._1, (c:Option[List[Int]], i:(String,Int)) => {
-        i._2 :: c.getOrElse(Nil)
-      } ).map(println)
+    val p:Promise[Int] = SinkTree(data){ f =>
+      f.fold(0, (a, b) => a + b)
     }
+
+    val f = p.future
+    Await.ready(f, 1.second)
+    println(f.value)
+
   }
 
 }

@@ -108,37 +108,12 @@ trait Source[+T]{
     }
   }
 
-  def groupBy[K, E](keyFn: T => K, collectFn: (Option[E], T) => E): Source[E] = {
-    val self = this
-    new Source[E]() {
-      private var lastValue: Option[E] = None
-      private var lastKey: Option[K] = None
-      private var end = false
-
-      def next(): Option[E] = {
-        var r:Option[E] = None
-        while (!end && r.isEmpty){
-          self.next() match{
-            case Some(nv) =>
-              val nk = keyFn.apply(nv)
-              if(lastKey.contains(nk)){
-                lastValue = Some(collectFn.apply(lastValue, nv))
-              }else{
-                r = lastValue
-                lastValue = Some(collectFn.apply(None, nv))
-                lastKey = Some(nk)
-              }
-            case None =>
-              r = lastValue
-              lastValue = None
-              lastKey = None
-              end = true
-          }
-        }
-        r
-      }
-
+  def fold[E](start:E, collectFn: (E, T) => E): E = {
+    var s = start
+    this.forEach{i =>
+      s = collectFn(s, i)
     }
+    s
   }
 
   def forEach[E >: T](c: Consumer[E]):Unit = {

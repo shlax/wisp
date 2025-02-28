@@ -13,12 +13,11 @@ class HelloSource {
   }
 
   @Test
-  def groupBy():Unit = {
-    val data = Seq(("a", 1), ("a", 2), ("b", 3), ("b", 4)).asSource
+  def fold():Unit = {
+    val data = Seq(1, 2, 3).asSource
 
-    data.groupBy(_._1, (o:Option[List[Int]], i:(String, Int)) => {
-        i._2 :: o.getOrElse(Nil)
-      } ).forEach(println)
+    val r = data.fold(0, (a, b) => a + b)
+    println(r)
   }
 
 }

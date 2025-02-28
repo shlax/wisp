@@ -4,6 +4,7 @@ import org.wisp.{ActorLink, Consumer}
 
 import java.util
 import scala.annotation.targetName
+import scala.concurrent.Promise
 import scala.jdk.CollectionConverters.*
 
 object SinkTree {
@@ -14,9 +15,11 @@ object SinkTree {
     f
   }
 
-  def apply[T](fe: Source[T])(fn: SinkTree[T] => Unit): Unit = {
-    val f = apply(fn)
+  def apply[T, E](fe: Source[T])(fn: SinkTree[T] => E): E = {
+    val f = new SinkTree[T]
+    val r = fn.apply(f)
     f.forEach(fe)
+    r
   }
 
 }
@@ -62,36 +65,23 @@ class SinkTree[T](val from:Option[SinkTree[?]] = None) extends Sink[T] {
     nf
   }
 
-  def groupBy[K, E](keyFn: T => K, collectFn: (Option[E], T) => E): SinkTree[E] = {
-    val nf = new SinkTree[E]
-    to(new SinkTree[T](nf){
-      protected var value: Option[E] = None
-      protected var key: Option[K] = None
+  def fold[E](start:E, collectFn: (E, T) => E): Promise[E] = {
+    val p = Promise[E]()
+    to(new SinkTree[T]{
+      private var value: E = start
 
       override def accept(t: T): Unit = {
-        val k = keyFn.apply(t)
-        if (key.isEmpty) {
-          value = Option(collectFn.apply(value, t))
-          key = Some(k)
-        } else if (key.get != k) {
-          for(x <- value) nf.accept(x)
-          value = Option(collectFn.apply(None, t))
-          key = Some(k)
-        }else{
-          value = Option(collectFn.apply(value, t))
-        }
         super.accept(t)
+        value = collectFn(value, t)
       }
 
       override def flush(): Unit = {
-        for (x <- value) nf.accept(x)
-        value = None
-        key = None
         super.flush()
+        p.trySuccess(value)
       }
 
     })
-    nf
+    p
   }
 
   def filter[E >: T](fn: E => Boolean): SinkTree[T] = {
