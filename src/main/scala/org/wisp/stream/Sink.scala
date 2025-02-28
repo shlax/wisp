@@ -7,7 +7,7 @@ trait Sink[-T] extends Consumer[T]{
 
   def flush(): Unit = {}
 
-  def andThen[S <: T](after: Sink[S]): Sink[S] = {
+  def thenTo[S <: T](after: Sink[S]): Sink[S] = {
     val self = this
     new Sink[S]{
 
