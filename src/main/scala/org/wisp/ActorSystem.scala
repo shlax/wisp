@@ -18,7 +18,6 @@ class ActorSystem(inboxCapacity:Int = 3) extends ExecutionContext, AutoCloseable
       }catch {
         case NonFatal(ex) =>
           reportFailure(ex)
-          throw ex
       }
     })
   }
