@@ -16,7 +16,7 @@ class HelloTyped {
     val data = Seq(0, 1, 2, 3, 4, 5).asSource
 
     ActorSystem() | ( _.as { sys =>
-      val p = StreamGraph(sys).from(data).map( i => i + 1).to(println).start()
+      val p = StreamGraph(sys).from(data).map(i => i + 1).to(println).start()
       Await.result(p.future, 1.second)
     })
 
