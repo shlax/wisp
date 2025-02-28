@@ -13,7 +13,7 @@ import scala.concurrent.duration.*
 class HelloTyped {
 
   @Test
-  def test1():Unit = {
+  def streamGraph():Unit = {
     val data = Seq(0, 1, 2, 3, 4, 5).asSource
 
     ActorSystem() | ( _.as { sys =>
@@ -24,7 +24,7 @@ class HelloTyped {
   }
 
   @Test
-  def test2():Unit = {
+  def sinkTree():Unit = {
     val data = Seq(0, 1, 2, 3, 4, 5).asSource
 
     ActorSystem() | ( _.as { sys =>
