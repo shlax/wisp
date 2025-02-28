@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentMap}
 import scala.concurrent.{ExecutionContext, Promise}
 
-class UdpRouter(address: SocketAddress, capacity:Int, executor: ExecutionContext) extends UdpClient(Some(address)), Runnable{
+class UdpRouter(address: SocketAddress, capacity:Int)(using executor: ExecutionContext) extends UdpClient(Some(address)), Runnable{
 
   protected val bindMap: ConcurrentMap[String, ActorLink] = createBindMap()
 

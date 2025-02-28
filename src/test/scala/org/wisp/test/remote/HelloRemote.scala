@@ -18,7 +18,7 @@ class HelloRemote {
     using{ use =>
       val s = use(ActorSystem())
 
-      val r = use(UdpRouter(adr, 2024, s))
+      val r = use( UdpRouter(adr, 2024)(using s) )
       r.register("echo", s.create(i => new Actor(i){
         override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
           case x:Any =>
