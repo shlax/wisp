@@ -65,7 +65,7 @@ class SinkTree[T](val from:Option[SinkTree[?]] = None) extends Sink[T] {
     nf
   }
 
-  def fold[E](start:E, collectFn: (E, T) => E): Promise[E] = {
+  def fold[E](start:E)(collectFn: (E, T) => E): Promise[E] = {
     val p = Promise[E]()
     to(new SinkTree[T]{
       private var value: E = start

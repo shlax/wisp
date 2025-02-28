@@ -16,7 +16,7 @@ class HelloSource {
   def fold():Unit = {
     val data = Seq(1, 2, 3).asSource
 
-    val r = data.fold(0, (a, b) => a + b)
+    val r = data.fold(0)( (a, b) => a + b)
     println(r)
   }
 

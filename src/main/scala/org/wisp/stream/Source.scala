@@ -108,7 +108,7 @@ trait Source[+T]{
     }
   }
 
-  def fold[E](start:E, collectFn: (E, T) => E): E = {
+  def fold[E](start:E)(collectFn: (E, T) => E): E = {
     var s = start
     this.forEach{i =>
       s = collectFn(s, i)
