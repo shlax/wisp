@@ -8,13 +8,13 @@ import scala.jdk.CollectionConverters.*
 
 object SinkTree {
 
-  def apply[T](fn: Consumer[SinkTree[T]]): SinkTree[T] = {
+  def apply[T](fn: SinkTree[T] => Unit): SinkTree[T] = {
     val f = new SinkTree[T]
-    fn.accept(f)
+    fn.apply(f)
     f
   }
 
-  def apply[T](fe: Source[T])(fn: Consumer[SinkTree[T]]): Unit = {
+  def apply[T](fe: Source[T])(fn: SinkTree[T] => Unit): Unit = {
     val f = apply(fn)
     f.forEach(fe)
   }
