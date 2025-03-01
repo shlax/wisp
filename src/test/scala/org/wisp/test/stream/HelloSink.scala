@@ -4,8 +4,7 @@ import org.junit.jupiter.api.Test
 import org.wisp.stream.{Sink, SinkTree}
 import org.wisp.stream.Source.*
 
-import scala.concurrent.{Await, Promise}
-import scala.concurrent.duration.*
+import scala.concurrent.Promise
 
 class HelloSink {
 

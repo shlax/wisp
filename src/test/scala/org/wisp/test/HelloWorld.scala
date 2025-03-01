@@ -8,18 +8,18 @@ import java.util.concurrent.CountDownLatch
 
 class HelloWorld {
 
-  val cd = new CountDownLatch(1)
-
-  class HelloActor(in:Inbox) extends Actor(in){
-    override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
-      case a =>
-        println(a)
-        cd.countDown()
-    }
-  }
-
   @Test
   def test(): Unit = {
+    val cd = new CountDownLatch(1)
+
+    class HelloActor(in: Inbox) extends Actor(in) {
+      override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
+        case a =>
+          println(a)
+          cd.countDown()
+      }
+    }
+
     new ActorSystem()|{ sys =>
       val hello = sys.create(HelloActor(_))
       hello << "Hello world"

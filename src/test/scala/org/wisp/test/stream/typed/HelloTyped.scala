@@ -1,7 +1,7 @@
 package org.wisp.test.stream.typed
 
 import org.junit.jupiter.api.Test
-import org.wisp.{ActorSystem, Consumer}
+import org.wisp.ActorSystem
 import org.wisp.stream.SinkTree
 import org.wisp.stream.typed.StreamGraph
 import org.wisp.using.*

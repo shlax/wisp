@@ -6,28 +6,29 @@ import scala.util.control.NonFatal
 object using {
 
   extension [T <: AutoCloseable](ac: T) {
+
+    /** support for javas try-with-resources construct */
     @targetName("autoClose")
     inline def | [R](inline f: T => R): R = {
-      var r:Option[R] = None
       var e:Throwable = null
       try {
-        r = Some(f.apply(ac))
+        f.apply(ac)
       }catch{
-        case NonFatal(ex) =>
-          e = ex
+        case NonFatal(exc) =>
+          e = exc
+          throw e
       } finally {
-        try {
+        if(e == null){
           ac.close()
-        }catch{
-          case NonFatal(ex) =>
-            if(e != null) e.addSuppressed(ex)
-            else e = ex
+        }else {
+          try {
+            ac.close()
+          } catch {
+            case NonFatal(ex) =>
+              e.addSuppressed(ex)
+          }
         }
       }
-      if (e != null) {
-        throw e
-      }
-      r.get
     }
   }
 
@@ -57,12 +58,9 @@ object using {
     }
   }
 
-  inline def using[R](inline f: UsingManager => R): R = {
-    val m = UsingManager()
-    try {
+  def using[R](f: UsingManager => R): R = {
+    UsingManager() | { m =>
       f.apply(m)
-    } finally {
-      m.close()
     }
   }
 
