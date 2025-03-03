@@ -85,14 +85,7 @@ class ZipStream(prev:Iterable[ActorLink])(using executor: ExecutionContext) exte
   }
 
   protected def end():Boolean = {
-    if (state.values.forall(_.isFinished)) {
-      var a = nodes.poll()
-      while (a != null) {
-        a << End(exception)
-        a = nodes.poll()
-      }
-      true
-    }else false
+    state.values.forall(_.isFinished)
   }
 
   override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
@@ -128,7 +121,13 @@ class ZipStream(prev:Iterable[ActorLink])(using executor: ExecutionContext) exte
         exception = ex
       }
 
-      end()
+      if(end()){
+        var a = nodes.poll()
+        while (a != null) {
+          a << End(exception)
+          a = nodes.poll()
+        }
+      }
 
   }
 
