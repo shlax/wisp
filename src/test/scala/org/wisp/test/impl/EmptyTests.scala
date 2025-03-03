@@ -154,9 +154,9 @@ class EmptyTests {
         "w:" + q
       ))
 
-      val p = StreamSink(w, l.add).start()
-      src.run()
-      Await.ready(p.future, 1.second)
+      val p = StreamSink(w, l.add).start().future
+      src.failOn(p).run()
+      Await.ready(p, 1.second)
 
     })
 
