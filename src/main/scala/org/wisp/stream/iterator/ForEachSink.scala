@@ -12,7 +12,7 @@ import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
 class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLink)(using executor: ExecutionContext)
-  extends StreamActorLink, ActorLink, Runnable {
+  extends StreamActorLink, ActorLink, StreamFailOn, Runnable {
 
   protected val nodes: util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
@@ -32,6 +32,12 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLin
     prev.ask(HasNext).future.onComplete(accept)
   }
 
+  override def fail(e: Throwable): this.type = lock.withLock {
+    exceptionSrc = Some(e)
+    condition.signal()
+    this
+  }
+
   override def run(): Unit = lock.withLock {
     next()
 
@@ -49,7 +55,7 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLin
           a << End()
         } else {
           var n: Option[F] = None
-          if (exceptionSrc.isEmpty) {
+          if (!srcEnded && exceptionSrc.isEmpty) {
             try {
               n = src.next()
             } catch {
@@ -57,7 +63,7 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLin
                 exceptionSrc = Some(ex)
             }
           }
-          if (exceptionSrc.isDefined) {
+          if (srcEnded || exceptionSrc.isDefined) {
             a << End(exceptionSrc)
           } else {
             n match {

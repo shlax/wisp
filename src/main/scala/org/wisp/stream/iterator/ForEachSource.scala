@@ -8,9 +8,11 @@ import java.util
 import org.wisp.lock.*
 
 import java.util.concurrent.locks.Condition
+import scala.concurrent.{ExecutionContext, Promise}
+import scala.util.Failure
 import scala.util.control.NonFatal
 
-class ForEachSource[T](src:Source[T]) extends StreamActorLink, ActorLink, Runnable {
+class ForEachSource[T](src:Source[T])(using executor: ExecutionContext) extends StreamActorLink, ActorLink, StreamFailOn, Runnable {
 
   protected val nodes:util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
@@ -20,28 +22,48 @@ class ForEachSource[T](src:Source[T]) extends StreamActorLink, ActorLink, Runnab
   protected var exception: Option[Throwable] = None
   protected var ended = false
 
+  override def fail(e:Throwable):this.type = lock.withLock {
+    exception = Some(e)
+    condition.signal()
+    this
+  }
+
   override def run():Unit = lock.withLock {
-    try {
-      src.forEach { e =>
-        var a = nodes.poll()
-        while (a == null) {
-          condition.await()
-          a = nodes.poll()
+
+    while (!ended && exception.isEmpty){
+
+      var a = nodes.poll()
+      while (a != null) {
+        var n: Option[T] = None
+        if (!ended && exception.isEmpty) {
+          try {
+            n = src.next()
+          } catch {
+            case NonFatal(ex) =>
+              exception = Some(ex)
+          }
         }
-        a << Next(e)
+
+        if(ended || exception.isDefined){
+          a << End(exception)
+        }else{
+          n match {
+            case Some(v) =>
+              a << Next(v)
+            case None =>
+              ended = true
+              a << End()
+          }
+        }
+
+        a = nodes.poll()
       }
-    } catch {
-      case NonFatal(ex) =>
-        exception = Some(ex)
-    }
 
-    ended = true
-    var a = nodes.poll()
-    while (a != null) {
-      a << End(exception)
-      a = nodes.poll()
-    }
+      if(!ended && exception.isEmpty){
+        condition.await()
+      }
 
+    }
   }
 
   override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
