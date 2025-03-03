@@ -102,7 +102,7 @@ class SourceExceptionTests {
   }
 
   @Test
-  def helloRunnableSink():Unit = {
+  def runnableSink():Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
     val ar = AtomicReference[Throwable]()
 

@@ -84,10 +84,25 @@ class ZipStream(prev:Iterable[ActorLink])(using executor: ExecutionContext) exte
     i.find(_.hasValue)
   }
 
+  protected def end():Boolean = {
+    if (state.values.forall(_.isFinished)) {
+      var a = nodes.poll()
+      while (a != null) {
+        a << End(exception)
+        a = nodes.poll()
+      }
+      true
+    }else false
+  }
+
   override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
     case HasNext =>
       if(exception.isDefined){
-        sender << End(exception)
+        if(end()) {
+          sender << End(exception)
+        }else{
+          nodes.add(sender)
+        }
       }else {
         select(state.values) match {
           case Some(n) =>
@@ -107,26 +122,19 @@ class ZipStream(prev:Iterable[ActorLink])(using executor: ExecutionContext) exte
       state(sender).next(v)
 
     case End(ex) =>
-      if(ex.isDefined){
-        exception = ex
+      state(sender).end()
 
-        var a = nodes.poll()
-        while (a != null) {
-          a << End(ex)
-          a = nodes.poll()
-        }
-
-      }else {
-        state(sender).end()
-
-        if (state.values.forall(_.isFinished)) {
-          var a = nodes.poll()
-          while (a != null) {
-            a << End()
-            a = nodes.poll()
+      if(ex.isDefined) {
+        if(exception.isDefined){
+          if(exception.get != ex.get) {
+            exception.get.addSuppressed(ex.get)
           }
+        }else {
+          exception = ex
         }
       }
+
+      end()
 
   }
 
