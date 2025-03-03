@@ -1,1 +1,1 @@
-simple implementation of the actor model with streaming
+simple implementation of the actor model with streams api
