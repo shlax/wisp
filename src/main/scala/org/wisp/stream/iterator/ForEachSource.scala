@@ -17,10 +17,10 @@ class ForEachSource[T](src:Source[T]) extends StreamActorLink, ActorLink, Runnab
 
   protected val condition: Condition = lock.newCondition()
 
+  protected var exception: Option[Throwable] = None
   protected var ended = false
 
   override def run():Unit = lock.withLock {
-    var e: Option[Throwable] = None
     try {
       src.forEach { e =>
         var a = nodes.poll()
@@ -32,25 +32,22 @@ class ForEachSource[T](src:Source[T]) extends StreamActorLink, ActorLink, Runnab
       }
     } catch {
       case NonFatal(ex) =>
-        e = Some(ex)
+        exception = Some(ex)
     }
 
     ended = true
     var a = nodes.poll()
     while (a != null) {
-      a << End(e)
+      a << End(exception)
       a = nodes.poll()
     }
 
-    if (e.isDefined) {
-      throw e.get
-    }
   }
 
   override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
     case HasNext =>
       if (ended) {
-        sender << End()
+        sender << End(exception)
       } else {
         nodes.add(sender)
         condition.signal()
