@@ -81,10 +81,10 @@ class WorkerExceptionTests {
       ))
 
       val p = StreamSink(w, l.add).start()
-      src.failOn(p).run()
-
       val f = p.future
-
+      
+      src.failOn(f).run()
+     
       Await.ready(f, 1.second)
       val v = f.value.get
       Assertions.assertTrue(v.isFailure)

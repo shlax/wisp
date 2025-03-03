@@ -27,11 +27,11 @@ class HelloForEachSource {
         "w:" + Thread.currentThread().threadId + ":" + q
       ))
 
-      val p = StreamSink(w, println(_)).start()
+      val p = StreamSink(w, println(_)).start().future
       println("start")
 
-      src.run()
-      Await.ready(p.future, 1.second)
+      src.failOn(p).run()
+      Await.ready(p, 1.second)
 
     })
   }

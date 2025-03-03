@@ -11,8 +11,7 @@ import java.util.concurrent.locks.Condition
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
-class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLink)(using executor: ExecutionContext)
-  extends StreamActorLink, ActorLink, StreamFailOn, Runnable {
+class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLink)(using executor: ExecutionContext) extends StreamFailOn {
 
   protected val nodes: util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
@@ -32,7 +31,7 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLin
     prev.ask(HasNext).future.onComplete(accept)
   }
 
-  override def fail(e: Throwable): this.type = lock.withLock {
+  override def failOn(e: Throwable): this.type = lock.withLock {
     exceptionSrc = Some(e)
     condition.signal()
     this

@@ -12,7 +12,7 @@ import scala.concurrent.{ExecutionContext, Promise}
 import scala.util.Failure
 import scala.util.control.NonFatal
 
-class ForEachSource[T](src:Source[T])(using executor: ExecutionContext) extends StreamActorLink, ActorLink, StreamFailOn, Runnable {
+class ForEachSource[T](src:Source[T])(using executor: ExecutionContext) extends StreamFailOn {
 
   protected val nodes:util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
@@ -22,7 +22,7 @@ class ForEachSource[T](src:Source[T])(using executor: ExecutionContext) extends 
   protected var exception: Option[Throwable] = None
   protected var ended = false
 
-  override def fail(e:Throwable):this.type = lock.withLock {
+  override def failOn(e:Throwable):this.type = lock.withLock {
     exception = Some(e)
     condition.signal()
     this
