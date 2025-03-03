@@ -24,7 +24,7 @@ object SinkTree {
 
 }
 
-class SinkTree[T](val from:Option[SinkTree[?]] = None) extends Sink[T] {
+class SinkTree[T](protected val from:Option[SinkTree[?]] = None) extends Sink[T] {
   def this(f:SinkTree[?]) = this(Some(f))
 
   protected val next = new util.LinkedList[Sink[? >: T]]
