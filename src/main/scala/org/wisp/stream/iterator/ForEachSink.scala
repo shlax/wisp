@@ -23,10 +23,10 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLin
   protected var exceptionSrc: Option[Throwable] = None
   protected var exceptionDst: Option[Throwable] = None
 
-  protected var value: Option[T] = None
+  protected var srcEnded = false
+  protected var dstEnded = false
 
-  protected var inputEnded = false
-  protected var ended = false
+  protected var value: Option[T] = None
 
   protected def next(): Unit = {
     prev.ask(HasNext).future.onComplete(accept)
@@ -35,7 +35,7 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLin
   override def run(): Unit = lock.withLock {
     next()
 
-    while (!ended && exceptionDst.isEmpty) {
+    while (!dstEnded && exceptionDst.isEmpty) {
 
       for (v <- value) {
         value = None
@@ -45,7 +45,7 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLin
 
       var a = nodes.poll()
       while (a != null) {
-        if (inputEnded) {
+        if (srcEnded) {
           a << End()
         } else {
           var n: Option[F] = None
@@ -64,7 +64,7 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLin
               case Some(v) =>
                 a << Next(v)
               case None =>
-                inputEnded = true
+                srcEnded = true
                 a << End()
             }
           }
@@ -72,7 +72,7 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLin
         a = nodes.poll()
       }
 
-      if (!ended && exceptionDst.isEmpty) {
+      if (!dstEnded && exceptionDst.isEmpty) {
         condition.await()
       }
     }
@@ -86,7 +86,7 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLin
       if(exceptionSrc.isDefined){
         sender << End(exceptionSrc)
       }else {
-        if (inputEnded) {
+        if (srcEnded) {
           sender << End()
         } else {
           nodes.add(sender)
@@ -95,7 +95,7 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLin
       }
 
     case Next(v) =>
-      if(ended) throw new IllegalStateException("ended")
+      if(dstEnded) throw new IllegalStateException("ended")
       if(value.isDefined) throw new IllegalStateException("dropped value: "+v)
 
       value = Some(v.asInstanceOf[T])
@@ -106,8 +106,8 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLin
         exceptionDst = ex
         condition.signal()
       }else{
-        val wasEnded = ended
-        ended = true
+        val wasEnded = dstEnded
+        dstEnded = true
         condition.signal()
         if(wasEnded){
           throw new IllegalStateException("ended")
