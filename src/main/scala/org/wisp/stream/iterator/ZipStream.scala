@@ -125,13 +125,7 @@ class ZipStream(prev:Iterable[ActorLink])(using executor: ExecutionContext) exte
       state(sender).end()
 
       if(ex.isDefined) {
-        if(exception.isDefined){
-          if(exception.get != ex.get) {
-            exception.get.addSuppressed(ex.get)
-          }
-        }else {
-          exception = ex
-        }
+        exception = ex
       }
 
       end()
