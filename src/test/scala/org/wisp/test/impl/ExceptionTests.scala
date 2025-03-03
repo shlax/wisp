@@ -18,10 +18,9 @@ class ExceptionTests {
 
   @Test
   def forEachSink(): Unit = {
-
-
     val l = Collections.synchronizedList(new util.ArrayList[String]())
     val ar = AtomicReference[Throwable]()
+
     try {
       ActorSystem() | (_.as { sys =>
 
