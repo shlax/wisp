@@ -15,7 +15,7 @@ abstract class StreamFailOn(using executor: ExecutionContext) extends StreamActo
     f
   }
 
-  def failOn(p:Future[?])(using executor: ExecutionContext):this.type = {
+  def failOn(p:Future[?]):this.type = {
     p.onComplete{
       case Failure(t) =>
         failOn(t)
