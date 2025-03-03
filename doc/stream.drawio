@@ -57,6 +57,11 @@
             <mxPoint x="2" as="offset" />
           </mxGeometry>
         </mxCell>
+        <mxCell id="XIxjW3UT9FIFUcmy_z78-12" value="" style="swimlane;startSize=0;gradientColor=none;strokeColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry width="560" height="240" as="geometry">
+            <mxRectangle width="50" height="40" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
