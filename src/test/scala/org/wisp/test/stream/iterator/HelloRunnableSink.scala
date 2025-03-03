@@ -6,8 +6,6 @@ import org.wisp.using.*
 import org.wisp.stream.Source.*
 import org.wisp.stream.iterator.{RunnableSink, StreamSource, StreamWorker}
 
-import scala.concurrent.ExecutionContextExecutorService
-
 class HelloRunnableSink {
 
   @Test

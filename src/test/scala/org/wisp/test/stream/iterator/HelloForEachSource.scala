@@ -6,7 +6,7 @@ import org.wisp.stream.Source.*
 import org.wisp.stream.iterator.{ForEachSource, StreamSink, StreamWorker}
 import org.wisp.using.*
 
-import scala.concurrent.{Await, ExecutionContextExecutorService}
+import scala.concurrent.Await
 import scala.concurrent.duration.*
 
 class HelloForEachSource {

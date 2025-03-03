@@ -6,7 +6,7 @@ import org.wisp.stream.iterator.{StreamSink, StreamSource, StreamWorker, ZipStre
 import org.wisp.using.*
 import org.wisp.stream.Source.*
 
-import scala.concurrent.{Await, ExecutionContextExecutorService}
+import scala.concurrent.Await
 import scala.concurrent.duration.*
 
 class HelloZipStream {
