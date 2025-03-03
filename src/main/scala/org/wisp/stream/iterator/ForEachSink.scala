@@ -20,7 +20,9 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLin
   protected val condition: Condition = lock.newCondition()
   protected val prev: ActorLink = link.apply(this)
 
-  protected var exception: Option[Throwable] = None
+  protected var exceptionSrc: Option[Throwable] = None
+  protected var exceptionDst: Option[Throwable] = None
+
   protected var value: Option[T] = None
 
   protected var inputEnded = false
@@ -33,7 +35,7 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLin
   override def run(): Unit = lock.withLock {
     next()
 
-    while (!ended && exception.isEmpty) {
+    while (!ended && exceptionDst.isEmpty) {
 
       for (v <- value) {
         value = None
@@ -47,16 +49,16 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLin
           a << End()
         } else {
           var n: Option[F] = None
-          if (exception.isEmpty) {
+          if (exceptionSrc.isEmpty) {
             try {
               n = src.next()
             } catch {
               case NonFatal(ex) =>
-                exception = Some(ex)
+                exceptionSrc = Some(ex)
             }
           }
-          if (exception.isDefined) {
-            a << End(exception)
+          if (exceptionSrc.isDefined) {
+            a << End(exceptionSrc)
           } else {
             n match {
               case Some(v) =>
@@ -70,19 +72,19 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLin
         a = nodes.poll()
       }
 
-      if (!ended && exception.isEmpty) {
+      if (!ended && exceptionDst.isEmpty) {
         condition.await()
       }
     }
 
-    flush(sink, exception)
+    flush(sink, exceptionDst)
 
   }
 
   override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
     case HasNext =>
-      if(exception.isDefined){
-        sender << End(exception)
+      if(exceptionSrc.isDefined){
+        sender << End(exceptionSrc)
       }else {
         if (inputEnded) {
           sender << End()
@@ -101,7 +103,7 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLin
 
     case End(ex) =>
       if(ex.isDefined){
-        exception = ex
+        exceptionDst = ex
         condition.signal()
       }else{
         val wasEnded = ended
