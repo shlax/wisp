@@ -20,10 +20,12 @@ class StreamBuffer(prev:ActorLink, size:Int)(using executor: ExecutionContext) e
   protected var ended = false
 
   protected def next(): Unit = {
-    val req = if(requested) 1 else 0
-    if (!ended && queue.size() + req < size) {
-      requested = true
-      prev.ask(HasNext).future.onComplete(accept)
+    if(!ended && !requested){
+      val req = if(requested) 1 else 0
+      if (queue.size() + req < size) {
+        requested = true
+        prev.ask(HasNext).future.onComplete(accept)
+      }
     }
   }
 
@@ -47,7 +49,9 @@ class StreamBuffer(prev:ActorLink, size:Int)(using executor: ExecutionContext) e
       }
 
     case Next(v) =>
-      if(ended) throw new IllegalStateException("ended")
+      if(ended){
+        throw new IllegalStateException("ended")
+      }
       requested = false
 
       val n = nodes.poll()
