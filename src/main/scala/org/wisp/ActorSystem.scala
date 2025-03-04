@@ -1,12 +1,12 @@
 package org.wisp
 
-import java.util.concurrent.Executors
+import java.util.concurrent.{Executors, RejectedExecutionException}
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 import scala.util.control.NonFatal
 
-class ActorSystem(inboxCapacity:Int = 3, waitToClose:Duration = 10.milli) extends ExecutionContext, AutoCloseable{
+class ActorSystem(inboxCapacity:Int = 3) extends ExecutionContext, AutoCloseable{
 
   val executor: ExecutionContextExecutorService = createExecutor()
   protected def createExecutor() : ExecutionContextExecutorService = {
@@ -14,14 +14,19 @@ class ActorSystem(inboxCapacity:Int = 3, waitToClose:Duration = 10.milli) extend
   }
 
   override def execute(command: Runnable): Unit = {
-    executor.execute(() => {
-      try{
+    try {
+      executor.execute(() => {
+        try {
+          command.run()
+        } catch {
+          case NonFatal(ex) =>
+            reportFailure(ex)
+        }
+      })
+    }catch{
+      case _ : RejectedExecutionException =>
         command.run()
-      }catch {
-        case NonFatal(ex) =>
-          reportFailure(ex)
-      }
-    })
+    }
   }
 
   override def reportFailure(cause: Throwable): Unit = {
@@ -43,7 +48,6 @@ class ActorSystem(inboxCapacity:Int = 3, waitToClose:Duration = 10.milli) extend
   }
 
   override def close(): Unit = {
-    Thread.sleep(waitToClose.toMillis)
     executor.close()
   }
 
