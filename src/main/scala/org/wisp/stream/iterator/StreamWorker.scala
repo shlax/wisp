@@ -97,16 +97,31 @@ class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T])(using 
           from << End()
         } else {
           var v:Option[T] = None
-          for(i <- source){
-            v = i.next()
-            if(v.isEmpty) source = None
+
+          if(source.isDefined){
+            try {
+              v = source.get.next()
+            }catch{
+              case NonFatal(ex) =>
+                exception = Some(ex)
+            }
+            if(v.isEmpty){
+              source = None
+            }
           }
-          if(v.isDefined){
-            from << Next(v.get)
-          }else {
-            nodes.add(from)
-            prev.ask(HasNext).future.onComplete(accept)
+
+          if (exception.isDefined) {
+            from << End(exception)
+            sendEnd()
+          } else {
+            if (v.isDefined) {
+              from << Next(v.get)
+            } else {
+              nodes.add(from)
+              prev.ask(HasNext).future.onComplete(accept)
+            }
           }
+
         }
       }
 

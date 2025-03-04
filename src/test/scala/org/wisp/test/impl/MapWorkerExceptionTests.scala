@@ -16,7 +16,7 @@ import scala.jdk.CollectionConverters.*
 import scala.concurrent.duration.*
 import scala.util.Failure
 
-class WorkerExceptionTests {
+class MapWorkerExceptionTests {
   class MyException(msg: String) extends RuntimeException(msg)
 
   @Test
