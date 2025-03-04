@@ -50,22 +50,45 @@ class ZipStream(prev:Iterable[ActorLink])(using executor: ExecutionContext) exte
 
       requested = false
 
-      val n = nodes.poll()
-      if(n == null){
-        value = Some(v)
-      }else{
-        n << Next(v)
-        requestNext()
+      if(exception.isEmpty) {
+        val n = nodes.poll()
+        if (n == null) {
+          value = Some(v)
+        } else {
+          n << Next(v)
+          requestNext()
+        }
       }
+
     }
 
-    def end():Unit = {
+    def end(ex: Option[Throwable]):Unit = {
       if(ended) throw new IllegalStateException("ended")
       if(!requested) throw new IllegalStateException("not requested")
       if(value.isDefined) throw new IllegalStateException("dropped: "+value.get)
 
-      requested = false
-      ended = true
+      if(ex.isDefined){
+        exception = ex
+
+        var n = nodes.poll()
+        while (n != null) {
+          n << End(exception)
+          n = nodes.poll()
+        }
+      }else {
+        requested = false
+        ended = true
+
+        if(state.values.forall(_.isFinished)){
+          var n = nodes.poll()
+          while (n != null) {
+            n << End(exception)
+            n = nodes.poll()
+          }
+        }
+
+      }
+
     }
 
   }
@@ -84,18 +107,10 @@ class ZipStream(prev:Iterable[ActorLink])(using executor: ExecutionContext) exte
     i.find(_.hasValue)
   }
 
-  protected def end():Boolean = {
-    state.values.forall(_.isFinished)
-  }
-
   override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
     case HasNext =>
       if(exception.isDefined){
-        if(end()) {
-          sender << End(exception)
-        }else{
-          nodes.add(sender)
-        }
+        sender << End(exception)
       }else {
         select(state.values) match {
           case Some(n) =>
@@ -115,19 +130,7 @@ class ZipStream(prev:Iterable[ActorLink])(using executor: ExecutionContext) exte
       state(sender).next(v)
 
     case End(ex) =>
-      state(sender).end()
-
-      if(ex.isDefined) {
-        exception = ex
-      }
-
-      if(end()){
-        var a = nodes.poll()
-        while (a != null) {
-          a << End(exception)
-          a = nodes.poll()
-        }
-      }
+      state(sender).end(ex)
 
   }
 
