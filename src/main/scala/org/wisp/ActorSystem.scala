@@ -1,10 +1,12 @@
 package org.wisp
 
 import java.util.concurrent.Executors
+import scala.concurrent.duration.Duration
+import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 import scala.util.control.NonFatal
 
-class ActorSystem(inboxCapacity:Int = 3) extends ExecutionContext, AutoCloseable{
+class ActorSystem(inboxCapacity:Int = 3, waitToClose:Duration = 10.milli) extends ExecutionContext, AutoCloseable{
 
   val executor: ExecutionContextExecutorService = createExecutor()
   protected def createExecutor() : ExecutionContextExecutorService = {
@@ -41,6 +43,7 @@ class ActorSystem(inboxCapacity:Int = 3) extends ExecutionContext, AutoCloseable
   }
 
   override def close(): Unit = {
+    Thread.sleep(waitToClose.toMillis)
     executor.close()
   }
 
