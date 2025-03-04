@@ -66,14 +66,12 @@ class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T])(using 
               exception = Some(ex)
           }
 
-          if(exception.isEmpty) {
-            optVal match {
-              case Some(v) =>
-                val n = nodes.poll()
-                n << Next(v)
-              case None =>
-                hasNext = false
-            }
+          optVal match {
+            case Some(v) =>
+              val n = nodes.poll()
+              n << Next(v)
+            case None =>
+              hasNext = false
           }
         }
 
