@@ -30,6 +30,7 @@ class ZipStream(prev:Iterable[ActorLink])(using executor: ExecutionContext) exte
     }
 
     def requestNext():Unit = {
+      if(exception.isDefined) throw new IllegalStateException("exception")
       if (!ended && !requested && value.isEmpty) {
         requested = true
         link.ask(HasNext).future.onComplete(accept)
