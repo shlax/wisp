@@ -16,9 +16,9 @@ abstract class StreamActorLink extends Consumer[Message], StreamException{
   /** method is running with lock */
   def accept(from:ActorLink): PartialFunction[IteratorMessage, Unit]
 
-  override def accept(t: Message): Unit = {
+  override def accept(t: Message): Unit = lock.withLock{
     val f = accept(t.sender)
-    lock.withLock{ f.apply(t.value.asInstanceOf[IteratorMessage]) }
+    f.apply(t.value.asInstanceOf[IteratorMessage])
   }
 
   protected def flush(c: Sink[?], tr: Option[Throwable]): Unit = {
