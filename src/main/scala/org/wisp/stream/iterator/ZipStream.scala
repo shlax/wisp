@@ -22,15 +22,20 @@ class ZipStream(prev:Iterable[ActorLink])(using executor: ExecutionContext) exte
     protected var ended = false
 
     def isFinished:Boolean = {
+      if(exception.isDefined) throw new IllegalStateException("exception")
+
       ended && !requested && value.isEmpty
     }
 
     def hasValue:Boolean = {
+      if(exception.isDefined) throw new IllegalStateException("exception")
+
       value.isDefined
     }
 
     def requestNext():Unit = {
       if(exception.isDefined) throw new IllegalStateException("exception")
+
       if (!ended && !requested && value.isEmpty) {
         requested = true
         link.ask(HasNext).future.onComplete(accept)
@@ -38,6 +43,8 @@ class ZipStream(prev:Iterable[ActorLink])(using executor: ExecutionContext) exte
     }
 
     def send(ref: ActorLink):Unit = {
+      if(exception.isDefined) throw new IllegalStateException("exception")
+
       val v = value.get
       value = None
       ref << Next(v)
@@ -105,6 +112,8 @@ class ZipStream(prev:Iterable[ActorLink])(using executor: ExecutionContext) exte
   }
 
   protected def select(i:Iterable[State]) : Option[State] = {
+    if(exception.isDefined) throw new IllegalStateException("exception")
+
     i.find(_.hasValue)
   }
 
