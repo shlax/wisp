@@ -9,9 +9,9 @@ import scala.util.control.NonFatal
 
 class StreamSink[T](prev:ActorLink, sink:Sink[T])(using executor: ExecutionContext) extends StreamActorLink{
 
-  protected val completed:Promise[Null] = Promise[Null]()
+  protected val completed:Promise[Unit] = Promise()
 
-  def start(): Promise[Null] = {
+  def start(): Promise[Unit] = {
     prev.ask(HasNext).future.onComplete(accept)
     completed
   }
@@ -41,7 +41,7 @@ class StreamSink[T](prev:ActorLink, sink:Sink[T])(using executor: ExecutionConte
       }
       
       if(err.isEmpty){
-        val c = completed.trySuccess(null)
+        val c = completed.trySuccess(())
         if (!c) throw new IllegalStateException("ended")
       }else {
         completed.failure(err.get)
