@@ -56,24 +56,23 @@ class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T])(using 
       if(exception.isDefined){
         sendEnd()
       }else {
-        var hanNext = true
-        while (exception.isEmpty && hanNext && !nodes.isEmpty) {
-          var optVal:Option[Option[T]] = None
+        var hasNext = true
+        while (exception.isEmpty && hasNext && !nodes.isEmpty) {
+          var optVal:Option[T] = None
           try{
-            val r = opt.get.next()
-            optVal = Some(r)
+            optVal = opt.get.next()
           }catch{
             case NonFatal(ex) =>
               exception = Some(ex)
           }
 
           if(exception.isEmpty) {
-            optVal.get match {
+            optVal match {
               case Some(v) =>
                 val n = nodes.poll()
                 n << Next(v)
               case None =>
-                hanNext = false
+                hasNext = false
             }
           }
         }
@@ -81,12 +80,13 @@ class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T])(using 
         if(exception.isDefined){
           sendEnd()
         }else {
-          if (hanNext) {
+          if (hasNext) {
             source = Some(opt.get)
-          } else if (!hanNext && !nodes.isEmpty) {
+          } else if (!hasNext && !nodes.isEmpty) {
             prev.ask(HasNext).future.onComplete(accept)
           }
         }
+
       }
 
     case HasNext =>
