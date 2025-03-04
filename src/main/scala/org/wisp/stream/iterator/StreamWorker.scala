@@ -115,6 +115,8 @@ class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T])(using 
       else ended = true
 
       sendEnd()
+
+      if(source.isDefined) throw new IllegalStateException("dropped value " + source.get)
   }
 
 }
