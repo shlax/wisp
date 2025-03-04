@@ -1,8 +1,7 @@
 package org.wisp
 
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.{Executors, RejectedExecutionException}
-import scala.concurrent.duration.Duration
-import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 import scala.util.control.NonFatal
 
@@ -12,6 +11,8 @@ class ActorSystem(inboxCapacity:Int = 3) extends ExecutionContext, AutoCloseable
   protected def createExecutor() : ExecutionContextExecutorService = {
     ExecutionContext.fromExecutorService( Executors.newVirtualThreadPerTaskExecutor(), reportFailure )
   }
+
+  protected val closed: AtomicBoolean = AtomicBoolean(false)
 
   override def execute(command: Runnable): Unit = {
     try {
@@ -24,8 +25,12 @@ class ActorSystem(inboxCapacity:Int = 3) extends ExecutionContext, AutoCloseable
         }
       })
     }catch{
-      case _ : RejectedExecutionException =>
-        command.run()
+      case e : RejectedExecutionException =>
+        if(closed.get()) {
+          command.run()
+        }else{
+          throw e
+        }
     }
   }
 
@@ -48,6 +53,7 @@ class ActorSystem(inboxCapacity:Int = 3) extends ExecutionContext, AutoCloseable
   }
 
   override def close(): Unit = {
+    closed.set(true)
     executor.close()
   }
 
