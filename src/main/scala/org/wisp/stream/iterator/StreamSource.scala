@@ -13,7 +13,7 @@ class StreamSource[T](src:Source[T])(using executor: ExecutionContext) extends S
   protected var exception:Option[Throwable] = None
   protected var ended = false
 
-  override def failOn(e: Throwable): StreamSource.this.type = lock.withLock {
+  override def failOn(e: Throwable): this.type = lock.withLock {
     exception = Some(e)
     this
   }
