@@ -95,7 +95,6 @@ class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T])(using 
           from << End()
         } else {
           var v:Option[T] = None
-
           if(source.isDefined){
             try {
               v = source.get.next()
