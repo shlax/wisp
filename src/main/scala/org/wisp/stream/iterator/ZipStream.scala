@@ -22,8 +22,6 @@ class ZipStream(prev:Iterable[ActorLink])(using executor: ExecutionContext) exte
     protected var ended = false
 
     def isFinished:Boolean = {
-      if(exception.isDefined) throw new IllegalStateException("exception")
-
       ended && !requested && value.isEmpty
     }
 
