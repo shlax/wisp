@@ -2,7 +2,7 @@ package org.wisp.test.stream.iterator
 
 import org.junit.jupiter.api.Test
 import org.wisp.ActorSystem
-import org.wisp.using.*
+import org.wisp.test.testSystem.*
 import org.wisp.stream.Source.*
 import org.wisp.stream.iterator.{StreamBuffer, StreamSink, StreamSource, StreamWorker}
 
@@ -13,7 +13,7 @@ class HelloStreamBuffer {
 
   @Test
   def test():Unit = {
-    ActorSystem() | ( _.as { sys =>
+    ActorSystem() || { sys =>
 
       val data = Seq(0, 1, 2, 3, 4, 5).asSource
 
@@ -31,7 +31,7 @@ class HelloStreamBuffer {
       val p = StreamSink(w, println(_)).start()
       Await.ready(p.future, 1.second)
 
-    })
+    }
   }
 
 }

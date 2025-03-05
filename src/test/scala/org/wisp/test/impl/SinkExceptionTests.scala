@@ -3,7 +3,7 @@ package org.wisp.test.impl
 import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.{ActorLink, ActorSystem}
 import org.wisp.stream.Sink
-import org.wisp.using.*
+import org.wisp.test.testSystem.*
 import org.wisp.stream.Source.*
 import org.wisp.stream.iterator.{ForEachSink, ForEachSource, RunnableSink, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
 
@@ -25,7 +25,7 @@ class SinkExceptionTests {
     val ar = AtomicReference[Throwable]()
 
     try {
-      ActorSystem() | (_.as { sys =>
+      ActorSystem() || { sys =>
 
         val tId = Thread.currentThread().threadId
 
@@ -50,7 +50,7 @@ class SinkExceptionTests {
 
         src.run()
 
-      })
+      }
     } catch {
       case NonFatal(e) =>
         ar.set(e)
@@ -67,7 +67,7 @@ class SinkExceptionTests {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
     val ar = AtomicReference[Throwable]()
 
-    ActorSystem() | (_.as { sys =>
+    ActorSystem() || { sys =>
 
       val data = Seq(0, 1, 2, 3, 4, 5).asSource.map { i =>
         "s:" + i
@@ -94,7 +94,7 @@ class SinkExceptionTests {
         case Failure(q) =>
           ar.set(q)
       }
-    })
+    }
 
     Assertions.assertEquals(List("w:s:0", "w:s:1", "w:s:2", "w:s:3"), l.asScala)
     Assertions.assertTrue(ar.get().isInstanceOf[MyException])
@@ -108,7 +108,7 @@ class SinkExceptionTests {
     val ar = AtomicReference[Throwable]()
 
     try {
-      ActorSystem() | (_.as { sys =>
+      ActorSystem() || { sys =>
 
         val data = Seq(0, 1, 2, 3, 4, 5).asSource.map { i =>
           "s:" + i
@@ -125,7 +125,7 @@ class SinkExceptionTests {
           l.add(q)
         }).run()
 
-      })
+      }
     } catch {
       case NonFatal(e) =>
         ar.set(e)
@@ -142,7 +142,7 @@ class SinkExceptionTests {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
     val ar = AtomicReference[Throwable]()
 
-    ActorSystem() | (_.as { sys =>
+    ActorSystem() || { sys =>
 
       val data = Seq(0, 1, 2, 3, 4, 5).asSource.map { i =>
         "s:" + i
@@ -167,7 +167,7 @@ class SinkExceptionTests {
         case Failure(q) =>
           ar.set(q)
       }
-    })
+    }
 
     Assertions.assertEquals(List("w:s:0", "w:s:1", "w:s:2", "w:s:3"), l.asScala)
     Assertions.assertTrue(ar.get().isInstanceOf[MyException])

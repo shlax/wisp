@@ -6,7 +6,7 @@ import org.wisp.stream.{Sink, SinkTree}
 import org.wisp.stream.Source.*
 import org.wisp.stream.iterator.{ForEachSink, ForEachSource, RunnableSink, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
 import org.wisp.stream.typed.StreamGraph
-import org.wisp.using.*
+import org.wisp.test.testSystem.*
 
 import java.util.Collections
 import scala.collection.mutable.ArrayBuffer
@@ -68,10 +68,10 @@ class EmptyTests {
     val data = Seq[Int]().asSource
     val l = Collections.synchronizedList(new util.ArrayList[Int]())
 
-    ActorSystem() | (_.as { sys =>
+    ActorSystem() || { sys =>
       val p = StreamGraph(sys).from(data).map(i => i + 1).to(l.add).start()
       Await.result(p.future, 1.second)
-    })
+    }
 
     Assertions.assertTrue(l.isEmpty)
 
@@ -84,7 +84,7 @@ class EmptyTests {
     val l1 = Collections.synchronizedList(new util.ArrayList[String]())
     val l2 = Collections.synchronizedList(new util.ArrayList[String]())
 
-    ActorSystem() | (_.as { sys =>
+    ActorSystem() || { sys =>
 
       val t = SinkTree[Int] { x =>
         x.as { y =>
@@ -95,7 +95,7 @@ class EmptyTests {
 
       val p = StreamGraph(sys).from(data).map(i => i + 1).to(t).start()
       Await.result(p.future, 1.second)
-    })
+    }
 
     Assertions.assertTrue(l1.isEmpty)
     Assertions.assertTrue(l2.isEmpty)
@@ -106,7 +106,7 @@ class EmptyTests {
   def forEachSink(): Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
 
-    ActorSystem() | (_.as { sys =>
+    ActorSystem() || { sys =>
 
       val tId = Thread.currentThread().threadId
 
@@ -130,7 +130,7 @@ class EmptyTests {
 
       src.run()
 
-    })
+    }
 
     Assertions.assertTrue(l.isEmpty)
 
@@ -140,7 +140,7 @@ class EmptyTests {
   def forEachSource(): Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
 
-    ActorSystem() | (_.as { sys =>
+    ActorSystem() || { sys =>
 
       val tId = Thread.currentThread().threadId
 
@@ -158,7 +158,7 @@ class EmptyTests {
       src.failOn(p).run()
       Await.ready(p, 1.second)
 
-    })
+    }
 
     Assertions.assertTrue(l.isEmpty)
 
@@ -168,7 +168,7 @@ class EmptyTests {
   def runnableSink(): Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
 
-    ActorSystem() | (_.as { sys =>
+    ActorSystem() || { sys =>
 
       val data = Seq[Int]().asSource
 
@@ -180,7 +180,7 @@ class EmptyTests {
 
       RunnableSink(w, l.add).run()
 
-    })
+    }
 
     Assertions.assertTrue(l.isEmpty)
 
@@ -190,7 +190,7 @@ class EmptyTests {
   def streamBuffer(): Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
 
-    ActorSystem() | (_.as { sys =>
+    ActorSystem() || { sys =>
 
       val data = Seq[Int]().asSource
 
@@ -204,7 +204,7 @@ class EmptyTests {
 
       val p = StreamSink(w, l.add).start()
       Await.ready(p.future, 1.second)
-    })
+    }
 
     Assertions.assertTrue(l.isEmpty)
 
@@ -214,7 +214,7 @@ class EmptyTests {
   def streamWorker(): Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
 
-    ActorSystem() | (_.as { sys =>
+    ActorSystem() || { sys =>
 
       val data = Seq[Int]().asSource
       val src = StreamSource(data)
@@ -226,7 +226,7 @@ class EmptyTests {
       val p = StreamSink(w, l.add).start()
       Await.ready(p.future, 1.second)
 
-    })
+    }
 
     Assertions.assertTrue(l.isEmpty)
 
@@ -236,7 +236,7 @@ class EmptyTests {
   def zipStream(): Unit = {
     val l = Collections.synchronizedSet(new util.HashSet[String]())
 
-    ActorSystem() | (_.as { sys =>
+    ActorSystem() || { sys =>
 
       val data = Seq[Int]().asSource
       val src = StreamSource(data)
@@ -254,7 +254,7 @@ class EmptyTests {
       val p = StreamSink(r, l.add).start()
       Await.ready(p.future, 1.second)
 
-    })
+    }
 
     Assertions.assertTrue(l.isEmpty)
 

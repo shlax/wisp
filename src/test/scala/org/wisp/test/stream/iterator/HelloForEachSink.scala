@@ -4,14 +4,14 @@ import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.stream.Sink
 import org.wisp.{ActorLink, ActorSystem}
 import org.wisp.stream.iterator.{ForEachSink, StreamWorker}
-import org.wisp.using.*
+import org.wisp.test.testSystem.*
 import org.wisp.stream.Source.*
 
 class HelloForEachSink {
 
   @Test
   def test():Unit = {
-    ActorSystem() | ( _.as { sys =>
+    ActorSystem() || { sys =>
 
       val tId = Thread.currentThread().threadId
 
@@ -35,7 +35,7 @@ class HelloForEachSink {
 
       src.run()
 
-    })
+    }
   }
 
 }

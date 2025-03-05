@@ -4,7 +4,7 @@ import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.ActorSystem
 import org.wisp.stream.Source.*
 import org.wisp.stream.iterator.{ForEachSource, StreamSink, StreamWorker}
-import org.wisp.using.*
+import org.wisp.test.testSystem.*
 
 import scala.concurrent.Await
 import scala.concurrent.duration.*
@@ -13,7 +13,7 @@ class HelloForEachSource {
 
   @Test
   def test(): Unit = {
-    ActorSystem() | ( _.as { sys =>
+    ActorSystem() || { sys =>
 
       val tId = Thread.currentThread().threadId
 
@@ -33,7 +33,7 @@ class HelloForEachSource {
       src.failOn(p).run()
       Await.ready(p, 1.second)
 
-    })
+    }
   }
 
 }

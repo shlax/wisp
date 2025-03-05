@@ -6,6 +6,7 @@ import org.wisp.stream.{Sink, SinkTree}
 import org.wisp.stream.Source.*
 import org.wisp.stream.iterator.{ForEachSink, ForEachSource, RunnableSink, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
 import org.wisp.stream.typed.StreamGraph
+import org.wisp.test.testSystem.*
 import org.wisp.using.*
 import org.wisp.{Actor, ActorLink, ActorSystem, Inbox}
 
@@ -35,7 +36,7 @@ class HelloTests {
       }
     }
 
-    new ActorSystem()|{ sys =>
+    new ActorSystem()||{ sys =>
       val hello = sys.create(HelloActor(_))
       hello << "Hello world"
 
@@ -56,7 +57,7 @@ class HelloTests {
       }
     }
 
-    ActorSystem() | ( _.as { sys =>
+    ActorSystem() || { sys =>
 
       val hello = sys.create(HelloActor(_))
       hello.ask("world").future.onComplete { e =>
@@ -65,7 +66,7 @@ class HelloTests {
       }
 
       cd.await()
-    })
+    }
 
     Assertions.assertEquals("Hello world", ref.get())
   }
@@ -121,10 +122,10 @@ class HelloTests {
     val data = Seq(0, 1, 2, 3, 4, 5).asSource
     val l = Collections.synchronizedList(new util.ArrayList[Int]())
 
-    ActorSystem() | (_.as { sys =>
+    ActorSystem() || { sys =>
       val p = StreamGraph(sys).from(data).map(i => i + 1).to(l.add).start()
       Await.result(p.future, 1.second)
-    })
+    }
 
     Assertions.assertEquals(1 to 6, l.asScala)
 
@@ -137,7 +138,7 @@ class HelloTests {
     val l1 = Collections.synchronizedList(new util.ArrayList[String]())
     val l2 = Collections.synchronizedList(new util.ArrayList[String]())
 
-    ActorSystem() | (_.as { sys =>
+    ActorSystem() || { sys =>
 
       val t = SinkTree[Int] { x =>
         x.as { y =>
@@ -148,7 +149,7 @@ class HelloTests {
 
       val p = StreamGraph(sys).from(data).map(i => i + 1).to(t).start()
       Await.result(p.future, 1.second)
-    })
+    }
 
     Assertions.assertEquals(List("a:2", "a:4", "a:6", "a:8", "a:10", "a:12"), l1.asScala)
     Assertions.assertEquals(List("b:3", "b:5", "b:7", "b:9", "b:11", "b:13"), l2.asScala)
@@ -192,7 +193,7 @@ class HelloTests {
   def helloForEachSink():Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
 
-    ActorSystem() | (_.as { sys =>
+    ActorSystem() || { sys =>
 
       val tId = Thread.currentThread().threadId
 
@@ -216,7 +217,7 @@ class HelloTests {
 
       src.run()
 
-    })
+    }
 
     Assertions.assertEquals(List("d:w:s:0", "d:w:s:1", "d:w:s:2", "d:w:s:3", "d:w:s:4", "d:w:s:5"), l.asScala)
 
@@ -226,7 +227,7 @@ class HelloTests {
   def helloForEachSource():Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
 
-    ActorSystem() | (_.as { sys =>
+    ActorSystem() || { sys =>
 
       val tId = Thread.currentThread().threadId
 
@@ -244,7 +245,7 @@ class HelloTests {
       src.run()
       Await.ready(p.future, 1.second)
 
-    })
+    }
 
     Assertions.assertEquals(List("w:s:0", "w:s:1", "w:s:2", "w:s:3", "w:s:4", "w:s:5"), l.asScala)
 
@@ -254,7 +255,7 @@ class HelloTests {
   def helloRunnableSink():Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
 
-    ActorSystem() | (_.as { sys =>
+    ActorSystem() || { sys =>
 
       val data = Seq(0, 1, 2, 3, 4, 5).asSource
 
@@ -266,7 +267,7 @@ class HelloTests {
 
       RunnableSink(w, l.add).run()
 
-    })
+    }
 
     Assertions.assertEquals(List("w:0", "w:1", "w:2", "w:3", "w:4", "w:5"), l.asScala)
 
@@ -276,7 +277,7 @@ class HelloTests {
   def helloStreamBuffer():Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
 
-    ActorSystem() | (_.as { sys =>
+    ActorSystem() || { sys =>
 
       val data = Seq(0, 1, 2, 3, 4, 5).asSource
 
@@ -290,7 +291,7 @@ class HelloTests {
 
       val p = StreamSink(w, l.add).start()
       Await.ready(p.future, 1.second)
-    })
+    }
 
     Assertions.assertEquals(List("w:0", "w:1", "w:2", "w:3", "w:4", "w:5"), l.asScala)
 
@@ -300,7 +301,7 @@ class HelloTests {
   def helloStreamWorker(): Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
     
-    ActorSystem() | (_.as { sys =>
+    ActorSystem() || { sys =>
 
       val data = Seq(0, 1, 2, 3, 4, 5).asSource
       val src = StreamSource(data)
@@ -312,7 +313,7 @@ class HelloTests {
       val p = StreamSink(w, l.add).start()
       Await.ready(p.future, 1.second)
 
-    })
+    }
 
     Assertions.assertEquals(List("w:0", "w:1", "w:2", "w:3", "w:4", "w:5"), l.asScala)
     
@@ -322,7 +323,7 @@ class HelloTests {
   def helloZipStream():Unit = {
     val l = Collections.synchronizedSet(new util.HashSet[String]())
     
-    ActorSystem() | (_.as { sys =>
+    ActorSystem() || { sys =>
 
       val data = Seq(0, 1, 2, 3, 4).asSource
       val src = StreamSource(data)
@@ -340,7 +341,7 @@ class HelloTests {
       val p = StreamSink(r, l.add).start()
       Await.ready(p.future, 1.second)
 
-    })
+    }
 
     Assertions.assertEquals(Set("w:0", "w:1", "w:2", "w:3", "w:4"), l.asScala)
     

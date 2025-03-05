@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test
 import org.wisp.ActorSystem
 import org.wisp.stream.Source.*
 import org.wisp.stream.iterator.{StreamSink, StreamSource, StreamWorker}
-import org.wisp.using.*
+import org.wisp.test.testSystem.*
 
 import scala.concurrent.Await
 import scala.concurrent.duration.*
@@ -13,7 +13,7 @@ class HelloStreamWorker {
 
   @Test
   def test(): Unit = {
-    ActorSystem() | ( _.as { sys =>
+    ActorSystem() || { sys =>
 
       val data = Seq(0,1,2,3,4,5).asSource
       val src = StreamSource(data)
@@ -25,7 +25,7 @@ class HelloStreamWorker {
       val p = StreamSink(w, println(_)).start()
       Await.ready(p.future, 1.second)
 
-    })
+    }
   }
 
 }

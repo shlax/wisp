@@ -3,7 +3,7 @@ package org.wisp.test.stream.iterator
 import org.junit.jupiter.api.Test
 import org.wisp.ActorSystem
 import org.wisp.stream.iterator.{StreamSink, StreamSource, StreamWorker, ZipStream}
-import org.wisp.using.*
+import org.wisp.test.testSystem.*
 import org.wisp.stream.Source.*
 
 import scala.concurrent.Await
@@ -13,7 +13,7 @@ class HelloZipStream {
 
   @Test
   def test():Unit = {
-    ActorSystem() | ( _.as { sys =>
+    ActorSystem() || { sys =>
 
       val data = Seq(0, 1, 2, 3, 4).asSource
       val src = StreamSource(data)
@@ -33,7 +33,7 @@ class HelloZipStream {
       val p = StreamSink(r, println(_)).start()
       Await.ready(p.future, 1.second)
 
-    })
+    }
 
   }
 

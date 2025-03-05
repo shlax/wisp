@@ -2,7 +2,7 @@ package org.wisp.test.stream.iterator
 
 import org.junit.jupiter.api.Test
 import org.wisp.ActorSystem
-import org.wisp.using.*
+import org.wisp.test.testSystem.*
 import org.wisp.stream.Source.*
 import org.wisp.stream.iterator.{RunnableSink, StreamSource, StreamWorker}
 
@@ -10,7 +10,7 @@ class HelloRunnableSink {
 
   @Test
   def test(): Unit = {
-    ActorSystem() | ( _.as { sys =>
+    ActorSystem() || { sys =>
 
       val data = Seq(0, 1, 2, 3, 4, 5).asSource
 
@@ -22,7 +22,7 @@ class HelloRunnableSink {
 
       RunnableSink(w, println(_)).run()
 
-    })
+    }
   }
 
 }

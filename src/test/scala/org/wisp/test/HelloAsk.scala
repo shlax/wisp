@@ -2,9 +2,8 @@ package org.wisp.test
 
 import org.junit.jupiter.api.Test
 import org.wisp.{Actor, ActorLink, ActorSystem, Inbox}
-import org.wisp.using.*
-
 import java.util.concurrent.CountDownLatch
+import org.wisp.test.testSystem.*
 
 class HelloAsk {
 
@@ -18,7 +17,7 @@ class HelloAsk {
       }
     }
 
-    ActorSystem() | ( _.as { sys =>
+    ActorSystem() || { sys =>
 
       val hello = sys.create(HelloActor(_))
       hello.ask("world").future.onComplete { e =>
@@ -27,7 +26,7 @@ class HelloAsk {
       }
 
       cd.await()
-    })
+    }
 
   }
 
