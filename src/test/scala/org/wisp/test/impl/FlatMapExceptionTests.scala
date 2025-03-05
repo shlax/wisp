@@ -5,7 +5,7 @@ import org.wisp.{ActorLink, ActorSystem}
 import org.wisp.stream.Sink
 import org.wisp.using.*
 import org.wisp.stream.Source.*
-import org.wisp.stream.iterator.{ForEachSink, ForEachSource, RunnableSink, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
+import org.wisp.stream.iterator.{ForEachSink, ForEachSource, RunnableSink, StreamSink, StreamSource, StreamWorker}
 
 import java.util
 import java.util.Collections
@@ -16,7 +16,7 @@ import scala.jdk.CollectionConverters.*
 import scala.concurrent.duration.*
 import scala.util.Failure
 
-class MapWorkerExceptionTests {
+class FlatMapExceptionTests {
   class MyException(msg: String) extends RuntimeException(msg)
 
   @Test
@@ -42,9 +42,15 @@ class MapWorkerExceptionTests {
         }
 
         val src = ForEachSink(data, sink) { (ref: ActorLink) =>
-          sys.create(i => StreamWorker.map(ref, i, (q: String) =>
-            if (q == "s:4") throw new MyException("is 4")
-            "w:" + q
+          sys.create(i => StreamWorker.flatMap(ref, i, (q: String) =>
+            if (q == "s:3"){
+              List("w:s:3", "w:s:4").asSource.map{ q =>
+                if(q == "w:s:4") {
+                  throw new MyException("is 4")
+                }
+                q
+              }
+            }else List("w:" + q).asSource
           ))
         }
 
@@ -75,16 +81,22 @@ class MapWorkerExceptionTests {
 
       val src = ForEachSource(data)
 
-      val w = sys.create(i => StreamWorker.map(src, i, q =>
-        if (q == "s:4") throw new MyException("is 4")
-        "w:" + q
+      val w = sys.create(i => StreamWorker.flatMap(src, i, (q: String) =>
+        if (q == "s:4"){
+          List("w:s:4").asSource.map{ q =>
+            if(q == "w:s:4") {
+              throw new MyException("is 4")
+            }
+            q
+          }
+        }else List("w:" + q).asSource
       ))
 
       val p = StreamSink(w, l.add).start()
       val f = p.future
-      
+
       src.failOn(f).run()
-     
+
       Await.ready(f, 1.second)
       val v = f.value.get
       Assertions.assertTrue(v.isFailure)
@@ -114,9 +126,15 @@ class MapWorkerExceptionTests {
 
         val src = StreamSource(data)
 
-        val w = sys.create(i => StreamWorker.map(src, i, q =>
-          if (q == "s:4") throw new MyException("is 4")
-          "w:" + q
+        val w = sys.create(i => StreamWorker.flatMap(src, i, (q: String) =>
+          if (q == "s:4"){
+            List("w:s:4").asSource.map{ q =>
+              if(q == "w:s:4") {
+                throw new MyException("is 4")
+              }
+              q
+            }
+          }else List("w:" + q).asSource
         ))
 
         RunnableSink(w, l.add).run()
@@ -146,9 +164,15 @@ class MapWorkerExceptionTests {
 
       val src = StreamSource(data)
 
-      val w = sys.create(i => StreamWorker.map(src, i, q =>
-        if (q == "s:4") throw new MyException("is 4")
-        "w:" + q
+      val w = sys.create(i => StreamWorker.flatMap(src, i, (q: String) =>
+        if (q == "s:3"){
+          List("w:s:3", "w:s:4").asSource.map{ q =>
+            if(q == "w:s:4") {
+              throw new MyException("is 4")
+            }
+            q
+          }
+        }else List("w:" + q).asSource
       ))
 
       val p = StreamSink(w, l.add).start()
@@ -164,87 +188,6 @@ class MapWorkerExceptionTests {
     })
 
     Assertions.assertEquals(List("w:s:0", "w:s:1", "w:s:2", "w:s:3"), l.asScala)
-    Assertions.assertTrue(ar.get().isInstanceOf[MyException])
-    Assertions.assertEquals(ar.get().getMessage, "is 4")
-
-  }
-
-  @Test
-  def streamBuffer(): Unit = {
-    val l = Collections.synchronizedList(new util.ArrayList[String]())
-    val ar = AtomicReference[Throwable]()
-
-    ActorSystem() | (_.as { sys =>
-
-      val data = Seq(0, 1, 2, 3, 4, 5).asSource.map { i =>
-        "s:" + i
-      }
-
-      val src = StreamSource(data.map { i => i })
-
-      val b = StreamBuffer(src, 3)
-
-      val w = sys.create(i => StreamWorker.map(b, i, q =>
-        if (q == "s:4") throw new MyException("is 4")
-        "w:" + q
-      ))
-
-      val p = StreamSink(w, l.add).start()
-
-      val f = p.future
-      Await.ready(f, 1.second)
-      val v = f.value.get
-      Assertions.assertTrue(v.isFailure)
-      v match {
-        case Failure(q) =>
-          ar.set(q)
-      }
-
-    })
-
-    Assertions.assertTrue(l.asScala.contains("w:s:0"))
-    Assertions.assertTrue(ar.get().isInstanceOf[MyException])
-    Assertions.assertEquals(ar.get().getMessage, "is 4")
-  }
-
-  @Test
-  def zipStream(): Unit = {
-    val l = Collections.synchronizedList(new util.ArrayList[String]())
-    val ar = AtomicReference[Throwable]()
-
-    ActorSystem() | (_.as { sys =>
-
-      val data = Seq(0, 1, 2, 3, 4, 5).asSource.map { i =>
-        "s:" + i
-      }
-
-      val src = StreamSource(data)
-
-      val w1 = sys.create(i => StreamWorker.map(src, i, q => {
-        if (q == "s:4") throw new MyException("is 4")
-        "w:" + q
-      }))
-
-      val w2 = sys.create(i => StreamWorker.map(src, i, q => {
-        if (q == "s:4") throw new MyException("is 4")
-        "w:" + q
-      }))
-
-      val r = ZipStream(w1, w2)
-
-      val p = StreamSink(r, l.add).start()
-
-      val f = p.future
-      Await.ready(f, 1.second)
-      val v = f.value.get
-      Assertions.assertTrue(v.isFailure)
-      v match {
-        case Failure(q) =>
-          ar.set(q)
-      }
-
-    })
-
     Assertions.assertTrue(ar.get().isInstanceOf[MyException])
     Assertions.assertEquals(ar.get().getMessage, "is 4")
 
