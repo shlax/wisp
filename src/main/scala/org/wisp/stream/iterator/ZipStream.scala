@@ -7,7 +7,9 @@ import java.util
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 
-class ZipStream(prev:Iterable[ActorLink])(using executor: ExecutionContext) extends StreamActorLink, ActorLink{
+/** Merges multiple `streams` into one
+ * @param streams streams to merge */
+class ZipStream(streams:Iterable[ActorLink])(using executor: ExecutionContext) extends StreamActorLink, ActorLink{
   def this(l:ActorLink*)(using executor: ExecutionContext) = this(l)
 
   protected val nodes: util.Queue[ActorLink] = createNodes()
@@ -105,7 +107,7 @@ class ZipStream(prev:Iterable[ActorLink])(using executor: ExecutionContext) exte
 
   protected val state:Map[ActorLink, State] = {
     val m = mutable.Map[ActorLink, State]()
-    for(p <- prev) m(p) = createState(p)
+    for(p <- streams) m(p) = createState(p)
     m.toMap
   }
 
