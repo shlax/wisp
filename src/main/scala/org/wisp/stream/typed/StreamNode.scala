@@ -27,7 +27,7 @@ class StreamNode[T](graph: StreamGraph, val link: ActorLink)(using executor: Exe
     graph.node(r)
   }
 
-  def as[R](fn: StreamNode[T] => R): R = {
+  def as[R](fn: this.type => R): R = {
     fn.apply(this)
   }
 

@@ -1,4 +1,4 @@
-package org.wisp.test
+package org.wisp.test.impl
 
 import org.wisp.ActorSystem
 import org.wisp.using.*
@@ -7,8 +7,8 @@ import scala.concurrent.ExecutionContext
 
 object testSystem {
 
-  extension (as:ActorSystem) {
-    def || [R](fn: ExecutionContext ?=> ActorSystem => R ):R = {
+  extension [T <: ActorSystem](as:T) {
+    def || [R](fn: ExecutionContext ?=> T => R ):R = {
       as | { a =>
         given ExecutionContext = as
         fn.apply(a)

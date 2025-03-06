@@ -2,18 +2,22 @@ package org.wisp.stream.typed
 
 import org.wisp.{ActorLink, ActorSystem}
 import org.wisp.stream.{Sink, Source}
-import org.wisp.stream.iterator.{ForEachSink, ForEachSource, StreamSource, ZipStream}
+import org.wisp.stream.iterator.{ForEachSink, ForEachSource, SourceActorLink, StreamSource, ZipStream}
 
 import scala.concurrent.ExecutionContext
 
 class StreamGraph(val system:ActorSystem)(using executor: ExecutionContext){
 
+  def sorce[T](link: SourceActorLink): SourceNode[T] = {
+    SourceNode(this, link)
+  }
+
   def node[T](link: ActorLink): StreamNode[T] = {
     StreamNode(this, link)
   }
 
-  def from[T](s:Source[T]) : StreamNode[T] = {
-    node(StreamSource(s))
+  def from[T](s:Source[T]) : SourceNode[T] = {
+    sorce(StreamSource(s))
   }
 
   def zip[T](nodes: Iterable[StreamNode[? <: T]]): StreamNode[T] = {
@@ -25,15 +29,15 @@ class StreamGraph(val system:ActorSystem)(using executor: ExecutionContext){
     zip(nodes)
   }
 
-  def forEach[T](s:Source[T])(fn : StreamNode[T] => Unit ) : ForEachSource[T] = {
+  def forEach[T](s:Source[T])(fn : SourceNode[T] => Unit ) : ForEachSource[T] = {
     val f = ForEachSource(s)
-    fn.apply( node(f) )
+    fn.apply( sorce(f) )
     f
   }
 
-  def forEach[T, R](s:Source[T], c:Sink[R])(fn: StreamNode[T] => ActorLink) : ForEachSink[T, R] = {
+  def forEach[T, R](s:Source[T], c:Sink[R])(fn: SourceNode[T] => ActorLink) : ForEachSink[T, R] = {
     ForEachSink(s, c ){ prev =>
-      fn.apply( node(prev) )
+      fn.apply( sorce(prev) )
     }
   }
 

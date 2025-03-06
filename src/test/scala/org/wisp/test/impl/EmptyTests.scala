@@ -6,7 +6,7 @@ import org.wisp.stream.{Sink, SinkTree}
 import org.wisp.stream.Source.*
 import org.wisp.stream.iterator.{ForEachSink, ForEachSource, RunnableSink, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
 import org.wisp.stream.typed.StreamGraph
-import org.wisp.test.testSystem.*
+import testSystem.*
 
 import java.util.Collections
 import scala.collection.mutable.ArrayBuffer

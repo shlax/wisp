@@ -48,9 +48,10 @@ class ActorSystem(inboxCapacity:Int = 3, finalizeWith:Option[ExecutionContext] =
     cause.printStackTrace()
   }
 
-  def as[R](fn: ExecutionContext ?=> ActorSystem => R ):R = {
+  /** give this as ExecutionContext for `fn` */
+  def as[R](fn: ExecutionContext ?=> this.type => R ):R = {
     given ExecutionContext = this
-    val f: ActorSystem => R = fn
+    val f: this.type => R = fn
     f.apply(this)
   }
 

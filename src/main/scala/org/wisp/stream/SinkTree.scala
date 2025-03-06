@@ -111,7 +111,7 @@ class SinkTree[T](protected val from:Option[SinkTree[?]] = None) extends Sink[T]
     nf
   }
 
-  def as[R](fn: SinkTree[T] => R): R = {
+  def as[R](fn: this.type => R): R = {
     fn.apply(this)
   }
 
