@@ -10,6 +10,7 @@ import org.wisp.lock.*
 
 import scala.concurrent.ExecutionContext
 
+/** Inbox backed by [[java.util.LinkedList]] witch block thread calling [[add]] when `inboxCapacity` is reached */
 class QueueInbox[T <: Actor](inboxCapacity:Int, fn: Inbox => T)(using executor: ExecutionContext) extends Inbox {
 
   val actor:T = fn.apply(this)

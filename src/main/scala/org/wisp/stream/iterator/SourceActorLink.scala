@@ -2,7 +2,7 @@ package org.wisp.stream.iterator
 
 import org.wisp.ActorLink
 
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Failure
 
 abstract class SourceActorLink(using executor: ExecutionContext) extends StreamActorLink, ActorLink{

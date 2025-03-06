@@ -7,7 +7,7 @@ object using {
 
   extension [T <: AutoCloseable](ac: T) {
 
-    /** support for javas try-with-resources construct */
+    /** support for java try-with-resources construct */
     @targetName("autoClose")
     inline def | [R](inline f: T => R): R = {
       var e:Throwable = null
