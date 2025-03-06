@@ -103,6 +103,7 @@ class FlatMapExceptionTests {
       v match {
         case Failure(q) =>
           ar.set(q)
+        case _ =>
       }
     }
 
@@ -183,6 +184,7 @@ class FlatMapExceptionTests {
       v match {
         case Failure(q) =>
           ar.set(q)
+        case _ =>
       }
     }
 

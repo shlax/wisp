@@ -90,6 +90,7 @@ class MapExceptionTests {
       v match {
         case Failure(q) =>
           ar.set(q)
+        case _ =>
       }
     }
 
@@ -158,6 +159,7 @@ class MapExceptionTests {
       v match {
         case Failure(q) =>
           ar.set(q)
+        case _ =>
       }
     }
 
@@ -195,6 +197,7 @@ class MapExceptionTests {
       v match {
         case Failure(q) =>
           ar.set(q)
+        case _ =>
       }
 
     }
@@ -237,6 +240,7 @@ class MapExceptionTests {
       v match {
         case Failure(q) =>
           ar.set(q)
+        case _ =>
       }
 
     }

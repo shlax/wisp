@@ -92,6 +92,7 @@ class SourceExceptionTests {
       v match {
         case Failure(q) =>
           ar.set(q)
+        case _ =>
       }
     }
 
@@ -160,6 +161,7 @@ class SourceExceptionTests {
       v match {
         case Failure(q) =>
           ar.set(q)
+        case _ =>
       }
     }
 
@@ -197,6 +199,7 @@ class SourceExceptionTests {
       v match {
         case Failure(q) =>
           ar.set(q)
+        case _ =>
       }
 
     }
@@ -238,6 +241,7 @@ class SourceExceptionTests {
       v match {
         case Failure(q) =>
           ar.set(q)
+        case _ =>
       }
 
     }
