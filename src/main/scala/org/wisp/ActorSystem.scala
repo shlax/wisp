@@ -5,7 +5,7 @@ import java.util.concurrent.{Executors, RejectedExecutionException}
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 import scala.util.control.NonFatal
 
-class ActorSystem(inboxCapacity:Int = 3) extends ExecutionContext, AutoCloseable{
+class ActorSystem(inboxCapacity:Int = 3, finalizeWith:Option[ExecutionContext] = Some(ExecutionContext.parasitic)) extends ExecutionContext, AutoCloseable{
 
   val executor: ExecutionContextExecutorService = createExecutor()
   protected def createExecutor() : ExecutionContextExecutorService = {
@@ -14,20 +14,24 @@ class ActorSystem(inboxCapacity:Int = 3) extends ExecutionContext, AutoCloseable
 
   protected val closed: AtomicBoolean = AtomicBoolean(false)
 
+  protected def asRunnable(command: Runnable):Runnable = {
+    () => {
+      try {
+        command.run()
+      } catch {
+        case NonFatal(ex) =>
+          reportFailure(ex)
+      }
+    }
+  }
+
   override def execute(command: Runnable): Unit = {
     try {
-      executor.execute(() => {
-        try {
-          command.run()
-        } catch {
-          case NonFatal(ex) =>
-            reportFailure(ex)
-        }
-      })
+      executor.execute(asRunnable(command))
     }catch{
       case e : RejectedExecutionException =>
-        if(closed.get()) {
-          command.run()
+        if(closed.get() && finalizeWith.isDefined) {
+          finalizeWith.get.execute(asRunnable(command))
         }else{
           throw e
         }
