@@ -9,12 +9,6 @@ abstract class SourceActorLink(using executor: ExecutionContext) extends StreamA
 
   def failOn(e: Throwable):this.type
 
-  def failOn[T](p:Promise[T]):Future[T] = {
-    val f = p.future
-    failOn(f)
-    f
-  }
-
   def failOn(p:Future[?]):this.type = {
     p.onComplete{
       case Failure(t) =>

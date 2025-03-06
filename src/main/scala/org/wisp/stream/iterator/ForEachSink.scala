@@ -22,6 +22,8 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLin
   protected var exceptionSrc: Option[Throwable] = None
   protected var exceptionDst: Option[Throwable] = None
 
+  protected var started: Boolean = false
+
   protected var srcEnded = false
   protected var dstEnded = false
 
@@ -38,6 +40,12 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ActorLink => ActorLin
   }
 
   override def run(): Unit = lock.withLock {
+    if (started) {
+      throw new IllegalStateException("started")
+    } else {
+      started = true
+    }
+
     next()
 
     while (!dstEnded && exceptionDst.isEmpty) {

@@ -124,7 +124,7 @@ class HelloTests {
 
     ActorSystem() || { sys =>
       val p = StreamGraph(sys).from(data).map(i => i + 1).to(l.add).start()
-      Await.result(p.future, 1.second)
+      Await.result(p, 1.second)
     }
 
     Assertions.assertEquals(1 to 6, l.asScala)
@@ -148,7 +148,7 @@ class HelloTests {
       }
 
       val p = StreamGraph(sys).from(data).map(i => i + 1).to(t).start()
-      Await.result(p.future, 1.second)
+      Await.result(p, 1.second)
     }
 
     Assertions.assertEquals(List("a:2", "a:4", "a:6", "a:8", "a:10", "a:12"), l1.asScala)
@@ -243,7 +243,7 @@ class HelloTests {
 
       val p = StreamSink(w, l.add).start()
       src.run()
-      Await.ready(p.future, 1.second)
+      Await.ready(p, 1.second)
 
     }
 
@@ -290,7 +290,7 @@ class HelloTests {
       ))
 
       val p = StreamSink(w, l.add).start()
-      Await.ready(p.future, 1.second)
+      Await.ready(p, 1.second)
     }
 
     Assertions.assertEquals(List("w:0", "w:1", "w:2", "w:3", "w:4", "w:5"), l.asScala)
@@ -311,7 +311,7 @@ class HelloTests {
       ))
 
       val p = StreamSink(w, l.add).start()
-      Await.ready(p.future, 1.second)
+      Await.ready(p, 1.second)
 
     }
 
@@ -339,7 +339,7 @@ class HelloTests {
       val r = ZipStream(w1, w2)
 
       val p = StreamSink(r, l.add).start()
-      Await.ready(p.future, 1.second)
+      Await.ready(p, 1.second)
 
     }
 

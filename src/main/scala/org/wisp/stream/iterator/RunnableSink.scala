@@ -15,6 +15,7 @@ class RunnableSink[T](prev:ActorLink, sink:Sink[T])(using executor: ExecutionCon
   protected var value: Option[T] = None
   protected var exception: Option[Throwable] = None
 
+  protected var started: Boolean = false
   protected var ended = false
 
   protected def next(): Unit = {
@@ -22,23 +23,29 @@ class RunnableSink[T](prev:ActorLink, sink:Sink[T])(using executor: ExecutionCon
   }
 
   override def run(): Unit = lock.withLock {
-      next()
+    if (started) {
+      throw new IllegalStateException("started")
+    } else {
+      started = true
+    }
 
-      while (!ended && exception.isEmpty) {
+    next()
 
-        for (v <- value) {
-          value = None
-          sink.accept(v)
-          next()
-        }
+    while (!ended && exception.isEmpty) {
 
-        if (!ended && exception.isEmpty) {
-          condition.await()
-        }
-
+      for (v <- value) {
+        value = None
+        sink.accept(v)
+        next()
       }
 
-      flush(sink, exception)
+      if (!ended && exception.isEmpty) {
+        condition.await()
+      }
+
+    }
+
+    flush(sink, exception)
   }
 
   override def accept(from: ActorLink): PartialFunction[IteratorMessage, Unit] = {

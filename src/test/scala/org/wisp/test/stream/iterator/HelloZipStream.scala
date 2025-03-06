@@ -31,7 +31,7 @@ class HelloZipStream {
       val r = ZipStream(w1, w2)
 
       val p = StreamSink(r, println(_)).start()
-      Await.ready(p.future, 1.second)
+      Await.ready(p, 1.second)
 
     }
 

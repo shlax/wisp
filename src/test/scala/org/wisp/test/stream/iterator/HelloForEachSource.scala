@@ -27,7 +27,7 @@ class HelloForEachSource {
         "w:" + Thread.currentThread().threadId + ":" + q
       ))
 
-      val p = StreamSink(w, println(_)).start().future
+      val p = StreamSink(w, println(_)).start()
       println("start")
 
       src.failOn(p).run()

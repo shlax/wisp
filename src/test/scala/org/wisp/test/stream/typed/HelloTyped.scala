@@ -18,7 +18,7 @@ class HelloTyped {
 
     ActorSystem() || { sys =>
       val p = StreamGraph(sys).from(data).map(i => i + 1).to(println).start()
-      Await.result(p.future, 1.second)
+      Await.result(p, 1.second)
     }
 
   }
@@ -37,7 +37,7 @@ class HelloTyped {
       }
 
       val p = StreamGraph(sys).from(data).map(i => i + 1).to(t).start()
-      Await.result(p.future, 1.second)
+      Await.result(p, 1.second)
     }
 
   }

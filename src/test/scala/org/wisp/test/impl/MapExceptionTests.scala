@@ -80,8 +80,7 @@ class MapExceptionTests {
         "w:" + q
       ))
 
-      val p = StreamSink(w, l.add).start()
-      val f = p.future
+      val f = StreamSink(w, l.add).start()
       
       src.failOn(f).run()
      
@@ -151,9 +150,8 @@ class MapExceptionTests {
         "w:" + q
       ))
 
-      val p = StreamSink(w, l.add).start()
+      val f = StreamSink(w, l.add).start()
 
-      val f = p.future
       Await.ready(f, 1.second)
       val v = f.value.get
       Assertions.assertTrue(v.isFailure)
@@ -189,9 +187,8 @@ class MapExceptionTests {
         "w:" + q
       ))
 
-      val p = StreamSink(w, l.add).start()
+      val f = StreamSink(w, l.add).start()
 
-      val f = p.future
       Await.ready(f, 1.second)
       val v = f.value.get
       Assertions.assertTrue(v.isFailure)
@@ -232,9 +229,8 @@ class MapExceptionTests {
 
       val r = ZipStream(w1, w2)
 
-      val p = StreamSink(r, l.add).start()
+      val f = StreamSink(r, l.add).start()
 
-      val f = p.future
       Await.ready(f, 1.second)
       val v = f.value.get
       Assertions.assertTrue(v.isFailure)

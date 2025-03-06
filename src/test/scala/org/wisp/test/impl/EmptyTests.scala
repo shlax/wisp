@@ -70,7 +70,7 @@ class EmptyTests {
 
     ActorSystem() || { sys =>
       val p = StreamGraph(sys).from(data).map(i => i + 1).to(l.add).start()
-      Await.result(p.future, 1.second)
+      Await.result(p, 1.second)
     }
 
     Assertions.assertTrue(l.isEmpty)
@@ -94,7 +94,7 @@ class EmptyTests {
       }
 
       val p = StreamGraph(sys).from(data).map(i => i + 1).to(t).start()
-      Await.result(p.future, 1.second)
+      Await.result(p, 1.second)
     }
 
     Assertions.assertTrue(l1.isEmpty)
@@ -154,7 +154,7 @@ class EmptyTests {
         "w:" + q
       ))
 
-      val p = StreamSink(w, l.add).start().future
+      val p = StreamSink(w, l.add).start()
       src.failOn(p).run()
       Await.ready(p, 1.second)
 
@@ -203,7 +203,7 @@ class EmptyTests {
       ))
 
       val p = StreamSink(w, l.add).start()
-      Await.ready(p.future, 1.second)
+      Await.ready(p, 1.second)
     }
 
     Assertions.assertTrue(l.isEmpty)
@@ -224,7 +224,7 @@ class EmptyTests {
       ))
 
       val p = StreamSink(w, l.add).start()
-      Await.ready(p.future, 1.second)
+      Await.ready(p, 1.second)
 
     }
 
@@ -252,7 +252,7 @@ class EmptyTests {
       val r = ZipStream(w1, w2)
 
       val p = StreamSink(r, l.add).start()
-      Await.ready(p.future, 1.second)
+      Await.ready(p, 1.second)
 
     }
 

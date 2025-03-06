@@ -2,18 +2,26 @@ package org.wisp.stream.iterator
 
 import org.wisp.stream.Sink
 import org.wisp.ActorLink
+import org.wisp.lock.*
 import org.wisp.stream.iterator.message.*
 
-import scala.concurrent.{ExecutionContext, Promise}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.control.NonFatal
 
 class StreamSink[T](prev:ActorLink, sink:Sink[T])(using executor: ExecutionContext) extends StreamActorLink{
 
   protected val completed:Promise[Unit] = Promise()
+  protected var started:Boolean = false
+  
+  def start(): Future[Unit] = lock.withLock{
+    if(started){
+      throw new IllegalStateException("started")
+    }else{
+      started = true
+    }
 
-  def start(): Promise[Unit] = {
     prev.ask(HasNext).future.onComplete(accept)
-    completed
+    completed.future
   }
 
   override def accept(from: ActorLink): PartialFunction[IteratorMessage, Unit] = {

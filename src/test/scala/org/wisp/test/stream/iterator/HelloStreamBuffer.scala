@@ -29,7 +29,7 @@ class HelloStreamBuffer {
       ))
 
       val p = StreamSink(w, println(_)).start()
-      Await.ready(p.future, 1.second)
+      Await.ready(p, 1.second)
 
     }
   }
