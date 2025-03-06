@@ -17,8 +17,10 @@ class HelloWorld {
 
     // create ActorSystem and close it
     ActorSystem() | { system =>
-      // send message
-      system.create(HelloActor(_)) << "Hello world"
+      //  create hello actor
+      val link = system.create(HelloActor(_))
+      //  send message
+      link << "Hello world"
     }
 
   }
