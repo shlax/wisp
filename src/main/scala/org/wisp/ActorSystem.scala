@@ -53,7 +53,8 @@ class ActorSystem(inboxCapacity:Int = 3, finalizeWith:Option[ExecutionContext] =
   }
   
   def create[T <: Actor](inboxSize:Int, fn: Inbox => T):T = {
-    QueueInbox(this, inboxSize, fn).actor
+    given ExecutionContext = this
+    QueueInbox(inboxSize, fn).actor
   }
 
   override def close(): Unit = {

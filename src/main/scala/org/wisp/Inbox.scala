@@ -1,9 +1,9 @@
 package org.wisp
 
+import scala.concurrent.ExecutionContext
+
 trait Inbox {
-
-  def system: ActorSystem
-
+  
   def add(message: Message):Unit
 
 }

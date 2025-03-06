@@ -8,7 +8,9 @@ import scala.annotation.targetName
 import scala.util.control.NonFatal
 import org.wisp.lock.*
 
-class QueueInbox[T <: Actor](override val system: ActorSystem, inboxCapacity:Int, fn: Inbox => T) extends Inbox {
+import scala.concurrent.ExecutionContext
+
+class QueueInbox[T <: Actor](inboxCapacity:Int, fn: Inbox => T)(using executor: ExecutionContext) extends Inbox {
 
   val actor:T = fn.apply(this)
 
@@ -38,7 +40,7 @@ class QueueInbox[T <: Actor](override val system: ActorSystem, inboxCapacity:Int
     if(!running){
       running = true
 
-      system.execute(() => {
+      executor.execute(() => {
           var next = pull()
           while(next.isDefined){
             val n = next.get
@@ -50,7 +52,7 @@ class QueueInbox[T <: Actor](override val system: ActorSystem, inboxCapacity:Int
                 }).apply(n.value)
             } catch {
               case NonFatal(e) =>
-                system.reportFailure(ProcessingException(n, actor, e))
+                executor.reportFailure(ProcessingException(n, actor, e))
             }
             next = pull()
           }
