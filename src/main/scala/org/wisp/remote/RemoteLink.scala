@@ -12,7 +12,7 @@ class RemoteLink(c: UdpClient, adr:SocketAddress, path:String) extends ActorLink
     c.send(adr, RemoteMessage(path, t.value))
   }
 
-  override def ask(v:Any) : Future[Message] = {
+  override def call(v:Any) : Future[Message] = {
     throw RemoteAskException(v)
   }
   

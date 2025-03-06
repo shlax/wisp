@@ -30,7 +30,7 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ForEachSink[F, T] => 
   protected var value: Option[T] = None
 
   protected def next(): Unit = {
-    prev.ask(HasNext).onComplete(accept)
+    prev.call(HasNext).onComplete(accept)
   }
 
   override def failOn(e: Throwable): this.type = lock.withLock {

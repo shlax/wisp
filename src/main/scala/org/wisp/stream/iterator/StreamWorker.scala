@@ -81,7 +81,7 @@ class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T])(using 
           if (hasNext) {
             source = Some(opt.get)
           } else if (!hasNext && !nodes.isEmpty) {
-            prev.ask(HasNext).onComplete(accept)
+            prev.call(HasNext).onComplete(accept)
           }
         }
 
@@ -115,7 +115,7 @@ class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T])(using 
               from << Next(v.get)
             } else {
               nodes.add(from)
-              prev.ask(HasNext).onComplete(accept)
+              prev.call(HasNext).onComplete(accept)
             }
           }
 

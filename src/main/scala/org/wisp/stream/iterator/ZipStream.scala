@@ -36,7 +36,7 @@ class ZipStream(prev:Iterable[ActorLink])(using executor: ExecutionContext) exte
 
       if (!ended && !requested && value.isEmpty) {
         requested = true
-        link.ask(HasNext).onComplete(accept)
+        link.call(HasNext).onComplete(accept)
       }
     }
 

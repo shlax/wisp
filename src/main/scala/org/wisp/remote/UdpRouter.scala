@@ -77,7 +77,7 @@ class UdpRouter(address: SocketAddress, capacity:Int)(using executor: ExecutionC
           }
         }
 
-        override def ask(v: Any): Future[Message] = {
+        override def call(v: Any): Future[Message] = {
           throw RemoteAskException(v)
         }
       }, rm.value) )

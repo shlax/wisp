@@ -20,7 +20,7 @@ class StreamSink[T](prev:ActorLink, sink:Sink[T])(using executor: ExecutionConte
       started = true
     }
 
-    prev.ask(HasNext).onComplete(accept)
+    prev.call(HasNext).onComplete(accept)
     completed.future
   }
 
@@ -30,7 +30,7 @@ class StreamSink[T](prev:ActorLink, sink:Sink[T])(using executor: ExecutionConte
       if(completed.isCompleted) throw new IllegalStateException("ended")
       try {
         sink.accept(v.asInstanceOf[T])
-        prev.ask(HasNext).onComplete(accept)
+        prev.call(HasNext).onComplete(accept)
       }catch{
         case NonFatal(exc) =>
           completed.failure(exc)

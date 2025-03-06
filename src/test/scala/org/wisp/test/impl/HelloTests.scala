@@ -60,7 +60,7 @@ class HelloTests {
     ActorSystem() || { sys =>
 
       val hello = sys.create(HelloActor(_))
-      hello.ask("world").onComplete { e =>
+      hello.call("world").onComplete { e =>
         ref.set(e.get.value)
         cd.countDown()
       }
