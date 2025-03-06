@@ -12,7 +12,11 @@ import scala.util.control.NonFatal
 object StreamWorker {
 
   def map[F, T](prev:ActorLink, inbox:Inbox, fn: F => T)(using executor: ExecutionContext) : StreamWorker[F, T] = {
-    StreamWorker(prev, inbox, i => Option(fn.apply(i)).asSource )
+    StreamWorker(prev, inbox, i => Source(fn.apply(i)) )
+  }
+
+  def filter[F](prev: ActorLink, inbox: Inbox, fn: F => Boolean)(using executor: ExecutionContext): StreamWorker[F, F] = {
+    StreamWorker(prev, inbox, i => { if(fn.apply(i)) Source(i) else Source.empty } )
   }
 
   def flatMap[F, T](prev: ActorLink, inbox: Inbox, fn: F => Source[T])(using executor: ExecutionContext): StreamWorker[F, T] = {

@@ -6,6 +6,22 @@ import java.{lang, util}
 
 object Source{
 
+  /** empty Source */
+  val empty: Source[Nothing] = () => None
+
+  /** Source containing only the specified object */
+  def apply[T](value:T) : Source[T] = {
+    new Source[T] {
+      private var ended = false
+      override def next(): Option[T] = {
+        if (ended) None else {
+          ended = true
+          Some(value)
+        }
+      }
+    }
+  }
+
   extension[E](i: util.Iterator[E]){
     def asSource: Source[E] = { () =>
       if (i.hasNext) Some(i.next()) else None
@@ -48,6 +64,7 @@ object Source{
 
 }
 
+/** `Iterator` more suitable for messaging */
 @FunctionalInterface
 trait Source[+T]{
 

@@ -6,13 +6,18 @@ import org.wisp.stream.iterator.{StreamBuffer, StreamSink, StreamWorker}
 
 import scala.concurrent.ExecutionContext
 
-class StreamNode[T](graph: StreamGraph, val link: ActorLink)(using executor: ExecutionContext) extends StreamGraph(graph.system){
-
+class StreamNode[T](graph: StreamGraph, val link: ActorLink) extends StreamGraph(graph.system){
+  
   def map[V](fn: T => V): StreamNode[V] = {
     val r = graph.system.create( i => StreamWorker.map(link, i, fn) )
     graph.node(r)
   }
 
+  def filter(fn: T => Boolean): StreamNode[T] = {
+    val r = graph.system.create(i => StreamWorker.filter(link, i, fn))
+    graph.node(r)
+  }
+  
   def flatMap[V](fn: T => Source[V]): StreamNode[V] = {
     val r = graph.system.create(i => StreamWorker.flatMap(link, i, fn) )
     graph.node(r)

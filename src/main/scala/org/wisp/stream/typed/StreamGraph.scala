@@ -6,7 +6,8 @@ import org.wisp.stream.iterator.{ForEachSink, ForEachSource, SourceActorLink, St
 
 import scala.concurrent.ExecutionContext
 
-class StreamGraph(val system:ActorSystem)(using executor: ExecutionContext){
+class StreamGraph(val system:ActorSystem){
+  given ExecutionContext = system
 
   def sorce[T](link: SourceActorLink): SourceNode[T] = {
     SourceNode(this, link)
