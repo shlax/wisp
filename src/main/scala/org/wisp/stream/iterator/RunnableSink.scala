@@ -19,7 +19,7 @@ class RunnableSink[T](prev:ActorLink, sink:Sink[T])(using executor: ExecutionCon
   protected var ended = false
 
   protected def next(): Unit = {
-    prev.ask(HasNext).future.onComplete(accept)
+    prev.ask(HasNext).onComplete(accept)
   }
 
   override def run(): Unit = lock.withLock {

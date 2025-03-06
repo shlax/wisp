@@ -8,7 +8,7 @@ import org.wisp.stream.iterator.{ForEachSink, ForEachSource, RunnableSink, Strea
 import org.wisp.stream.typed.StreamGraph
 import testSystem.*
 import org.wisp.using.*
-import org.wisp.{Actor, ActorLink, ActorSystem, Inbox}
+import org.wisp.{AbstractActor, Actor, ActorLink, ActorSystem, Inbox}
 
 import java.net.InetSocketAddress
 import java.util
@@ -28,7 +28,7 @@ class HelloTests {
     val cd = new CountDownLatch(1)
     val ref = AtomicReference[Any]()
 
-    class HelloActor(in: Inbox) extends Actor(in) {
+    class HelloActor(in: Inbox) extends AbstractActor(in) {
       override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
         case a =>
           ref.set(a)
@@ -51,7 +51,7 @@ class HelloTests {
     val cd = new CountDownLatch(1)
     val ref = AtomicReference[Any]()
 
-    class HelloActor(in: Inbox) extends Actor(in) {
+    class HelloActor(in: Inbox) extends AbstractActor(in) {
       override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
         case a => from << "Hello " + a
       }
@@ -60,7 +60,7 @@ class HelloTests {
     ActorSystem() || { sys =>
 
       val hello = sys.create(HelloActor(_))
-      hello.ask("world").future.onComplete { e =>
+      hello.ask("world").onComplete { e =>
         ref.set(e.get.value)
         cd.countDown()
       }
@@ -167,7 +167,7 @@ class HelloTests {
       val s = use(ActorSystem())
 
       val r = use(UdpRouter(adr, 2024)(using s))
-      r.register("echo", s.create(i => new Actor(i) {
+      r.register("echo", s.create(i => new AbstractActor(i) {
         override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
           case x: Any =>
             res.add(x)

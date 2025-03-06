@@ -2,7 +2,7 @@ package org.wisp.stream.iterator
 
 import org.wisp.stream.Source
 import org.wisp.stream.Source.*
-import org.wisp.{Actor, ActorLink, Inbox}
+import org.wisp.{AbstractActor, Actor, ActorLink, Inbox}
 import org.wisp.stream.iterator.message.*
 
 import java.util
@@ -21,7 +21,7 @@ object StreamWorker {
 
 }
 
-class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T])(using executor: ExecutionContext) extends Actor(inbox), StreamException{
+class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T])(using executor: ExecutionContext) extends AbstractActor(inbox), StreamException{
 
   protected val nodes:util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
@@ -81,7 +81,7 @@ class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T])(using 
           if (hasNext) {
             source = Some(opt.get)
           } else if (!hasNext && !nodes.isEmpty) {
-            prev.ask(HasNext).future.onComplete(accept)
+            prev.ask(HasNext).onComplete(accept)
           }
         }
 
@@ -115,7 +115,7 @@ class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T])(using 
               from << Next(v.get)
             } else {
               nodes.add(from)
-              prev.ask(HasNext).future.onComplete(accept)
+              prev.ask(HasNext).onComplete(accept)
             }
           }
 

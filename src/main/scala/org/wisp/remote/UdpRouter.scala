@@ -10,7 +10,7 @@ import java.nio.ByteBuffer
 import java.nio.channels.AsynchronousCloseException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentMap}
-import scala.concurrent.{ExecutionContext, Promise}
+import scala.concurrent.{ExecutionContext, Future}
 
 class UdpRouter(address: SocketAddress, capacity:Int)(using executor: ExecutionContext) extends UdpClient(Some(address)), Runnable{
 
@@ -77,7 +77,7 @@ class UdpRouter(address: SocketAddress, capacity:Int)(using executor: ExecutionC
           }
         }
 
-        override def ask(v: Any): Promise[Message] = {
+        override def ask(v: Any): Future[Message] = {
           throw RemoteAskException(v)
         }
       }, rm.value) )

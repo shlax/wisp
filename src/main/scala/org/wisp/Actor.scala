@@ -1,9 +1,11 @@
 package org.wisp
 
-abstract class Actor(protected val inbox: Inbox) extends ActorLink{
+trait Actor extends ActorLink{
 
   def accept(from:ActorLink): PartialFunction[Any, Unit]
 
+  protected def inbox: Inbox
+  
   override def accept(m: Message): Unit = {
     inbox.add(m)
   }

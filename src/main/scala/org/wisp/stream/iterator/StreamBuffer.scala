@@ -24,7 +24,7 @@ class StreamBuffer(prev:ActorLink, size:Int)(using executor: ExecutionContext) e
       val req = if(requested) 1 else 0
       if (queue.size() + req < size) {
         requested = true
-        prev.ask(HasNext).future.onComplete(accept)
+        prev.ask(HasNext).onComplete(accept)
       }
     }
   }
