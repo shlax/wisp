@@ -11,13 +11,13 @@ import scala.concurrent.ExecutionContext
 class SplitStream(prev:ActorLink)(link: SplitStream#Split => Unit)(using executor: ExecutionContext) extends StreamException {
 
   trait Split {
-    def nextTo(): ActorLink
+    def next(): ActorLink
   }
 
   protected class SplitBuilder extends Split {
     var links:List[SplitActorLink] = Nil
 
-    override def nextTo(): SplitActorLink = {
+    override def next(): SplitActorLink = {
       val link = SplitActorLink()
       links = link :: links
       link
@@ -34,7 +34,7 @@ class SplitStream(prev:ActorLink)(link: SplitStream#Split => Unit)(using executo
   protected var exception:Option[Throwable] = None
   protected var ended = false
 
-  protected val next: List[SplitActorLink] = {
+  protected val nextTo: List[SplitActorLink] = {
     val s = SplitBuilder()
     link.apply(s)
     s.links
@@ -46,7 +46,7 @@ class SplitStream(prev:ActorLink)(link: SplitStream#Split => Unit)(using executo
 
     t.value match {
       case Next(v) =>
-        for(n <- next) n.next(v)
+        for(n <- nextTo) n.next(v)
         pullNext()
       case End(v) =>
         if(v.isDefined){
@@ -55,12 +55,12 @@ class SplitStream(prev:ActorLink)(link: SplitStream#Split => Unit)(using executo
           ended = true
         }
 
-        for(n <- next) n.end()
+        for(n <- nextTo) n.end()
     }
   }
 
   protected def pullNext():Unit = {
-    if(!requested && next.forall(i => !i.nodes.isEmpty)){
+    if(!requested && nextTo.forall(i => !i.nodes.isEmpty)){
       requested = true
       prev.call(HasNext).onComplete(SplitStream.this.accept)
     }

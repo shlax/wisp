@@ -4,13 +4,13 @@ import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.{ActorLink, ActorSystem}
 import org.wisp.stream.{Sink, SinkTree}
 import org.wisp.stream.Source.*
-import org.wisp.stream.iterator.{ForEachSink, ForEachSource, RunnableSink, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
+import org.wisp.stream.iterator.{ForEachSink, ForEachSource, RunnableSink, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
 import org.wisp.stream.typed.StreamGraph
 import testSystem.*
 
 import java.util.Collections
 import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.{Await, Promise}
+import scala.concurrent.{Await, Future, Promise}
 import scala.util.Success
 import java.util
 import scala.concurrent.duration.*
@@ -260,5 +260,31 @@ class EmptyTests {
 
   }
 
+  @Test
+  def splitStream(): Unit = {
+    val l1 = Collections.synchronizedSet(new util.HashSet[Integer]())
+    val l2 = Collections.synchronizedSet(new util.HashSet[Integer]())
+
+    ActorSystem() || { sys =>
+
+      val data = Seq[Int]().asSource
+      val src = StreamSource(data)
+
+      var sl: List[StreamSink[?]] = Nil
+
+      val r = SplitStream(src) { b =>
+        sl = StreamSink(b.next(), l1.add) :: sl
+        sl = StreamSink(b.next(), l2.add) :: sl
+      }
+
+      val p = Future.sequence(sl.map(_.start()))
+      Await.ready(p, 1.second)
+
+    }
+
+    Assertions.assertTrue(l1.isEmpty)
+    Assertions.assertTrue(l2.isEmpty)
+
+  }
 
 }

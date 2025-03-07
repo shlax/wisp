@@ -4,7 +4,7 @@ import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.remote.{RemoteLink, UdpClient, UdpRouter}
 import org.wisp.stream.{Sink, SinkTree}
 import org.wisp.stream.Source.*
-import org.wisp.stream.iterator.{ForEachSink, ForEachSource, RunnableSink, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
+import org.wisp.stream.iterator.{ForEachSink, ForEachSource, RunnableSink, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
 import org.wisp.stream.typed.StreamGraph
 import testSystem.*
 import org.wisp.using.*
@@ -16,12 +16,12 @@ import java.util.Collections
 import java.util.concurrent.{CountDownLatch, TimeUnit}
 import java.util.concurrent.atomic.AtomicReference
 import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.{Await, Promise}
+import scala.concurrent.{Await, Future, Promise}
 import scala.concurrent.duration.*
 import scala.util.Success
 import scala.jdk.CollectionConverters.*
 
-class HelloTests {
+class BasicTests {
 
   @Test
   def helloWorld(): Unit = {
@@ -72,7 +72,7 @@ class HelloTests {
   }
 
   @Test
-  def helloSinkFlatMap():Unit = {
+  def sinkFlatMap():Unit = {
     val data = Seq(List(0,1,2),List(3,4,5)).asSource
     val l = ArrayBuffer[Int]()
 
@@ -86,7 +86,7 @@ class HelloTests {
   }
 
   @Test
-  def helloSinkFold(): Unit = {
+  def sinkFold(): Unit = {
     val data = Seq(1, 2, 3).asSource
 
     val p:Promise[Int] = SinkTree(data){ f =>
@@ -99,7 +99,7 @@ class HelloTests {
   }
 
   @Test
-  def helloSourceFlatMap():Unit = {
+  def sourceFlatMap():Unit = {
     val data = Seq(List(0, 1, 2), List(3, 4, 5)).asSource
     val l = ArrayBuffer[Int]()
 
@@ -109,7 +109,7 @@ class HelloTests {
   }
 
   @Test
-  def helloSourceFold(): Unit = {
+  def sourceFold(): Unit = {
     val data = Seq(1, 2, 3).asSource
 
     val r = data.fold(0)((a, b) => a + b)
@@ -118,7 +118,7 @@ class HelloTests {
   }
 
   @Test
-  def helloTypedStreamGraph():Unit = {
+  def typedStreamGraph():Unit = {
     val data = Seq(0, 1, 2, 3, 4, 5).asSource
     val l = Collections.synchronizedList(new util.ArrayList[Int]())
 
@@ -132,7 +132,7 @@ class HelloTests {
   }
 
   @Test
-  def helloTypedSinkTree():Unit = {
+  def typedSinkTree():Unit = {
     val data = Seq(0, 1, 2, 3, 4, 5).asSource
 
     val l1 = Collections.synchronizedList(new util.ArrayList[String]())
@@ -190,7 +190,7 @@ class HelloTests {
   }
 
   @Test
-  def helloForEachSink():Unit = {
+  def forEachSink():Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
 
     ActorSystem() || { sys =>
@@ -224,7 +224,7 @@ class HelloTests {
   }
 
   @Test
-  def helloForEachSource():Unit = {
+  def forEachSource():Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
 
     ActorSystem() || { sys =>
@@ -252,7 +252,7 @@ class HelloTests {
   }
 
   @Test
-  def helloRunnableSink():Unit = {
+  def runnableSink():Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
 
     ActorSystem() || { sys =>
@@ -274,7 +274,7 @@ class HelloTests {
   }
 
   @Test
-  def helloStreamBuffer():Unit = {
+  def streamBuffer():Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
 
     ActorSystem() || { sys =>
@@ -298,7 +298,7 @@ class HelloTests {
   }
 
   @Test
-  def helloStreamWorker(): Unit = {
+  def streamWorker(): Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
     
     ActorSystem() || { sys =>
@@ -320,7 +320,7 @@ class HelloTests {
   }
 
   @Test
-  def helloZipStream():Unit = {
+  def zipStream():Unit = {
     val l = Collections.synchronizedSet(new util.HashSet[String]())
     
     ActorSystem() || { sys =>
@@ -346,5 +346,54 @@ class HelloTests {
     Assertions.assertEquals(Set("w:0", "w:1", "w:2", "w:3", "w:4"), l.asScala)
     
   }
-  
+
+
+  @Test
+  def splitStream():Unit = {
+    val l1 = Collections.synchronizedList(new util.ArrayList[Int]())
+    val l2 = Collections.synchronizedList(new util.ArrayList[Int]())
+
+    ActorSystem() || { sys =>
+
+      val data = Seq(0, 1, 2, 3, 4).asSource
+      val src = StreamSource(data)
+
+      var sl:List[StreamSink[?]] = Nil
+
+      val r = SplitStream(src){ b =>
+        sl = StreamSink( b.next(), l1.add ) :: sl
+        sl = StreamSink( b.next(), l2.add ) :: sl
+      }
+
+      val p = Future.sequence( sl.map(_.start()) )
+      Await.ready(p, 1.second)
+
+    }
+
+    Assertions.assertEquals(List(0, 1, 2, 3, 4), l1.asScala.toList)
+    Assertions.assertEquals(List(0, 1, 2, 3, 4), l2.asScala.toList)
+
+  }
+
+  @Test
+  def typedSplitStream(): Unit = {
+    val data = Seq(0, 1, 2, 3, 4).asSource
+
+    val l1 = Collections.synchronizedList(new util.ArrayList[Int]())
+    val l2 = Collections.synchronizedList(new util.ArrayList[Int]())
+
+    ActorSystem() || { sys =>
+
+      val p = StreamGraph(sys).from(data).split{ n =>
+        Seq( n.next().to(l1.add), n.next().to(l2.add) )
+      }
+
+      Await.result( Future.sequence( p.map(_.start()) ), 1.second)
+    }
+
+    Assertions.assertEquals(List(0, 1, 2, 3, 4), l1.asScala.toList)
+    Assertions.assertEquals(List(0, 1, 2, 3, 4), l2.asScala.toList)
+
+  }
+
 }
