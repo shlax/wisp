@@ -8,11 +8,13 @@ import org.wisp.stream.iterator.message.*
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.control.NonFatal
 
-class StreamSink[T](prev:ActorLink, sink:Sink[T])(using executor: ExecutionContext) extends StreamActorLink{
+/** for each element of `stream` `sink.accept(...)` is called */
+class StreamSink[T](stream :ActorLink, sink:Sink[T])(using executor: ExecutionContext) extends StreamActorLink{
 
   protected val completed:Promise[Unit] = Promise()
   protected var started:Boolean = false
-  
+
+  /** start precessing data */
   def start(): Future[Unit] = lock.withLock{
     if(started){
       throw new IllegalStateException("started")
@@ -20,7 +22,7 @@ class StreamSink[T](prev:ActorLink, sink:Sink[T])(using executor: ExecutionConte
       started = true
     }
 
-    prev.call(HasNext).onComplete(accept)
+    stream.call(HasNext).onComplete(accept)
     completed.future
   }
 
@@ -30,7 +32,7 @@ class StreamSink[T](prev:ActorLink, sink:Sink[T])(using executor: ExecutionConte
       if(completed.isCompleted) throw new IllegalStateException("ended")
       try {
         sink.accept(v.asInstanceOf[T])
-        prev.call(HasNext).onComplete(accept)
+        stream.call(HasNext).onComplete(accept)
       }catch{
         case NonFatal(exc) =>
           completed.failure(exc)

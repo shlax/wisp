@@ -8,7 +8,9 @@ import java.util
 import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.ExecutionContext
 
-class SplitStream(prev:ActorLink)(link: SplitStream#Split => Unit)(using executor: ExecutionContext) extends StreamException {
+/** Duplicate `original` stream ino links created with `link.next()`
+ * Data from `original` is pulled after every link created with `link.next()` is pulled. */
+class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using executor: ExecutionContext) extends StreamException {
 
   trait Split {
     def next(): ActorLink
@@ -62,7 +64,7 @@ class SplitStream(prev:ActorLink)(link: SplitStream#Split => Unit)(using executo
   protected def pullNext():Unit = {
     if(!requested && nextTo.forall(i => !i.nodes.isEmpty)){
       requested = true
-      prev.call(HasNext).onComplete(SplitStream.this.accept)
+      original.call(HasNext).onComplete(SplitStream.this.accept)
     }
   }
 
