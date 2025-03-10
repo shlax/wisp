@@ -1,8 +1,7 @@
 package org.wisp.stream.iterator
 
 import org.wisp.stream.Source
-import org.wisp.stream.Source.*
-import org.wisp.{AbstractActor, Actor, ActorLink, Inbox}
+import org.wisp.{AbstractActor, ActorLink, Inbox}
 import org.wisp.stream.iterator.message.*
 
 import java.util
@@ -11,21 +10,24 @@ import scala.util.control.NonFatal
 
 object StreamWorker {
 
-  def map[F, T](prev:ActorLink, inbox:Inbox, fn: F => T)(using executor: ExecutionContext) : StreamWorker[F, T] = {
-    StreamWorker(prev, inbox, i => Source(fn.apply(i)) )
+  /** creates new `stream` applying `map` function */
+  def map[F, T](stream:ActorLink, inbox:Inbox, map: F => T)(using executor: ExecutionContext) : StreamWorker[F, T] = {
+    StreamWorker(stream, inbox, i => Source(map.apply(i)) )
   }
 
-  def filter[F](prev: ActorLink, inbox: Inbox, fn: F => Boolean)(using executor: ExecutionContext): StreamWorker[F, F] = {
-    StreamWorker(prev, inbox, i => { if(fn.apply(i)) Source(i) else Source.empty } )
+  def filter[F](stream: ActorLink, inbox: Inbox, filter: F => Boolean)(using executor: ExecutionContext): StreamWorker[F, F] = {
+    StreamWorker(stream, inbox, i => { if(filter.apply(i)) Source(i) else Source.empty } )
   }
 
-  def flatMap[F, T](prev: ActorLink, inbox: Inbox, fn: F => Source[T])(using executor: ExecutionContext): StreamWorker[F, T] = {
-    StreamWorker(prev, inbox, fn)
+  /** creates new `stream` applying `flatMap` function */
+  def flatMap[F, T](stream:ActorLink, inbox:Inbox, flatMap: F => Source[T])(using executor: ExecutionContext): StreamWorker[F, T] = {
+    StreamWorker(stream, inbox, flatMap)
   }
 
 }
 
-class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T])(using executor: ExecutionContext) extends AbstractActor(inbox), StreamException{
+/** creates new `stream` applying `flatMap` function */
+class StreamWorker[F, T](stream:ActorLink, inbox:Inbox, flatMap: F => Source[T])(using executor: ExecutionContext) extends AbstractActor(inbox), StreamException{
 
   protected val nodes:util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
@@ -50,7 +52,7 @@ class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T])(using 
 
       var opt:Option[Source[T]] = None
       try{
-        val r = fn.apply(v.asInstanceOf[F])
+        val r = flatMap.apply(v.asInstanceOf[F])
         opt = Some(r)
       }catch{
         case NonFatal(ex) =>
@@ -85,7 +87,7 @@ class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T])(using 
           if (hasNext) {
             source = Some(opt.get)
           } else if (!hasNext && !nodes.isEmpty) {
-            prev.call(HasNext).onComplete(accept)
+            stream.call(HasNext).onComplete(accept)
           }
         }
 
@@ -119,7 +121,7 @@ class StreamWorker[F, T](prev:ActorLink, inbox:Inbox, fn: F => Source[T])(using 
               from << Next(v.get)
             } else {
               nodes.add(from)
-              prev.call(HasNext).onComplete(accept)
+              stream.call(HasNext).onComplete(accept)
             }
           }
 
