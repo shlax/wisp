@@ -21,15 +21,15 @@ class StreamGraph(val system:ActorSystem){
     sorce(StreamSource(s))
   }
 
-  /** Merge multiple `streams` into one */
-  def zip[T](nodes: Iterable[StreamNode[? <: T]]): StreamNode[T] = {
-    val r = ZipStream(nodes.map(_.link))
+  /** Combine multiple `streams` into one  */
+  def zip[T](streams: Iterable[StreamNode[? <: T]]): StreamNode[T] = {
+    val r = ZipStream(streams.map(_.link))
     node(r)
   }
 
-  /** Merge multiple `streams` into one */
-  def zip[T](nodes:StreamNode[? <: T]*): StreamNode[T] = {
-    zip(nodes)
+  /** Combine multiple `streams` into one  */
+  def zip[T](streams:StreamNode[? <: T]*): StreamNode[T] = {
+    zip(streams)
   }
 
   def forEach[T](s:Source[T])(fn : SourceNode[T] => Unit ) : ForEachSource[T] = {
