@@ -98,4 +98,44 @@ class Streams {
     }
   }
 
+  @Test
+  def split(): Unit = {
+    // create ActorSystem
+    ActorSystem() | { system =>
+      given ExecutionContext = system
+
+      // test data
+      val data = 1 to 10
+      // create graph builder
+      val graph = StreamGraph(system)
+      // convert data to Source
+      val source = data.asSource
+
+      // create stream
+      val stream = graph.from(source).as { src =>
+
+        // duplicate stream so each worker will receive each item
+        src.split{ split =>
+
+          // create worker 1
+          val w1 = split.next().map(i => {
+            Thread.sleep(10)
+            "w1:" + i
+          }).to(println) // to sink 1
+
+          // create worker 2
+          val w2 = split.next().map(i => {
+            Thread.sleep(20)
+            "w2:" + i
+          }).to(println) // to sink 2
+
+          Seq(w1, w2)
+        }
+
+      }
+      // start execution and wait for completion
+      Await.ready(Future.sequence(stream.map(_.start())), 1.second)
+    }
+  }
+
 }
