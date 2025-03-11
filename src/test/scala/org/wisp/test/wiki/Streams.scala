@@ -12,7 +12,7 @@ import scala.concurrent.duration.*
 class Streams {
 
   @Test
-  def simpleStream():Unit = {
+  def simple():Unit = {
     // create ActorSystem
     ActorSystem() | { system =>
       // test data
@@ -29,7 +29,7 @@ class Streams {
   }
 
   @Test
-  def workersStream(): Unit = {
+  def workers(): Unit = {
     // create ActorSystem
     ActorSystem() | { system =>
       given ExecutionContext = system
@@ -39,23 +39,62 @@ class Streams {
       val graph = StreamGraph(system)
       // convert data to Source
       val source = data.asSource
-      // create stream from source
+
+      // create stream
       val stream = graph.from(source).as{ src =>
-        // create first worker
+
+        // create worker 1
         val w1 = src.map(i => {
             Thread.sleep(10)
             "w1:"+i
-          }).to(println)
-        // create second worker
+          }).to(println) // to sink 1
+
+        // create worker 2
         val w2 = src.map(i => {
             Thread.sleep(20)
             "w2:"+i
-          }).to(println)
+          }).to(println) // to sink 2
 
-        List(w1, w2)
+        Seq(w1, w2)
       }
       // start execution and wait for completion
       Await.ready(Future.sequence(stream.map(_.start())), 1.second)
+    }
+  }
+
+  @Test
+  def zip(): Unit = {
+    // create ActorSystem
+    ActorSystem() | { system =>
+      given ExecutionContext = system
+
+      // test data
+      val data = 1 to 10
+      // create graph builder
+      val graph = StreamGraph(system)
+      // convert data to Source
+      val source = data.asSource
+
+      // create stream
+      val stream = graph.from(source).as { src =>
+
+        // create worker 1
+        val w1 = src.map(i => {
+          Thread.sleep(10)
+          "w1:" + i
+        })
+
+        // create worker 2
+        val w2 = src.map(i => {
+          Thread.sleep(20)
+          "w2:" + i
+        })
+
+        // zip streams
+        graph.zip(Seq(w1, w2)).to(println)
+      }
+      // start execution and wait for completion
+      Await.ready(stream.start(), 1.second)
     }
   }
 
