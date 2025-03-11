@@ -9,16 +9,19 @@ import scala.concurrent.ExecutionContext
 class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
   given ExecutionContext = graph.system
 
+  /** @see [[StreamWorker]] */
   def map[V](fn: T => V): StreamNode[V] = {
     val r = graph.system.create( i => StreamWorker.map(link, i, fn) )
     graph.node(r)
   }
 
+  /** @see [[StreamWorker]] */
   def filter(fn: T => Boolean): StreamNode[T] = {
     val r = graph.system.create(i => StreamWorker.filter(link, i, fn))
     graph.node(r)
   }
-  
+
+  /** @see [[StreamWorker]] */
   def flatMap[V](fn: T => Source[V]): StreamNode[V] = {
     val r = graph.system.create(i => StreamWorker.flatMap(link, i, fn) )
     graph.node(r)
@@ -44,6 +47,7 @@ class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
     StreamSink(link, c)
   }
 
+  /** @see [[StreamBuffer]] */
   def buffer(size:Int) : StreamNode[T] = {
     val r = StreamBuffer(link, size)
     graph.node(r)

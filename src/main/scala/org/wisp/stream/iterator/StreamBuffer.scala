@@ -6,7 +6,9 @@ import org.wisp.stream.iterator.message.*
 import java.util
 import scala.concurrent.ExecutionContext
 
-class StreamBuffer(prev:ActorLink, size:Int)(using executor: ExecutionContext) extends StreamActorLink, ActorLink{
+/** Prefetch element from `stream`
+ * @param size maximum no of elements to prefetch */
+class StreamBuffer(stream:ActorLink, size:Int)(using executor: ExecutionContext) extends StreamActorLink, ActorLink{
 
   protected val queue:util.Queue[Any] = createQueue()
   protected def createQueue(): util.Queue[Any] = { util.LinkedList[Any]() }
@@ -24,7 +26,7 @@ class StreamBuffer(prev:ActorLink, size:Int)(using executor: ExecutionContext) e
       val req = if(requested) 1 else 0
       if (queue.size() + req < size) {
         requested = true
-        prev.call(HasNext).onComplete(accept)
+        stream.call(HasNext).onComplete(accept)
       }
     }
   }
