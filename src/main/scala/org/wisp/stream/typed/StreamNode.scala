@@ -1,23 +1,26 @@
 package org.wisp.stream.typed
 
-import org.wisp.ActorLink
+import org.wisp.{ActorLink, ActorSystem}
 import org.wisp.stream.{Sink, Source}
 import org.wisp.stream.iterator.{SplitStream, StreamBuffer, StreamSink, StreamWorker}
 
-class StreamNode[T](graph: StreamGraph, val link: ActorLink) extends StreamGraph(graph.system){
-  
+import scala.concurrent.ExecutionContext
+
+class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
+  given ExecutionContext = graph.system
+
   def map[V](fn: T => V): StreamNode[V] = {
-    val r = system.create( i => StreamWorker.map(link, i, fn) )
+    val r = graph.system.create( i => StreamWorker.map(link, i, fn) )
     graph.node(r)
   }
 
   def filter(fn: T => Boolean): StreamNode[T] = {
-    val r = system.create(i => StreamWorker.filter(link, i, fn))
+    val r = graph.system.create(i => StreamWorker.filter(link, i, fn))
     graph.node(r)
   }
   
   def flatMap[V](fn: T => Source[V]): StreamNode[V] = {
-    val r = system.create(i => StreamWorker.flatMap(link, i, fn) )
+    val r = graph.system.create(i => StreamWorker.flatMap(link, i, fn) )
     graph.node(r)
   }
 

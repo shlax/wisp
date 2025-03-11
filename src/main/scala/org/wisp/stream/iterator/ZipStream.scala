@@ -7,7 +7,7 @@ import java.util
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 
-/** Merges multiple `streams` into one
+/** Merge multiple `streams` into one
  * @param streams streams to merge */
 class ZipStream(streams:Iterable[ActorLink])(using executor: ExecutionContext) extends StreamActorLink, ActorLink{
   def this(l:ActorLink*)(using executor: ExecutionContext) = this(l)
