@@ -8,8 +8,7 @@ import java.util
 import org.wisp.lock.*
 
 import java.util.concurrent.locks.Condition
-import scala.concurrent.{ExecutionContext, Promise}
-import scala.util.Failure
+import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
 class ForEachSource[T](src:Source[T])(using executor: ExecutionContext) extends SourceActorLink, Runnable{

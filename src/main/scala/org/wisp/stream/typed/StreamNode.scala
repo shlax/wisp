@@ -1,6 +1,6 @@
 package org.wisp.stream.typed
 
-import org.wisp.{ActorLink, ActorSystem}
+import org.wisp.ActorLink
 import org.wisp.stream.{Sink, Source}
 import org.wisp.stream.iterator.{SplitStream, StreamBuffer, StreamSink, StreamWorker}
 
@@ -25,9 +25,13 @@ class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
   }
 
   class SplitNode(from: SplitStream#Split) {
+    /** Create new copy */
     def next(): StreamNode[T] = StreamNode[T](graph, from.next())
   }
 
+  /** Duplicate current stream
+   * @note elements are not duplicated
+   * @see [[SplitStream]] */
   def split[E](fn: SplitNode => E): E = {
     var res: Option[E] = None
     SplitStream(link){ s =>
