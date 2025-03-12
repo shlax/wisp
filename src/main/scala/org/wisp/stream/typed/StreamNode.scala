@@ -9,19 +9,19 @@ import scala.concurrent.ExecutionContext
 class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
   given ExecutionContext = graph.system
 
-  /** @see [[StreamWorker]] */
+  /** @see [[org.wisp.stream.iterator.StreamWorker]] */
   def map[V](fn: T => V): StreamNode[V] = {
     val r = graph.system.create( i => StreamWorker.map(link, i, fn) )
     graph.node(r)
   }
 
-  /** @see [[StreamWorker]] */
+  /** @see [[org.wisp.stream.iterator.StreamWorker]] */
   def filter(fn: T => Boolean): StreamNode[T] = {
     val r = graph.system.create(i => StreamWorker.filter(link, i, fn))
     graph.node(r)
   }
 
-  /** @see [[StreamWorker]] */
+  /** @see [[org.wisp.stream.iterator.StreamWorker]] */
   def flatMap[V](fn: T => Source[V]): StreamNode[V] = {
     val r = graph.system.create(i => StreamWorker.flatMap(link, i, fn) )
     graph.node(r)
@@ -34,7 +34,7 @@ class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
 
   /** Duplicate current stream
    * @note elements are not duplicated
-   * @see [[SplitStream]] */
+   * @see [[org.wisp.stream.iterator.SplitStream]] */
   def split[E](fn: SplitNode => E): E = {
     var res: Option[E] = None
     SplitStream(link){ s =>
@@ -47,7 +47,7 @@ class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
     StreamSink(link, c)
   }
 
-  /** @see [[StreamBuffer]] */
+  /** @see [[org.wisp.stream.iterator.StreamBuffer]] */
   def buffer(size:Int) : StreamNode[T] = {
     val r = StreamBuffer(link, size)
     graph.node(r)
