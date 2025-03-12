@@ -10,13 +10,13 @@ import scala.jdk.CollectionConverters.*
 object SinkTree {
 
   def apply[T](fn: SinkTree[T] => Unit): SinkTree[T] = {
-    val f = new SinkTree[T]
+    val f = new SinkTree[T]()
     fn.apply(f)
     f
   }
 
   def apply[T, E](fe: Source[T])(fn: SinkTree[T] => E): E = {
-    val f = new SinkTree[T]
+    val f = new SinkTree[T]()
     val r = fn.apply(f)
     f.forEach(fe)
     r
@@ -24,8 +24,8 @@ object SinkTree {
 
 }
 
-class SinkTree[T](protected val from:Option[SinkTree[?]] = None) extends Sink[T] {
-  def this(f:SinkTree[?]) = this(Some(f))
+/** Utility class for hierarchically combining sinks */
+class SinkTree[T] extends Sink[T] {
 
   protected val next = new util.LinkedList[Sink[? >: T]]
 
@@ -39,13 +39,12 @@ class SinkTree[T](protected val from:Option[SinkTree[?]] = None) extends Sink[T]
   }
 
   override def flush(): Unit = {
-    for(f <- from) f.flush()
     for(i <- next.asScala) i.flush()
   }
 
   def map[R](fn: T => R) : SinkTree[R] = {
     val nf = new SinkTree[R]
-    to(new SinkTree[T](nf){
+    to(new SinkTree[T](){
       override def accept(e: T): Unit = {
         nf.accept(fn.apply(e))
         super.accept(e)
@@ -56,7 +55,7 @@ class SinkTree[T](protected val from:Option[SinkTree[?]] = None) extends Sink[T]
 
   def flatMap[R](fn: Sink[R] => Consumer[T]) : SinkTree[R] = {
     val nf = new SinkTree[R]
-    to(new SinkTree[T](nf){
+    to(new SinkTree[T](){
       override def accept(e: T): Unit = {
         fn.apply(nf).accept(e)
         super.accept(e)
@@ -67,7 +66,7 @@ class SinkTree[T](protected val from:Option[SinkTree[?]] = None) extends Sink[T]
 
   def fold[E](start:E)(collectFn: (E, T) => E): Promise[E] = {
     val p = Promise[E]()
-    to(new SinkTree[T]{
+    to(new SinkTree[T](){
       private var value: E = start
 
       override def accept(t: T): Unit = {
@@ -86,7 +85,7 @@ class SinkTree[T](protected val from:Option[SinkTree[?]] = None) extends Sink[T]
 
   def filter[E >: T](fn: E => Boolean): SinkTree[T] = {
     val nf = new SinkTree[T]
-    to(new SinkTree[T](nf){
+    to(new SinkTree[T](){
       override def accept(e: T): Unit = {
         if(fn.apply(e)) nf.accept(e)
         super.accept(e)
@@ -102,7 +101,7 @@ class SinkTree[T](protected val from:Option[SinkTree[?]] = None) extends Sink[T]
 
   def collect[F >: T, R](pf: PartialFunction[F, R]): SinkTree[R] = {
     val nf = new SinkTree[R]
-    to(new SinkTree[T](nf){
+    to(new SinkTree[T](){
       override def accept(e: T): Unit = {
         if (pf.isDefinedAt(e)) nf.accept(pf.apply(e))
         super.accept(e)
