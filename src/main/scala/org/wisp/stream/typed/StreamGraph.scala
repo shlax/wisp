@@ -38,9 +38,9 @@ class StreamGraph(val system:ActorSystem){
     f
   }
 
-  def forEach[T, R](s:Source[T], c:Sink[R])(fn: SourceNode[T] => ActorLink) : ForEachSink[T, R] = {
+  def forEach[T, R](s:Source[T], c:Sink[R])(fn: SourceNode[T] => StreamNode[R]) : ForEachSink[T, R] = {
     ForEachSink(s, c ){ prev =>
-      fn.apply( sorce(prev) )
+      fn.apply( sorce(prev) ).link
     }
   }
 
