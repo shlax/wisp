@@ -4,7 +4,7 @@ import org.wisp.{ActorLink, Consumer}
 
 import java.util
 import scala.annotation.targetName
-import scala.concurrent.Promise
+import scala.concurrent.{Future, Promise}
 import scala.jdk.CollectionConverters.*
 
 object SinkTree {
@@ -89,7 +89,7 @@ class SinkTree[T] extends Sink[T] {
     nf
   }
 
-  def fold[E](start:E)(collectFn: (E, T) => E): Promise[E] = {
+  def fold[E](start:E)(collectFn: (E, T) => E): Future[E] = {
     val p = Promise[E]()
     to(new Sink[T](){
       private var value: E = start
@@ -103,7 +103,7 @@ class SinkTree[T] extends Sink[T] {
       }
 
     })
-    p
+    p.future
   }
 
   def to[E >: T](s: Sink[E]): SinkTree[T] = {

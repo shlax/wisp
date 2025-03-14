@@ -89,13 +89,13 @@ class BasicTests {
   def sinkFold(): Unit = {
     val data = Seq(1, 2, 3).asSource
 
-    val p:Promise[Int] = SinkTree(data){ f =>
+    val p:Future[Int] = SinkTree(data){ f =>
       val tmp = f.fold(0)( (a, b) => a + b)
       Assertions.assertFalse(tmp.isCompleted)
       tmp
     }
 
-    Assertions.assertEquals(Some(Success(6)), p.future.value)
+    Assertions.assertEquals(Some(Success(6)), p.value)
   }
 
   @Test

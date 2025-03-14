@@ -35,13 +35,13 @@ class EmptyTests {
   def sinkFold(): Unit = {
     val data = Seq[Int]().asSource
 
-    val p: Promise[Int] = SinkTree(data) { f =>
+    val p: Future[Int] = SinkTree(data) { f =>
       val tmp = f.fold(0)((a, b) => a + b)
       Assertions.assertFalse(tmp.isCompleted)
       tmp
     }
 
-    Assertions.assertEquals(Some(Success(0)), p.future.value)
+    Assertions.assertEquals(Some(Success(0)), p.value)
   }
 
   @Test
