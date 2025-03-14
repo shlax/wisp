@@ -99,6 +99,21 @@ class BasicTests {
   }
 
   @Test
+  def sinkSimple(): Unit = {
+    val data = Seq(1, 2, 3).asSource
+
+    val l = ArrayBuffer[Int]()
+
+    val t = SinkTree[Int]{ f =>
+      f.map(_ + 1).to(i => l += i)
+    }
+
+    t.forEach(data)
+
+    Assertions.assertEquals(List(2, 3, 4), l.toList)
+  }
+
+  @Test
   def sourceFlatMap():Unit = {
     val data = Seq(List(0, 1, 2), List(3, 4, 5)).asSource
     val l = ArrayBuffer[Int]()
