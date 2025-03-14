@@ -9,6 +9,12 @@ import scala.jdk.CollectionConverters.*
 
 object SinkTree {
 
+  def apply[T, E](fn: SinkTree[T] => E): (Sink[T], E) = {
+    val f = new SinkTree[T]()
+    val g = fn.apply(f)
+    (f.build(), g)
+  }
+
   def apply[T](fn: SinkTree[T] => Unit): Sink[T] = {
     val f = new SinkTree[T]()
     fn.apply(f)
