@@ -1,5 +1,11 @@
 package org.wisp
 
+object Consumer {
+
+  def apply[T](ref:ActorLink):Consumer[T] = (t: T) => { ref << t }
+  
+}
+
 /** [[java.util.function.Consumer]] with added variance */
 @FunctionalInterface
 trait Consumer[-T] {

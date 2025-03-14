@@ -125,15 +125,43 @@ trait Source[+T]{
     }
   }
 
+  def collect[E >: T, R](fn: PartialFunction[T, R]): Source[R] = {
+    val self = this
+    new Source[R]() {
+      var end = false
+      
+      def next(): Option[R] = {
+        var r:Option[R] = None
+        while (!end && r.isEmpty){
+          self.next() match {
+            case Some(v) =>
+              if(fn.isDefinedAt(v)){
+                r = Some(fn.apply(v))
+              }
+            case None =>
+              end = true
+          }
+        }
+        r
+      }
+
+    }
+  }
+  
   def fold[E](start:E)(collectFn: (E, T) => E): E = {
     var s = start
-    this.forEach{i =>
+    each{ i =>
       s = collectFn(s, i)
     }
     s
   }
 
-  def forEach[E >: T](c: Consumer[E]):Unit = {
+  def forEach[E >: T](c: Sink[E]):Unit = {
+    each(c)
+    c.flush()
+  }
+
+  def each[E >: T](c: Consumer[E]):Unit = {
     var v = next()
     while (v.isDefined){
       c.accept(v.get)

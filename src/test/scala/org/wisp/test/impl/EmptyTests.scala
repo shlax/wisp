@@ -49,7 +49,7 @@ class EmptyTests {
     val data = Seq[List[Int]](List(), List()).asSource
     val l = ArrayBuffer[Int]()
 
-    data.flatMap(i => i.asSource).forEach(i => l += i)
+    data.flatMap(i => i.asSource).each(i => l += i)
 
     Assertions.assertTrue(l.isEmpty)
   }

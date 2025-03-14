@@ -21,10 +21,10 @@ object SinkTree {
     f.build()
   }
 
-  def apply[T, E](fe: Source[T])(fn: SinkTree[T] => E): E = {
+  def apply[T, E](source: Source[T])(fn: SinkTree[T] => E): E = {
     val f = new SinkTree[T]()
     val r = fn.apply(f)
-    f.build().forEach(fe)
+    source.forEach(f.build())
     r
   }
 

@@ -15,11 +15,6 @@ trait Sink[-T] extends Consumer[T]{
    * @note for grouping operation */
   def flush(): Unit = {}
 
-  def forEach(src: Source[T]): Unit = {
-    src.forEach(this)
-    flush()
-  }
-
   /** Returns a composed `Sink` that performs, in sequence, this operation followed by the `after` operation. */
   def thenTo[S <: T](after: Sink[S]): Sink[S] = {
     val self = this

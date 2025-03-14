@@ -108,7 +108,7 @@ class BasicTests {
       f.map(_ + 1).to(i => l += i)
     }
 
-    t.forEach(data)
+    data.forEach(t)
 
     Assertions.assertEquals(List(2, 3, 4), l.toList)
   }
@@ -118,7 +118,7 @@ class BasicTests {
     val data = Seq(List(0, 1, 2), List(3, 4, 5)).asSource
     val l = ArrayBuffer[Int]()
 
-    data.flatMap( i => i.asSource ).forEach(i => l += i)
+    data.flatMap( i => i.asSource ).each(i => l += i)
 
     Assertions.assertEquals(0 to 5, l)
   }
