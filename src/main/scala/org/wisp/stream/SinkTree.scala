@@ -30,7 +30,7 @@ object SinkTree {
 
 }
 
-/** Utility class for hierarchically combining sinks */
+/** Common operations for `Sink` */
 class SinkTree[T] extends Sink[T] {
 
   protected val next = new util.LinkedList[Sink[? >: T]]
