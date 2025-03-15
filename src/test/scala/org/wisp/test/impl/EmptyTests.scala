@@ -2,7 +2,8 @@ package org.wisp.test.impl
 
 import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.{ActorLink, ActorSystem}
-import org.wisp.stream.{Sink, SinkTree}
+import org.wisp.stream.Sink
+import org.wisp.stream.Sink.*
 import org.wisp.stream.Source.*
 import org.wisp.stream.iterator.{ForEachSink, ForEachSource, RunnableSink, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
 import org.wisp.stream.typed.StreamGraph
@@ -22,12 +23,12 @@ class EmptyTests {
     val data = Seq(List(),List()).asSource
     val l = ArrayBuffer[Int]()
 
-    SinkTree(data){ f =>
-      f.flatMap{ (x:Sink[Int]) =>
-        (t: List[Int]) => for (i <- t) x.accept(i)
-      }.map(i => l += i)
+    val x = Sink[Int](i => l += i)
+    val y = x.flatMap{ (t: List[Int]) => self =>
+      for (i <- t) self.accept(i)
     }
 
+    data.forEach(y)
     Assertions.assertTrue(l.isEmpty)
   }
 
@@ -35,13 +36,12 @@ class EmptyTests {
   def sinkFold(): Unit = {
     val data = Seq[Int]().asSource
 
-    val p: Future[Int] = SinkTree(data) { f =>
-      val tmp = f.fold(0)((a, b) => a + b)
-      Assertions.assertFalse(tmp.isCompleted)
-      tmp
-    }
+    val p = Promise[Int]()
+    val s = p.asSink[Int](0){ (a, b) => a + b }
+    Assertions.assertFalse(p.isCompleted)
+    data.forEach(s)
 
-    Assertions.assertEquals(Some(Success(0)), p.value)
+    Assertions.assertEquals(Some(Success(0)), p.future.value)
   }
 
   @Test
@@ -86,12 +86,9 @@ class EmptyTests {
 
     ActorSystem() || { sys =>
 
-      val t = SinkTree[Int] { x =>
-        x.as { y =>
-          y.map(i => i * 2 + 0).map("a:" + _).to(l1.add)
-          y.map(i => i * 2 + 1).map("b:" + _).to(l2.add)
-        }
-      }
+      val s1 = Sink[String](l1.add).map[Int]("a:" + _).map[Int](i => i * 2 + 0)
+      val s2 = Sink[String](l2.add).map[Int]("b:" + _).map[Int](i => i * 2 + 1)
+      val t = s1.thenTo(s2)
 
       val p = StreamGraph(sys).from(data).map(i => i + 1).to(t).start()
       Await.result(p, 1.second)

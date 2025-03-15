@@ -2,7 +2,8 @@ package org.wisp.test.impl
 
 import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.remote.{RemoteLink, UdpClient, UdpRouter}
-import org.wisp.stream.{Sink, SinkTree}
+import org.wisp.stream.Sink
+import org.wisp.stream.Sink.*
 import org.wisp.stream.Source.*
 import org.wisp.stream.iterator.{ForEachSink, ForEachSource, RunnableSink, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
 import org.wisp.stream.typed.StreamGraph
@@ -76,12 +77,12 @@ class BasicTests {
     val data = Seq(List(0,1,2),List(3,4,5)).asSource
     val l = ArrayBuffer[Int]()
 
-    SinkTree(data){ f =>
-      f.flatMap{ (x:Sink[Int]) =>
-        (t: List[Int]) => for (i <- t) x.accept(i)
-      }.map(i => l += i)
+    val x = Sink[Int](i => l += i)
+    val y = x.flatMap{ (t: List[Int]) => self =>
+      for (i <- t) self.accept(i)
     }
 
+    data.forEach(y)
     Assertions.assertEquals(0 to 5, l)
   }
 
@@ -89,26 +90,38 @@ class BasicTests {
   def sinkFold(): Unit = {
     val data = Seq(1, 2, 3).asSource
 
-    val p:Future[Int] = SinkTree(data){ f =>
-      val tmp = f.fold(0)( (a, b) => a + b)
-      Assertions.assertFalse(tmp.isCompleted)
-      tmp
-    }
+    val p = Promise[Int]()
+    val s = p.asSink[Int](0){ (a, b) => a + b }
+    Assertions.assertFalse(p.isCompleted)
+    data.forEach(s)
 
-    Assertions.assertEquals(Some(Success(6)), p.value)
+    Assertions.assertEquals(Some(Success(6)), p.future.value)
   }
 
   @Test
   def sinkFoldFilter(): Unit = {
     val data = Seq(1, 2, 3).asSource
 
-    val p:Future[Int] = SinkTree(data){ f =>
-      val tmp = f.filter(_ % 2 == 1).fold(0)( (a, b) => a + b)
-      Assertions.assertFalse(tmp.isCompleted)
-      tmp
-    }
+    val p = Promise[Int]()
+    val s = p.asSink[Int](0){ (a, b) => a + b }
+    val f = s.filter( _ % 2 == 1 )
+    Assertions.assertFalse(p.isCompleted)
+    data.forEach(f)
 
-    Assertions.assertEquals(Some(Success(4)), p.value)
+    Assertions.assertEquals(Some(Success(4)), p.future.value)
+  }
+
+  @Test
+  def sinkToMap(): Unit = {
+    val data = Seq(1, 2, 3).asSource
+
+    var r:Option[String] = None
+
+    val s1 = Sink[String]{ i => r = Some(i) }
+    val s2 = s1.map( (i:Int) => ""+i )
+    s2.accept(1)
+
+    Assertions.assertEquals("1", r.get)
   }
 
   @Test
@@ -117,9 +130,7 @@ class BasicTests {
 
     val l = ArrayBuffer[Int]()
 
-    val t = SinkTree[Int]{ f =>
-      f.map(_ + 1).to(i => l += i)
-    }
+    val t = Sink[Int](i => l += i).map[Int](_ + 1)
 
     data.forEach(t)
 
@@ -168,12 +179,9 @@ class BasicTests {
 
     ActorSystem() || { sys =>
 
-      val t = SinkTree[Int] { x =>
-        x.as { y =>
-          y.map(i => i * 2 + 0).map("a:" + _).to(l1.add)
-          y.map(i => i * 2 + 1).map("b:" + _).to(l2.add)
-        }
-      }
+      val s1 = Sink[String](l1.add).map[Int]("a:" + _).map[Int](i => i * 2 + 0)
+      val s2 = Sink[String](l2.add).map[Int]("b:" + _).map[Int](i => i * 2 + 1)
+      val t = s1.thenTo(s2)
 
       val p = StreamGraph(sys).from(data).map(i => i + 1).to(t).start()
       Await.result(p, 1.second)
