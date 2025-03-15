@@ -89,26 +89,24 @@ class BasicTests {
   @Test
   def sinkFold(): Unit = {
     val data = Seq(1, 2, 3).asSource
-
-    val p = Promise[Int]()
-    val s = p.asSink[Int](0){ (a, b) => a + b }
-    Assertions.assertFalse(p.isCompleted)
+    
+    val (s, f) = Promise[Int]().asSink[Int](0){ (a, b) => a + b }
+    Assertions.assertFalse(f.isCompleted)
     data.forEach(s)
 
-    Assertions.assertEquals(Some(Success(6)), p.future.value)
+    Assertions.assertEquals(Some(Success(6)), f.value)
   }
 
   @Test
   def sinkFoldFilter(): Unit = {
     val data = Seq(1, 2, 3).asSource
-
-    val p = Promise[Int]()
-    val s = p.asSink[Int](0){ (a, b) => a + b }
+    
+    val (s, p) = Promise[Int]().asSink[Int](0){ (a, b) => a + b }
     val f = s.filter( _ % 2 == 1 )
     Assertions.assertFalse(p.isCompleted)
     data.forEach(f)
 
-    Assertions.assertEquals(Some(Success(4)), p.future.value)
+    Assertions.assertEquals(Some(Success(4)), p.value)
   }
 
   @Test

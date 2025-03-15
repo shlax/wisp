@@ -2,7 +2,7 @@ package org.wisp.stream
 
 import org.wisp.{ActorLink, Consumer}
 
-import scala.concurrent.Promise
+import scala.concurrent.{Future, Promise}
 import scala.util.control.NonFatal
 
 object Sink {
@@ -14,19 +14,22 @@ object Sink {
   }
 
   extension [E](p: Promise[E]) {
-    def asSink[T](start:E)(fn: (E, T) => E): Sink[T] = new Sink[T]{
-      private var value: E = start
-      override def accept(t: T): Unit = {
-        try {
-          value = fn(value, t)
-        }catch {
-          case NonFatal(e) =>
-            p.failure(e)
+    def asSink[T](start:E)(fn: (E, T) => E): (Sink[T], Future[E]) = {
+      val s = new Sink[T]{
+        private var value: E = start
+        override def accept(t: T): Unit = {
+          try {
+            value = fn(value, t)
+          }catch {
+            case NonFatal(e) =>
+              p.failure(e)
+          }
+        }
+        override def flush(): Unit = {
+          p.success(value)
         }
       }
-      override def flush(): Unit = {
-        p.success(value)
-      }
+      (s, p.future)
     }
   }
 

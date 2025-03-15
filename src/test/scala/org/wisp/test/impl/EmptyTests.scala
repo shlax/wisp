@@ -35,13 +35,12 @@ class EmptyTests {
   @Test
   def sinkFold(): Unit = {
     val data = Seq[Int]().asSource
-
-    val p = Promise[Int]()
-    val s = p.asSink[Int](0){ (a, b) => a + b }
-    Assertions.assertFalse(p.isCompleted)
+    
+    val (s, f) = Promise[Int]().asSink[Int](0){ (a, b) => a + b }
+    Assertions.assertFalse(f.isCompleted)
     data.forEach(s)
 
-    Assertions.assertEquals(Some(Success(0)), p.future.value)
+    Assertions.assertEquals(Some(Success(0)), f.value)
   }
 
   @Test
