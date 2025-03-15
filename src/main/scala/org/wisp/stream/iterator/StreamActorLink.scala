@@ -22,17 +22,8 @@ abstract class StreamActorLink extends Consumer[Message], StreamException{
   }
 
   protected def flush(c: Sink[?], tr: Option[Throwable]): Unit = {
-    if(tr.isDefined){
-      throw tr.get
-    }
-
-    try {
-      c.flush()
-    } catch {
-      case NonFatal(ex) =>
-        throw ex
-    }
-
+    if(tr.isDefined) throw tr.get
+    c.flush()
   }
 
 }
