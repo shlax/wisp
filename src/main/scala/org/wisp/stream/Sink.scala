@@ -33,7 +33,7 @@ object Sink {
     }
   }
 
-  extension [E](s: Iterable[? <: Sink[E]]) {
+  extension [E](s: Iterable[Sink[E]]) {
     def asSink: Sink[E] = new Sink[E] {
       override def accept(t: E): Unit = {
         for (i <- s) i.accept(t)
