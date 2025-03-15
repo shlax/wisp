@@ -7,8 +7,8 @@ import scala.util.control.NonFatal
 
 object Sink {
 
-  extension [E](i: ActorLink) {
-    def asSink: Sink[E] = (t: E) => {
+  extension (i: ActorLink) {
+    def asSink[E]: Sink[E] = (t: E) => {
       i << t
     }
   }
@@ -30,6 +30,18 @@ object Sink {
         }
       }
       (s, p.future)
+    }
+  }
+
+  extension [E](s: Iterable[Sink[? >: E]]) {
+    def asSink: Sink[E] = new Sink[E] {
+      override def accept(t: E): Unit = {
+        for (i <- s) i.accept(t)
+      }
+
+      override def flush(): Unit = {
+        for (i <- s) i.flush()
+      }
     }
   }
 
