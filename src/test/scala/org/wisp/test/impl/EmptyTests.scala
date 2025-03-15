@@ -24,7 +24,7 @@ class EmptyTests {
     val l = ArrayBuffer[Int]()
 
     val x = Sink[Int](i => l += i)
-    val y = x.flatMap{ (t: List[Int]) => self =>
+    val y = x.flatMap{ (t: List[Int], self) =>
       for (i <- t) self.accept(i)
     }
 

@@ -78,7 +78,7 @@ class BasicTests {
     val l = ArrayBuffer[Int]()
 
     val x = Sink[Int](i => l += i)
-    val y = x.flatMap{ (t: List[Int]) => self =>
+    val y = x.flatMap[List[Int]]{ (t, self) =>
       for (i <- t) self.accept(i)
     }
 
