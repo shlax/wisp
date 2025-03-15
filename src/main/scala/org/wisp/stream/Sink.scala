@@ -55,8 +55,8 @@ trait Sink[-T] extends Consumer[T]{
     }
   }
 
-  def flatMap[R](fn: (R, Sink[T]) => Unit): Sink[R] = {
-    val self = this
+  def flatMap[R](fn: (R, this.type) => Unit): Sink[R] = {
+    val self:this.type = this
     new Sink[R] {
       override def accept(e: R): Unit = {
         fn.apply(e, self)
