@@ -43,7 +43,7 @@ trait Sink[-T] extends Consumer[T]{
    * @note for grouping operation */
   def flush(): Unit = {}
 
-  def map[R](fn: R => T): Sink[R] = {
+  override def map[R](fn: R => T): Sink[R] = {
     val self = this
     new Sink[R] {
       override def accept(e: R): Unit = {
@@ -55,7 +55,7 @@ trait Sink[-T] extends Consumer[T]{
     }
   }
 
-  def flatMap[R](fn: (R, this.type) => Unit): Sink[R] = {
+  override def flatMap[R](fn: (R, this.type) => Unit): Sink[R] = {
     val self:this.type = this
     new Sink[R] {
       override def accept(e: R): Unit = {
@@ -67,7 +67,7 @@ trait Sink[-T] extends Consumer[T]{
     }
   }
 
-  def filter[R <: T](fn: R => Boolean): Sink[R] = {
+  override def filter[R <: T](fn: R => Boolean): Sink[R] = {
     val self = this
     new Sink[R] {
       override def accept(e: R): Unit = {
@@ -79,7 +79,7 @@ trait Sink[-T] extends Consumer[T]{
     }
   }
 
-  def collect[R](fn: PartialFunction[R, T]): Sink[R] = {
+  override def collect[R](fn: PartialFunction[R, T]): Sink[R] = {
     val self = this
     new Sink[R] {
       override def accept(e: R): Unit = {
