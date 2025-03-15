@@ -3,7 +3,7 @@ package org.wisp.test.wiki
 import org.junit.jupiter.api.Test
 import org.wisp.ActorSystem
 import org.wisp.stream.typed.StreamGraph
-import org.wisp.stream.Source.*
+import org.wisp.stream.extensions.*
 import org.wisp.using.*
 
 import scala.concurrent.{Await, ExecutionContext, Future}

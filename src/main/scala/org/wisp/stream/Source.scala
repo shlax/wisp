@@ -2,8 +2,6 @@ package org.wisp.stream
 
 import org.wisp.Consumer
 
-import java.{lang, util}
-
 object Source{
 
   /** empty Source */
@@ -19,46 +17,6 @@ object Source{
           Some(value)
         }
       }
-    }
-  }
-
-  extension[E](i: util.Iterator[E]){
-    def asSource: Source[E] = { () =>
-      if (i.hasNext) Some(i.next()) else None
-    }
-  }
-
-  extension[E](i: util.Enumeration[E]){
-    def asSource: Source[E] = { () =>
-      if (i.hasMoreElements) Some(i.nextElement()) else None
-    }
-  }
-
-  extension[E] (it: lang.Iterable[E]) {
-    def asSource: Source[E] = new Source[E] {
-      private val i = it.iterator()
-      override def next(): Option[E] = if (i.hasNext) Some(i.next()) else None
-    }
-  }
-
-  extension[K, V] (it: util.Map[K, V]) {
-    def asSource: Source[util.Map.Entry[K, V]] = new Source[util.Map.Entry[K, V]] {
-      private val i = it.entrySet().iterator()
-      override def next(): Option[util.Map.Entry[K, V]] = if (i.hasNext) Some(i.next()) else None
-    }
-  }
-
-  extension[E](it: IterableOnce[E]){
-    def asSource: Source[E] = new Source[E] {
-      private val i = it.iterator
-      override def next(): Option[E] = if (i.hasNext) Some(i.next()) else None
-    }
-  }
-
-  extension[E](it: Array[E]){
-    def asSource: Source[E] = new Source[E] {
-      private val i = it.iterator
-      override def next(): Option[E] = if (i.hasNext) Some(i.next()) else None
     }
   }
 

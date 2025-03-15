@@ -4,7 +4,7 @@ import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.{ActorLink, ActorSystem}
 import org.wisp.stream.Sink
 import testSystem.*
-import org.wisp.stream.Source.*
+import org.wisp.stream.extensions.*
 import org.wisp.stream.iterator.{ForEachSink, ForEachSource, RunnableSink, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
 
 import java.util

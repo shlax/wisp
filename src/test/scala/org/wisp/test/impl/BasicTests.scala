@@ -3,8 +3,7 @@ package org.wisp.test.impl
 import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.remote.{RemoteLink, UdpClient, UdpRouter}
 import org.wisp.stream.Sink
-import org.wisp.stream.Sink.*
-import org.wisp.stream.Source.*
+import org.wisp.stream.extensions.*
 import org.wisp.stream.iterator.{ForEachSink, ForEachSource, RunnableSink, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
 import org.wisp.stream.typed.StreamGraph
 import testSystem.*
