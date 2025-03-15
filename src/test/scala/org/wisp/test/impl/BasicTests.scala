@@ -9,7 +9,7 @@ import org.wisp.stream.iterator.{ForEachSink, ForEachSource, RunnableSink, Split
 import org.wisp.stream.typed.StreamGraph
 import testSystem.*
 import org.wisp.using.*
-import org.wisp.{AbstractActor, Actor, ActorLink, ActorSystem, Inbox}
+import org.wisp.{AbstractActor, ActorLink, ActorSystem, Inbox}
 
 import java.net.InetSocketAddress
 import java.util
