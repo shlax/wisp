@@ -32,10 +32,10 @@ class StreamGraph(val system:ActorSystem){
     zip(streams)
   }
 
-  def forEach[T](s:Source[T])(fn : SourceNode[T] => Unit ) : ForEachSource[T] = {
+  def forEach[T, R](s:Source[T])(fn : SourceNode[T] => R ) : (ForEachSource[T], R) = {
     val f = ForEachSource(s)
-    fn.apply( sorce(f) )
-    f
+    val r = fn.apply( sorce(f) )
+    (f, r)
   }
 
   def forEach[T, R](s:Source[T], c:Sink[R])(fn: SourceNode[T] => StreamNode[R]) : ForEachSink[T, R] = {
