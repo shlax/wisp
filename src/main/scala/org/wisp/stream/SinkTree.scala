@@ -35,12 +35,14 @@ class SinkTree[T] extends Sink[T] {
 
   protected val next = new util.LinkedList[Sink[? >: T]]
 
+  /** optimize internal structure */
   protected def build(): Sink[T] = {
     if(next.isEmpty) throw new IllegalStateException("empty")
     for(i <- 0 until next.size()){
       next.get(i) match{
         case t : SinkTree[? >: T] =>
-          next.set(i, t.build())
+          val b = t.build()
+          if(t != b) next.set(i, b)
         case _ =>
       }
     }
@@ -61,6 +63,9 @@ class SinkTree[T] extends Sink[T] {
       override def accept(e: T): Unit = {
         nf.accept(fn.apply(e))
       }
+      override def flush(): Unit = {
+        nf.flush()
+      }
     })
     nf
   }
@@ -70,6 +75,9 @@ class SinkTree[T] extends Sink[T] {
     to(new Sink[T](){
       override def accept(e: T): Unit = {
         fn.apply(nf).accept(e)
+      }
+      override def flush(): Unit = {
+        nf.flush()
       }
     })
     nf
@@ -81,6 +89,9 @@ class SinkTree[T] extends Sink[T] {
       override def accept(e: T): Unit = {
         if(fn.apply(e)) nf.accept(e)
       }
+      override def flush(): Unit = {
+        nf.flush()
+      }
     })
     nf
   }
@@ -90,6 +101,9 @@ class SinkTree[T] extends Sink[T] {
     to(new Sink[T](){
       override def accept(e: T): Unit = {
         if (pf.isDefinedAt(e)) nf.accept(pf.apply(e))
+      }
+      override def flush(): Unit = {
+        nf.flush()
       }
     })
     nf

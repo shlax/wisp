@@ -99,6 +99,19 @@ class BasicTests {
   }
 
   @Test
+  def sinkFoldFilter(): Unit = {
+    val data = Seq(1, 2, 3).asSource
+
+    val p:Future[Int] = SinkTree(data){ f =>
+      val tmp = f.filter(_ % 2 == 1).fold(0)( (a, b) => a + b)
+      Assertions.assertFalse(tmp.isCompleted)
+      tmp
+    }
+
+    Assertions.assertEquals(Some(Success(4)), p.value)
+  }
+
+  @Test
   def sinkSimple(): Unit = {
     val data = Seq(1, 2, 3).asSource
 
