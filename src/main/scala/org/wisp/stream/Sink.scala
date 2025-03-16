@@ -15,9 +15,9 @@ object Sink {
 @FunctionalInterface
 trait Sink[-T] extends Consumer[T]{
 
-  /** Force element emission
+  /** Indicates end of stream
    * @note for grouping operation */
-  def flush(): Unit = {}
+  def complete(): Unit = {}
 
   override def map[R](fn: R => T): Sink[R] = {
     val self = this
@@ -25,8 +25,8 @@ trait Sink[-T] extends Consumer[T]{
       override def accept(e: R): Unit = {
         self.accept(fn.apply(e))
       }
-      override def flush(): Unit = {
-        self.flush()
+      override def complete(): Unit = {
+        self.complete()
       }
     }
   }
@@ -37,8 +37,8 @@ trait Sink[-T] extends Consumer[T]{
       override def accept(e: R): Unit = {
         fn.apply(e, self)
       }
-      override def flush(): Unit = {
-        self.flush()
+      override def complete(): Unit = {
+        self.complete()
       }
     }
   }
@@ -49,8 +49,8 @@ trait Sink[-T] extends Consumer[T]{
       override def accept(e: R): Unit = {
         if(fn.apply(e)) self.accept(e)
       }
-      override def flush(): Unit = {
-        self.flush()
+      override def complete(): Unit = {
+        self.complete()
       }
     }
   }
@@ -62,8 +62,8 @@ trait Sink[-T] extends Consumer[T]{
         if (fn.isDefinedAt(e)) self.accept(fn.apply(e))
       }
 
-      override def flush(): Unit = {
-        self.flush()
+      override def complete(): Unit = {
+        self.complete()
       }
     }
   }
@@ -78,9 +78,9 @@ trait Sink[-T] extends Consumer[T]{
         after.accept(t)
       }
 
-      override def flush(): Unit = {
-        self.flush()
-        after.flush()
+      override def complete(): Unit = {
+        self.complete()
+        after.complete()
       }
 
     }

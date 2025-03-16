@@ -43,7 +43,7 @@ class StreamSink[T](stream :ActorLink, sink:Sink[T])(using executor: ExecutionCo
 
       if(err.isEmpty) {
         try {
-          sink.flush()
+          sink.complete()
         } catch {
           case NonFatal(exc) =>
             err = Some(exc)

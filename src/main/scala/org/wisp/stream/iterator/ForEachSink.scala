@@ -90,7 +90,7 @@ class ForEachSink[F, T](src:Source[F], sink:Sink[T])(link: ForEachSink[F, T] => 
       }
     }
 
-    flush(sink, exceptionDst)
+    complete(sink, exceptionDst)
 
   }
 

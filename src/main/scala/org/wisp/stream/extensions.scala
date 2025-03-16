@@ -72,7 +72,7 @@ object extensions {
           }
         }
 
-        override def flush(): Unit = {
+        override def complete(): Unit = {
           p.success(value)
         }
       }
@@ -86,8 +86,8 @@ object extensions {
         for (i <- s) i.accept(t)
       }
 
-      override def flush(): Unit = {
-        for (i <- s) i.flush()
+      override def complete(): Unit = {
+        for (i <- s) i.complete()
       }
     }
   }

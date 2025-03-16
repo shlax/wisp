@@ -45,7 +45,7 @@ class RunnableSink[T](prev:ActorLink, sink:Sink[T])(using executor: ExecutionCon
 
     }
 
-    flush(sink, exception)
+    complete(sink, exception)
   }
 
   override def accept(from: ActorLink): PartialFunction[IteratorMessage, Unit] = {

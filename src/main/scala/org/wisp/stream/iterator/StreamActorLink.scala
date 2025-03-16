@@ -21,9 +21,9 @@ abstract class StreamActorLink extends Consumer[Message], StreamException{
     f.apply(t.value.asInstanceOf[IteratorMessage])
   }
 
-  protected def flush(c: Sink[?], tr: Option[Throwable]): Unit = {
+  protected def complete(c: Sink[?], tr: Option[Throwable]): Unit = {
     if(tr.isDefined) throw tr.get
-    c.flush()
+    c.complete()
   }
 
 }

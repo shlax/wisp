@@ -116,7 +116,7 @@ trait Source[+T]{
 
   def forEach[E >: T](c: Sink[E]):Unit = {
     each(c)
-    c.flush()
+    c.complete()
   }
 
   def each[E >: T](c: Consumer[E]):Unit = {
