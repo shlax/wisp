@@ -16,7 +16,7 @@ trait ActorLink extends Consumer[Message]{
     accept(msg)
   }
 
-  /** Sends an asynchronous message and reply can be obtained through returned future */
+  /** Sends an asynchronous message and reply [[Message]] can be obtained through returned future */
   def call(v:Any) : Future[Message] = {
     val cf = Promise[Message]()
     val msg = Message( t => { if (!cf.trySuccess(t)) throw UndeliveredException(t) }, v)
@@ -24,6 +24,7 @@ trait ActorLink extends Consumer[Message]{
     cf.future
   }
 
+  /** Sends an asynchronous message and reply value can be obtained through returned future */
   def ask(v:Any)(using executor: ExecutionContext) : Future[Any] = {
     call(v).map(_.value)
   }
