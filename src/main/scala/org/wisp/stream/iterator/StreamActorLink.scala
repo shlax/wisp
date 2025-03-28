@@ -7,7 +7,6 @@ import org.wisp.{ActorLink, Message}
 
 import java.util.concurrent.locks.ReentrantLock
 import org.wisp.Consumer
-import scala.util.control.NonFatal
 
 abstract class StreamActorLink extends Consumer[Message], StreamException{
 

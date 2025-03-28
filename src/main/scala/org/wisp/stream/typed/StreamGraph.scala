@@ -9,7 +9,7 @@ import scala.concurrent.ExecutionContext
 class StreamGraph(val system:ActorSystem){
   given ExecutionContext = system
 
-  def sorce[T](link: SourceActorLink): SourceNode[T] = {
+  def source[T](link: SourceActorLink): SourceNode[T] = {
     SourceNode(this, link)
   }
 
@@ -18,7 +18,7 @@ class StreamGraph(val system:ActorSystem){
   }
 
   def from[T](s:Source[T]) : SourceNode[T] = {
-    sorce(StreamSource(s))
+    source(StreamSource(s))
   }
 
   /** Combine multiple `streams` into one  */
@@ -34,13 +34,13 @@ class StreamGraph(val system:ActorSystem){
 
   def forEach[T, R](s:Source[T])(fn : SourceNode[T] => R ) : (ForEachSource[T], R) = {
     val f = ForEachSource(s)
-    val r = fn.apply( sorce(f) )
+    val r = fn.apply( source(f) )
     (f, r)
   }
 
   def forEach[T, R](s:Source[T], c:Sink[R])(fn: SourceNode[T] => StreamNode[R]) : ForEachSink[T, R] = {
     ForEachSink(s, c ){ prev =>
-      fn.apply( sorce(prev) ).link
+      fn.apply( source(prev) ).link
     }
   }
 

@@ -6,6 +6,7 @@ import org.wisp.stream.iterator.{SplitStream, StreamBuffer, StreamSink, StreamWo
 
 import scala.concurrent.ExecutionContext
 
+/** Stream element */
 class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
   given ExecutionContext = graph.system
 
