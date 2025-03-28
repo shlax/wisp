@@ -48,13 +48,13 @@ class ActorSystem(inboxCapacity:Int = 3, finalizeWith:Option[ExecutionContext] =
     cause.printStackTrace()
   }
 
-  def create[T <: Actor](fn: Inbox => T):T = {
+  def create[T <: Actor](fn: ActorScheduler => T):T = {
     create(inboxCapacity, fn)
   }
   
-  def create[T <: Actor](inboxSize:Int, fn: Inbox => T):T = {
+  def create[T <: Actor](inboxSize:Int, fn: ActorScheduler => T):T = {
     given ExecutionContext = this
-    QueueInbox(inboxSize, fn).actor
+    QueueScheduler(inboxSize, fn).actor
   }
 
   override def close(): Unit = {

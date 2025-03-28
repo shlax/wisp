@@ -1,7 +1,7 @@
 package org.wisp.test.wiki
 
 import org.junit.jupiter.api.Test
-import org.wisp.{AbstractActor, ActorLink, ActorSystem, Inbox}
+import org.wisp.{AbstractActor, ActorLink, ActorSystem, ActorScheduler}
 import org.wisp.using.*
 
 import scala.concurrent.ExecutionContext
@@ -11,7 +11,7 @@ class AskHelloWorld {
   @Test
   def askHelloWorld(): Unit = {
 
-    class HelloActor(inbox: Inbox) extends AbstractActor(inbox) {
+    class HelloActor(inbox: ActorScheduler) extends AbstractActor(inbox) {
       override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
         case a =>
           // send message back

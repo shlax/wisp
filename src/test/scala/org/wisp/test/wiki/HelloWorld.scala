@@ -2,14 +2,14 @@ package org.wisp.test.wiki
 
 import org.junit.jupiter.api.Test
 import org.wisp.using.*
-import org.wisp.{AbstractActor, ActorLink, ActorSystem, Inbox}
+import org.wisp.{AbstractActor, ActorLink, ActorSystem, ActorScheduler}
 
 class HelloWorld {
 
   @Test
   def helloWorld():Unit = {
 
-    class HelloActor(inbox:Inbox) extends AbstractActor(inbox){
+    class HelloActor(inbox:ActorScheduler) extends AbstractActor(inbox){
       override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
         case a => println(a)
       }

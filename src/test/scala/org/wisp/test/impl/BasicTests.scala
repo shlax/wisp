@@ -8,7 +8,7 @@ import org.wisp.stream.iterator.{ForEachSink, ForEachSource, RunnableSink, Split
 import org.wisp.stream.typed.StreamGraph
 import testSystem.*
 import org.wisp.using.*
-import org.wisp.{AbstractActor, ActorLink, ActorSystem, Inbox}
+import org.wisp.{AbstractActor, ActorLink, ActorSystem, ActorScheduler}
 
 import java.net.InetSocketAddress
 import java.util
@@ -28,7 +28,7 @@ class BasicTests {
     val cd = new CountDownLatch(1)
     val ref = AtomicReference[Any]()
 
-    class HelloActor(in: Inbox) extends AbstractActor(in) {
+    class HelloActor(in: ActorScheduler) extends AbstractActor(in) {
       override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
         case a =>
           ref.set(a)
@@ -51,7 +51,7 @@ class BasicTests {
     val cd = new CountDownLatch(1)
     val ref = AtomicReference[Any]()
 
-    class HelloActor(in: Inbox) extends AbstractActor(in) {
+    class HelloActor(in: ActorScheduler) extends AbstractActor(in) {
       override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
         case a => from << "Hello " + a
       }

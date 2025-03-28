@@ -1,3 +1,4 @@
 package org.wisp
 
-abstract class AbstractActor(override protected val inbox: Inbox) extends Actor
+/** [[Actor]] that takes [[ActorScheduler]] as constructor argument */
+abstract class AbstractActor(override protected val scheduler: ActorScheduler) extends Actor

@@ -2,14 +2,14 @@ package org.wisp
 
 trait Actor extends ActorLink{
 
-  /** function with the actor logic */
+  /** Function with the actor logic */
   def accept(from:ActorLink): PartialFunction[Any, Unit]
 
-  protected def inbox: Inbox
+  protected def scheduler: ActorScheduler
 
-  /** redirect message from [[ActorLink]] to [[inbox]] */
+  /** redirect message to [[scheduler]] */
   override def accept(m: Message): Unit = {
-    inbox.add(m)
+    scheduler.schedule(m)
   }
 
 }

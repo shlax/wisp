@@ -10,8 +10,8 @@ import org.wisp.lock.*
 
 import scala.concurrent.ExecutionContext
 
-/** Inbox backed by [[java.util.LinkedList]] witch block thread calling [[add]] when `inboxCapacity` is reached */
-class QueueInbox[T <: Actor](inboxCapacity:Int, fn: Inbox => T)(using executor: ExecutionContext) extends Inbox {
+/** [[ActorScheduler]] backed by [[java.util.LinkedList]] witch will block thread calling [[schedule]] when `inboxCapacity` is reached */
+class QueueScheduler[T <: Actor](inboxCapacity:Int, fn: ActorScheduler => T)(using executor: ExecutionContext) extends ActorScheduler {
 
   val actor:T = fn.apply(this)
 
@@ -33,7 +33,7 @@ class QueueInbox[T <: Actor](inboxCapacity:Int, fn: Inbox => T)(using executor: 
     n
   }
 
-  override def add(message: Message): Unit = lock.withLock {
+  override def schedule(message: Message): Unit = lock.withLock {
     while (queue.size() >= inboxCapacity){
       cnd.await()
     }
