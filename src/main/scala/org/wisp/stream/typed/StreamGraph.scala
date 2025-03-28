@@ -6,19 +6,23 @@ import org.wisp.stream.iterator.{ForEachSink, ForEachSource, SourceActorLink, St
 
 import scala.concurrent.ExecutionContext
 
+/** Api for creating stream graphs. */
 class StreamGraph(val system:ActorSystem){
   given ExecutionContext = system
 
-  def source[T](link: SourceActorLink): SourceNode[T] = {
-    SourceNode(this, link)
-  }
-
+  /** Convert [[ActorLink]] to [[StreamNode]] */
   def node[T](link: ActorLink): StreamNode[T] = {
     StreamNode(this, link)
   }
 
+  /** Create stream [[SourceNode]] from [[SourceActorLink]] */
+  def from[T](link: SourceActorLink): SourceNode[T] = {
+    SourceNode(this, link)
+  }
+
+  /** Create stream [[SourceNode]] from [[Source]] */
   def from[T](s:Source[T]) : SourceNode[T] = {
-    source(StreamSource(s))
+    from(StreamSource(s))
   }
 
   /** Combine multiple `streams` into one  */
@@ -34,13 +38,13 @@ class StreamGraph(val system:ActorSystem){
 
   def forEach[T, R](s:Source[T])(fn : SourceNode[T] => R ) : (ForEachSource[T], R) = {
     val f = ForEachSource(s)
-    val r = fn.apply( source(f) )
+    val r = fn.apply(from(f))
     (f, r)
   }
 
   def forEach[T, R](s:Source[T], c:Sink[R])(fn: SourceNode[T] => StreamNode[R]) : ForEachSink[T, R] = {
     ForEachSink(s, c ){ prev =>
-      fn.apply( source(prev) ).link
+      fn.apply(from(prev)).link
     }
   }
 
