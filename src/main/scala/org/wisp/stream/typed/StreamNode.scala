@@ -2,7 +2,7 @@ package org.wisp.stream.typed
 
 import org.wisp.ActorLink
 import org.wisp.stream.{Sink, Source}
-import org.wisp.stream.iterator.{SplitStream, StreamBuffer, StreamSink, StreamWorker}
+import org.wisp.stream.iterator.{ForEachSink, SplitStream, StreamBuffer, StreamSink, StreamWorker}
 
 import scala.concurrent.ExecutionContext
 
@@ -46,6 +46,10 @@ class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
 
   def to[E >: T](c: Sink[E]): StreamSink[E] = {
     StreamSink(link, c)
+  }
+
+  def forEach[E >: T](c: Sink[E]): ForEachSink[E] = {
+    ForEachSink[E](link ,c)
   }
 
   /** @see [[org.wisp.stream.iterator.StreamBuffer]] */

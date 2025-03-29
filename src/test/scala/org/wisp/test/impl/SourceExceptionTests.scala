@@ -5,7 +5,7 @@ import org.wisp.{ActorLink, ActorSystem}
 import org.wisp.stream.Sink
 import testSystem.*
 import org.wisp.stream.extensions.*
-import org.wisp.stream.iterator.{ForEachSink, ForEachSource, RunnableSink, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
+import org.wisp.stream.iterator.{ForEachSourceSink, ForEachSource, ForEachSink, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
 
 import java.util
 import java.util.Collections
@@ -42,7 +42,7 @@ class SourceExceptionTests {
           }
         }
 
-        val src = ForEachSink(data, sink) { (ref: ActorLink) =>
+        val src = ForEachSourceSink(data, sink) { (ref: ActorLink) =>
           sys.create(i => StreamWorker.map(ref, i, (q: String) =>
             "w:" + q
           ))
@@ -121,7 +121,7 @@ class SourceExceptionTests {
           "w:" + q
         ))
 
-        RunnableSink(w, l.add).run()
+        ForEachSink(w, l.add).run()
 
       }
     } catch {

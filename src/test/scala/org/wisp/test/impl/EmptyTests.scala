@@ -4,7 +4,7 @@ import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.{ActorLink, ActorSystem}
 import org.wisp.stream.Sink
 import org.wisp.stream.extensions.*
-import org.wisp.stream.iterator.{ForEachSink, ForEachSource, RunnableSink, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
+import org.wisp.stream.iterator.{ForEachSourceSink, ForEachSource, ForEachSink, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
 import org.wisp.stream.typed.StreamGraph
 import testSystem.*
 
@@ -117,7 +117,7 @@ class EmptyTests {
         }
       }
 
-      val src = ForEachSink(data, sink) { (ref: ActorLink) =>
+      val src = ForEachSourceSink(data, sink) { (ref: ActorLink) =>
         sys.create(i => StreamWorker.map(ref, i, (q: String) =>
           "w:" + q
         ))
@@ -173,7 +173,7 @@ class EmptyTests {
         "w:" + q
       ))
 
-      RunnableSink(w, l.add).run()
+      ForEachSink(w, l.add).run()
 
     }
 
