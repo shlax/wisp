@@ -1,7 +1,7 @@
 package org.wisp.stream.iterator
 
 import org.wisp.ActorLink
-import org.wisp.stream.iterator.message.{End, HasNext, IteratorMessage, Next}
+import org.wisp.stream.iterator.message.{End, HasNext, Next, Operation}
 import org.wisp.lock.*
 import org.wisp.stream.Sink
 
@@ -48,7 +48,7 @@ class ForEachSink[T](prev:ActorLink, sink:Sink[T])(using ExecutionContext) exten
     complete(sink, exception)
   }
 
-  override def accept(from: ActorLink): PartialFunction[IteratorMessage, Unit] = {
+  override def accept(from: ActorLink): PartialFunction[Operation, Unit] = {
     case Next(v) =>
       if (ended) throw new IllegalStateException("ended")
       if(value.isDefined) throw new IllegalStateException("dropped value: "+v)

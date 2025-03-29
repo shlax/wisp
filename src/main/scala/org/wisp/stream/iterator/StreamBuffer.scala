@@ -31,7 +31,7 @@ class StreamBuffer(stream:ActorLink, size:Int)(using ExecutionContext) extends S
     }
   }
 
-  override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
+  override def accept(sender: ActorLink): PartialFunction[Operation, Unit] = {
     case HasNext =>
       if(exception.isDefined){
         sender << End(exception)

@@ -2,7 +2,7 @@ package org.wisp.stream.iterator
 
 import org.wisp.ActorLink
 import org.wisp.stream.{Sink, Source}
-import org.wisp.stream.iterator.message.{End, HasNext, IteratorMessage, Next}
+import org.wisp.stream.iterator.message.{End, HasNext, Operation, Next}
 import org.wisp.lock.*
 
 import java.util
@@ -94,7 +94,7 @@ class ForEachSourceSink[F, T](src:Source[F], sink:Sink[T])(link: ForEachSourceSi
 
   }
 
-  override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
+  override def accept(sender: ActorLink): PartialFunction[Operation, Unit] = {
     case HasNext =>
       if(exceptionSrc.isDefined){
         sender << End(exceptionSrc)

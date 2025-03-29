@@ -26,7 +26,7 @@ class StreamSink[T](stream :ActorLink, sink:Sink[T])(using ExecutionContext) ext
     completed.future
   }
 
-  override def accept(from: ActorLink): PartialFunction[IteratorMessage, Unit] = {
+  override def accept(from: ActorLink): PartialFunction[Operation, Unit] = {
 
     case Next(v) =>
       if(completed.isCompleted) throw new IllegalStateException("ended")

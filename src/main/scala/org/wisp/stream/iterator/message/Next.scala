@@ -1,3 +1,3 @@
 package org.wisp.stream.iterator.message
 
-case class Next(value: Any) extends ResponseMessage
+case class Next(value: Any) extends Response

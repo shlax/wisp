@@ -1,6 +1,6 @@
 package org.wisp.stream.iterator
 
-import org.wisp.stream.iterator.message.{End, HasNext, IteratorMessage, Next}
+import org.wisp.stream.iterator.message.{End, HasNext, Operation, Next}
 import org.wisp.ActorLink
 
 import java.util
@@ -117,7 +117,7 @@ class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends Str
     i.find(_.hasValue)
   }
 
-  override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
+  override def accept(sender: ActorLink): PartialFunction[Operation, Unit] = {
     case HasNext =>
       if(exception.isDefined){
         sender << End(exception)

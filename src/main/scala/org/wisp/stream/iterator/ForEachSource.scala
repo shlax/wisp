@@ -65,7 +65,7 @@ class ForEachSource[T](src:Source[T])(using ExecutionContext) extends SourceActo
     }
   }
 
-  override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
+  override def accept(sender: ActorLink): PartialFunction[Operation, Unit] = {
     case HasNext =>
       if (ended) {
         sender << End(exception)

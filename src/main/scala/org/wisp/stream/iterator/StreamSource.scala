@@ -18,7 +18,7 @@ class StreamSource[T](src:Source[T])(using ExecutionContext) extends SourceActor
     this
   }
 
-  override def accept(sender: ActorLink): PartialFunction[IteratorMessage, Unit] = {
+  override def accept(sender: ActorLink): PartialFunction[Operation, Unit] = {
     case HasNext =>
       if(exception.isDefined){
         sender << End(exception)
