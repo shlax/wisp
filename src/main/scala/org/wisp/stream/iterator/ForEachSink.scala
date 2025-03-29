@@ -8,7 +8,7 @@ import org.wisp.stream.Sink
 import java.util.concurrent.locks.Condition
 import scala.concurrent.ExecutionContext
 
-class ForEachSink[T](prev:ActorLink, sink:Sink[T])(using executor: ExecutionContext) extends ForEachStream{
+class ForEachSink[T](prev:ActorLink, sink:Sink[T])(using ExecutionContext) extends StreamActorLink, ForEachStream{
 
   protected val condition: Condition = lock.newCondition()
 

@@ -8,7 +8,7 @@ import org.wisp.{ActorLink, Message}
 import java.util.concurrent.locks.ReentrantLock
 import org.wisp.Consumer
 
-abstract class StreamActorLink extends Consumer[Message], StreamException{
+abstract class StreamActorLink extends StreamConsumer{
 
   protected val lock = new ReentrantLock()
 

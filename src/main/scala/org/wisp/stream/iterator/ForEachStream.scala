@@ -1,3 +1,3 @@
 package org.wisp.stream.iterator
 
-trait ForEachStream extends StreamActorLink, Runnable
+trait ForEachStream extends StreamConsumer, Runnable

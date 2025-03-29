@@ -6,7 +6,7 @@ import org.wisp.stream.iterator.message.End
 
 import scala.util.{Failure, Success, Try}
 
-trait StreamException extends Consumer[Message]{
+trait StreamConsumer extends Consumer[Message]{
 
   def accept(t: Try[Message]): Unit = {
     t match{

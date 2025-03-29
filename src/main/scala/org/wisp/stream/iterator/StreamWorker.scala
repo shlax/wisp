@@ -27,7 +27,7 @@ object StreamWorker {
 }
 
 /** creates new `stream` applying `flatMap` function */
-class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => Source[T])(using executor: ExecutionContext) extends AbstractActor(inbox), StreamException{
+class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => Source[T])(using executor: ExecutionContext) extends AbstractActor(inbox), StreamConsumer{
 
   protected val nodes:util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
