@@ -9,8 +9,8 @@ import scala.concurrent.ExecutionContext
 
 /** Combine multiple `streams` into one
  * @param streams streams to combine */
-class ZipStream(streams:Iterable[ActorLink])(using executor: ExecutionContext) extends StreamActorLink, ActorLink{
-  def this(l:ActorLink*)(using executor: ExecutionContext) = this(l)
+class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends StreamActorLink, ActorLink{
+  def this(l:ActorLink*)(using ExecutionContext) = this(l)
 
   protected val nodes: util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }

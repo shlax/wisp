@@ -25,7 +25,7 @@ trait ActorLink extends Consumer[Message]{
   }
 
   /** Sends an asynchronous message and reply value can be obtained through returned future */
-  def ask(v:Any)(using executor: ExecutionContext) : Future[Any] = {
+  def ask(v:Any)(using ExecutionContext) : Future[Any] = {
     call(v).map(_.value)
   }
 

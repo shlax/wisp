@@ -8,7 +8,7 @@ import scala.concurrent.ExecutionContext
 
 /** Prefetch element from `stream`
  * @param size maximum no of elements to prefetch */
-class StreamBuffer(stream:ActorLink, size:Int)(using executor: ExecutionContext) extends StreamActorLink, ActorLink{
+class StreamBuffer(stream:ActorLink, size:Int)(using ExecutionContext) extends StreamActorLink, ActorLink{
 
   protected val queue:util.Queue[Any] = createQueue()
   protected def createQueue(): util.Queue[Any] = { util.LinkedList[Any]() }

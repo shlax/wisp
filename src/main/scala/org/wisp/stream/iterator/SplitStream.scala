@@ -11,7 +11,7 @@ import scala.concurrent.ExecutionContext
 /** Duplicate `original` stream into links created with `link.next()`
  * Data from `original` is pulled after every link created with `link.next()` is pulled.
  * @note elements are not duplicated */
-class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using executor: ExecutionContext) extends StreamConsumer {
+class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using ExecutionContext) extends StreamConsumer {
 
   trait Split {
     def next(): ActorLink

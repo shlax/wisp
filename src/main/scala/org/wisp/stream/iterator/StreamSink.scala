@@ -9,7 +9,7 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.control.NonFatal
 
 /** for each element of `stream` `sink.accept(...)` is called */
-class StreamSink[T](stream :ActorLink, sink:Sink[T])(using executor: ExecutionContext) extends StreamActorLink{
+class StreamSink[T](stream :ActorLink, sink:Sink[T])(using ExecutionContext) extends StreamActorLink{
 
   protected val completed:Promise[Unit] = Promise()
   protected var started:Boolean = false

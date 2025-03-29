@@ -11,23 +11,23 @@ import scala.util.control.NonFatal
 object StreamWorker {
 
   /** creates new `stream` applying `map` function */
-  def map[F, T](stream:ActorLink, inbox:ActorScheduler, map: F => T)(using executor: ExecutionContext) : StreamWorker[F, T] = {
+  def map[F, T](stream:ActorLink, inbox:ActorScheduler, map: F => T)(using ExecutionContext) : StreamWorker[F, T] = {
     StreamWorker(stream, inbox, i => Source(map.apply(i)) )
   }
 
-  def filter[F](stream: ActorLink, inbox: ActorScheduler, filter: F => Boolean)(using executor: ExecutionContext): StreamWorker[F, F] = {
+  def filter[F](stream: ActorLink, inbox: ActorScheduler, filter: F => Boolean)(using ExecutionContext): StreamWorker[F, F] = {
     StreamWorker(stream, inbox, i => { if(filter.apply(i)) Source(i) else Source.empty } )
   }
 
   /** creates new `stream` applying `flatMap` function */
-  def flatMap[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => Source[T])(using executor: ExecutionContext): StreamWorker[F, T] = {
+  def flatMap[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => Source[T])(using ExecutionContext): StreamWorker[F, T] = {
     StreamWorker(stream, inbox, flatMap)
   }
 
 }
 
 /** creates new `stream` applying `flatMap` function */
-class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => Source[T])(using executor: ExecutionContext) extends AbstractActor(inbox), StreamConsumer{
+class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => Source[T])(using ExecutionContext) extends AbstractActor(inbox), StreamConsumer{
 
   protected val nodes:util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
