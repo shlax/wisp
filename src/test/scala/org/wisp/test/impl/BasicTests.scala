@@ -4,7 +4,7 @@ import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.remote.{RemoteLink, UdpClient, UdpRouter}
 import org.wisp.stream.Sink
 import org.wisp.stream.extensions.*
-import org.wisp.stream.iterator.{ForEachSourceSink, ForEachSource, ForEachSink, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
+import org.wisp.stream.iterator.{RunnableSourceSink, RunnableSource, RunnableSink, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
 import org.wisp.stream.typed.StreamGraph
 import testSystem.*
 import org.wisp.using.*
@@ -242,7 +242,7 @@ class BasicTests {
         }
       }
 
-      val src = ForEachSourceSink(data, sink) { (ref: ActorLink) =>
+      val src = RunnableSourceSink(data, sink) { (ref: ActorLink) =>
         sys.create(i => StreamWorker.map(ref, i, (q: String) =>
           "w:" + q
         ))
@@ -268,7 +268,7 @@ class BasicTests {
         Assertions.assertTrue(Thread.currentThread().threadId == tId)
         "s:" + i
       }
-      val src = ForEachSource(data)
+      val src = RunnableSource(data)
 
       val w = sys.create(i => StreamWorker.map(src, i, q =>
         "w:" + q
@@ -298,7 +298,7 @@ class BasicTests {
         "w:" + q
       ))
 
-      ForEachSink(w, l.add).run()
+      RunnableSink(w, l.add).run()
 
     }
 

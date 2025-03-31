@@ -5,7 +5,7 @@ import org.wisp.{ActorLink, ActorSystem}
 import org.wisp.stream.Sink
 import testSystem.*
 import org.wisp.stream.extensions.*
-import org.wisp.stream.iterator.{ForEachSourceSink, ForEachSource, ForEachSink, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
+import org.wisp.stream.iterator.{RunnableSourceSink, RunnableSource, RunnableSink, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
 
 import java.util
 import java.util.Collections
@@ -42,7 +42,7 @@ class SinkExceptionTests {
           }
         }
 
-        val src = ForEachSourceSink(data, sink) { (ref: ActorLink) =>
+        val src = RunnableSourceSink(data, sink) { (ref: ActorLink) =>
           sys.create(i => StreamWorker.map(ref, i, (q: String) =>
             "w:" + q
           ))
@@ -73,7 +73,7 @@ class SinkExceptionTests {
         "s:" + i
       }
 
-      val src = ForEachSource(data)
+      val src = RunnableSource(data)
 
       val w = sys.create(i => StreamWorker.map(src, i, q =>
         "w:" + q
@@ -120,7 +120,7 @@ class SinkExceptionTests {
           "w:" + q
         ))
 
-        ForEachSink(w, (q:String) => {
+        RunnableSink(w, (q:String) => {
           if (q == "w:s:4") throw new MyException("is 4")
           l.add(q)
         }).run()

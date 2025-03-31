@@ -5,7 +5,7 @@ import org.wisp.{ActorLink, ActorSystem}
 import org.wisp.stream.Sink
 import testSystem.*
 import org.wisp.stream.extensions.*
-import org.wisp.stream.iterator.{ForEachSourceSink, ForEachSource, ForEachSink, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
+import org.wisp.stream.iterator.{RunnableSourceSink, RunnableSource, RunnableSink, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
 
 import java.util
 import java.util.Collections
@@ -41,7 +41,7 @@ class MapExceptionTests {
           }
         }
 
-        val src = ForEachSourceSink(data, sink) { (ref: ActorLink) =>
+        val src = RunnableSourceSink(data, sink) { (ref: ActorLink) =>
           sys.create(i => StreamWorker.map(ref, i, (q: String) =>
             if (q == "s:4") throw new MyException("is 4")
             "w:" + q
@@ -73,7 +73,7 @@ class MapExceptionTests {
         "s:" + i
       }
 
-      val src = ForEachSource(data)
+      val src = RunnableSource(data)
 
       val w = sys.create(i => StreamWorker.map(src, i, q =>
         if (q == "s:4") throw new MyException("is 4")
@@ -119,7 +119,7 @@ class MapExceptionTests {
           "w:" + q
         ))
 
-        ForEachSink(w, l.add).run()
+        RunnableSink(w, l.add).run()
 
       }
     } catch {

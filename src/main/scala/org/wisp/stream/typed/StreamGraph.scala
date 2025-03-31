@@ -2,7 +2,7 @@ package org.wisp.stream.typed
 
 import org.wisp.{ActorLink, ActorSystem}
 import org.wisp.stream.{Sink, Source}
-import org.wisp.stream.iterator.{ForEachSourceSink, ForEachSource, SourceActorLink, StreamSource, ZipStream}
+import org.wisp.stream.iterator.{RunnableSourceSink, RunnableSource, SourceActorLink, StreamSource, ZipStream}
 
 import scala.concurrent.ExecutionContext
 
@@ -36,14 +36,14 @@ class StreamGraph(val system:ActorSystem){
     zip(streams)
   }
 
-  def forEach[T, R](s:Source[T])(fn : SourceNode[T] => R ) : (ForEachSource[T], R) = {
-    val f = ForEachSource(s)
+  def fromRunnable[T, R](s:Source[T])(fn : SourceNode[T] => R ) : (RunnableSource[T], R) = {
+    val f = RunnableSource(s)
     val r = fn.apply(from(f))
     (f, r)
   }
 
-  def forEach[T, R](s:Source[T], c:Sink[R])(fn: SourceNode[T] => StreamNode[R]) : ForEachSourceSink[T, R] = {
-    ForEachSourceSink(s, c ){ prev =>
+  def runnable[T, R](s:Source[T], c:Sink[R])(fn: SourceNode[T] => StreamNode[R]) : RunnableSourceSink[T, R] = {
+    RunnableSourceSink(s, c ){ prev =>
       fn.apply(from(prev)).link
     }
   }
