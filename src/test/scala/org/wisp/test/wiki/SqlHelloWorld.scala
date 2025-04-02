@@ -1,15 +1,15 @@
-package org.wisp.test.impl
+package org.wisp.test.wiki
 
 import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.ActorSystem
-import org.wisp.stream.{Sink, Source}
 import org.wisp.stream.typed.StreamGraph
+import org.wisp.stream.{Sink, Source}
 import org.wisp.test.impl.testSystem.*
 import org.wisp.using.*
 
 import java.sql.{DriverManager, PreparedStatement, ResultSet}
 
-class SqlTest {
+class SqlHelloWorld {
 
   extension (i: ResultSet) {
     def asSource(thread:Thread): Source[ResultSet] = { () =>
@@ -49,6 +49,7 @@ class SqlTest {
 
       val thread = Thread.currentThread()
 
+      // demo calculation
       using{ use =>
         val ins = use( conn.prepareStatement("insert into dst(a, b, c) values(?, ?, ?)") )
 
@@ -73,6 +74,7 @@ class SqlTest {
             // combine results from workers to single stream
             graph.zip(workers)
           }
+          // run calculation
           r.run()
         }
 
