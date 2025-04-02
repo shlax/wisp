@@ -2,7 +2,7 @@ package org.wisp.test.impl
 
 import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.ActorSystem
-import org.wisp.stream.Source
+import org.wisp.stream.{Sink, Source}
 import org.wisp.stream.typed.StreamGraph
 import org.wisp.test.impl.testSystem.*
 import org.wisp.using.*
@@ -36,11 +36,18 @@ class SqlTest {
       using{ use =>
         val upd = use( conn.prepareStatement("insert into dst(a, b, c) values(?, ?, ?)") )
 
-        def insert(x:(Int, Int, Int)):Unit = {
-          Assertions.assertEquals(t, Thread.currentThread())
+        type DstType = (Int, Int, Int)
 
-          upd.setInt(1, x._1); upd.setInt(2, x._2); upd.setInt(3, x._3)
-          upd.addBatch()
+        val insert = new Sink[DstType](){
+          override def accept(x:DstType):Unit = {
+            Assertions.assertEquals(t, Thread.currentThread())
+            upd.setInt(1, x._1); upd.setInt(2, x._2); upd.setInt(3, x._3)
+            upd.addBatch()
+          }
+          override def complete(): Unit = {
+            Assertions.assertEquals(t, Thread.currentThread())
+            upd.executeBatch()
+          }
         }
 
         val sel = use( conn.prepareStatement("select a, b from src") )
@@ -49,7 +56,6 @@ class SqlTest {
         // convert ResultSet to Steam[(Int, Int)]
         val data = rs.asSource.map{ r =>
           Assertions.assertEquals(t, Thread.currentThread())
-
           ( r.getInt(1), r.getInt(2) )
         }
 
@@ -64,7 +70,6 @@ class SqlTest {
           r.run()
         }
 
-        upd.executeBatch()
       }
 
       // check result
