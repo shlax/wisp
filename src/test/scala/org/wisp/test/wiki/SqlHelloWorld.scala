@@ -8,26 +8,30 @@ import org.wisp.test.impl.testSystem.*
 import org.wisp.using.*
 
 import java.sql.{DriverManager, PreparedStatement, ResultSet}
+import java.util.concurrent.atomic.AtomicInteger
 
 class SqlHelloWorld {
 
   extension (i: ResultSet) {
-    def asSource(thread:Thread): Source[ResultSet] = { () =>
+    def asSource(thread:Thread, cnt: AtomicInteger): Source[ResultSet] = { () =>
       Assertions.assertEquals(thread, Thread.currentThread())
+      cnt.incrementAndGet()
       if (i.next()) Some(i) else None
     }
   }
 
   extension (i: PreparedStatement) {
-    def asSink[T](thread:Thread)(fn: T => Unit): Sink[T] = new Sink{
+    def asSink[T](thread:Thread, cntAcc: AtomicInteger, cntCom: AtomicInteger)(fn: T => Unit): Sink[T] = new Sink{
       override def accept(x: T): Unit = {
         Assertions.assertEquals(thread, Thread.currentThread())
+        cntAcc.incrementAndGet()
         fn.apply(x)
         i.addBatch()
       }
 
       override def complete(): Unit = {
         Assertions.assertEquals(thread, Thread.currentThread())
+        cntCom.incrementAndGet()
         i.executeBatch()
       }
     }
@@ -48,13 +52,16 @@ class SqlHelloWorld {
       conn.prepareStatement("create table dst(a INT, b INT, c INT)")|(_.executeUpdate())
 
       val thread = Thread.currentThread()
+      val cntRs = new AtomicInteger
+      val cntIns = new AtomicInteger
+      val cntCom = new AtomicInteger
 
       // demo calculation
       using{ use =>
         val ins = use( conn.prepareStatement("insert into dst(a, b, c) values(?, ?, ?)") )
 
         // convert PreparedStatement to Sink[(Int, Int, Int)]
-        val insert = ins.asSink[(Int, Int, Int)](thread){ x =>
+        val insert = ins.asSink[(Int, Int, Int)](thread, cntIns, cntCom){ x =>
           ins.setInt(1, x._1); ins.setInt(2, x._2); ins.setInt(3, x._3)
         }
 
@@ -62,7 +69,7 @@ class SqlHelloWorld {
         val rs = use( sel.executeQuery() )
 
         // convert ResultSet to Steam[(Int, Int)]
-        val data = rs.asSource(thread).map{ r =>
+        val data = rs.asSource(thread, cntRs).map{ r =>
           ( r.getInt(1), r.getInt(2) )
         }
 
@@ -80,18 +87,21 @@ class SqlHelloWorld {
 
       }
 
+      Assertions.assertEquals(cntRs.get(), 11)
+      Assertions.assertEquals(cntIns.get(), 10)
+      Assertions.assertEquals(cntCom.get(), 1)
+
       // check result
       using { use =>
         val sel = use(conn.prepareStatement("select a, b, c from dst"))
         val rs = use(sel.executeQuery())
 
-        var cnt = 0
-        rs.asSource(thread).forEach{ rs =>
+        cntRs.set(0)
+        rs.asSource(thread, cntRs).forEach{ rs =>
           Assertions.assertEquals(rs.getInt(1) + rs.getInt(2), rs.getInt(3))
-          cnt += 1
         }
 
-        Assertions.assertEquals(cnt, 10)
+        Assertions.assertEquals(cntRs.get(), 11)
       }
 
     }
