@@ -12,19 +12,22 @@ import java.sql.{DriverManager, PreparedStatement, ResultSet}
 class SqlTest {
 
   extension (i: ResultSet) {
-    def asSource: Source[ResultSet] = { () =>
+    def asSource(thread:Thread): Source[ResultSet] = { () =>
+      Assertions.assertEquals(thread, Thread.currentThread())
       if (i.next()) Some(i) else None
     }
   }
 
   extension (i: PreparedStatement) {
-    def asSink[T](fn: T => Unit): Sink[T] = new Sink{
+    def asSink[T](thread:Thread)(fn: T => Unit): Sink[T] = new Sink{
       override def accept(x: T): Unit = {
+        Assertions.assertEquals(thread, Thread.currentThread())
         fn.apply(x)
         i.addBatch()
       }
 
       override def complete(): Unit = {
+        Assertions.assertEquals(thread, Thread.currentThread())
         i.executeBatch()
       }
     }
@@ -50,8 +53,7 @@ class SqlTest {
         val ins = use( conn.prepareStatement("insert into dst(a, b, c) values(?, ?, ?)") )
 
         // convert PreparedStatement to Sink[(Int, Int, Int)]
-        val insert = ins.asSink[(Int, Int, Int)]{ x =>
-          Assertions.assertEquals(thread, Thread.currentThread())
+        val insert = ins.asSink[(Int, Int, Int)](thread){ x =>
           ins.setInt(1, x._1); ins.setInt(2, x._2); ins.setInt(3, x._3)
         }
 
@@ -59,8 +61,7 @@ class SqlTest {
         val rs = use( sel.executeQuery() )
 
         // convert ResultSet to Steam[(Int, Int)]
-        val data = rs.asSource.map{ r =>
-          Assertions.assertEquals(thread, Thread.currentThread())
+        val data = rs.asSource(thread).map{ r =>
           ( r.getInt(1), r.getInt(2) )
         }
 
@@ -83,7 +84,7 @@ class SqlTest {
         val rs = use(sel.executeQuery())
 
         var cnt = 0
-        rs.asSource.forEach{ rs =>
+        rs.asSource(thread).forEach{ rs =>
           Assertions.assertEquals(rs.getInt(1) + rs.getInt(2), rs.getInt(3))
           cnt += 1
         }
