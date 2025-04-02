@@ -23,8 +23,7 @@ class SqlTest {
       conn.prepareStatement("create table src(a INT, b INT)")|(_.executeUpdate())
       conn.prepareStatement("insert into src(a, b) values(?, ?)")|{ ps =>
         for (i <- 1 to 10) {
-          ps.setInt(1, i)
-          ps.setInt(2, i+1)
+          ps.setInt(1, i); ps.setInt(2, i+1)
           ps.addBatch()
         }
         ps.executeBatch()
