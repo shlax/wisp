@@ -7,13 +7,26 @@ import org.wisp.stream.typed.StreamGraph
 import org.wisp.test.impl.testSystem.*
 import org.wisp.using.*
 
-import java.sql.{DriverManager, ResultSet}
+import java.sql.{DriverManager, PreparedStatement, ResultSet}
 
 class SqlTest {
 
   extension (i: ResultSet) {
     def asSource: Source[ResultSet] = { () =>
       if (i.next()) Some(i) else None
+    }
+  }
+
+  extension (i: PreparedStatement) {
+    def asSink[T](fn: T => Unit): Sink[T] = new Sink{
+      override def accept(x: T): Unit = {
+        fn.apply(x)
+        i.addBatch()
+      }
+
+      override def complete(): Unit = {
+        i.executeBatch()
+      }
     }
   }
 
@@ -31,23 +44,15 @@ class SqlTest {
 
       conn.prepareStatement("create table dst(a INT, b INT, c INT)")|(_.executeUpdate())
 
-      val t = Thread.currentThread()
+      val thread = Thread.currentThread()
 
       using{ use =>
-        val upd = use( conn.prepareStatement("insert into dst(a, b, c) values(?, ?, ?)") )
+        val ins = use( conn.prepareStatement("insert into dst(a, b, c) values(?, ?, ?)") )
 
-        type DstType = (Int, Int, Int)
-
-        val insert = new Sink[DstType](){
-          override def accept(x:DstType):Unit = {
-            Assertions.assertEquals(t, Thread.currentThread())
-            upd.setInt(1, x._1); upd.setInt(2, x._2); upd.setInt(3, x._3)
-            upd.addBatch()
-          }
-          override def complete(): Unit = {
-            Assertions.assertEquals(t, Thread.currentThread())
-            upd.executeBatch()
-          }
+        // convert PreparedStatement to Sink[(Int, Int, Int)]
+        val insert = ins.asSink[(Int, Int, Int)]{ x =>
+          Assertions.assertEquals(thread, Thread.currentThread())
+          ins.setInt(1, x._1); ins.setInt(2, x._2); ins.setInt(3, x._3)
         }
 
         val sel = use( conn.prepareStatement("select a, b from src") )
@@ -55,7 +60,7 @@ class SqlTest {
 
         // convert ResultSet to Steam[(Int, Int)]
         val data = rs.asSource.map{ r =>
-          Assertions.assertEquals(t, Thread.currentThread())
+          Assertions.assertEquals(thread, Thread.currentThread())
           ( r.getInt(1), r.getInt(2) )
         }
 
