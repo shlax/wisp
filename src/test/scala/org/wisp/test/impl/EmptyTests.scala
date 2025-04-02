@@ -103,16 +103,16 @@ class EmptyTests {
 
     ActorSystem() || { sys =>
 
-      val tId = Thread.currentThread().threadId
+      val thread = Thread.currentThread()
 
       val data = Seq[Int]().asSource.map { i =>
-        Assertions.assertTrue(Thread.currentThread().threadId == tId)
+        Assertions.assertTrue(Thread.currentThread() == thread)
         "s:" + i
       }
 
       val sink = new Sink[String] {
         override def accept(t: String): Unit = {
-          Assertions.assertTrue(Thread.currentThread().threadId == tId)
+          Assertions.assertTrue(Thread.currentThread() == thread)
           l.add("d:" + t)
         }
       }
@@ -137,10 +137,10 @@ class EmptyTests {
 
     ActorSystem() || { sys =>
 
-      val tId = Thread.currentThread().threadId
+      val thread = Thread.currentThread()
 
       val data = Seq[Int]().asSource.map { i =>
-        Assertions.assertTrue(Thread.currentThread().threadId == tId)
+        Assertions.assertTrue(Thread.currentThread() == thread)
         "s:" + i
       }
       val src = RunnableSource(data)

@@ -5,7 +5,7 @@ import org.wisp.{ActorLink, ActorSystem}
 import org.wisp.stream.Sink
 import testSystem.*
 import org.wisp.stream.extensions.*
-import org.wisp.stream.iterator.{RunnableSourceSink, RunnableSource, RunnableSink, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
+import org.wisp.stream.iterator.{RunnableSourceSink, RunnableSource, RunnableSink, StreamSink, StreamSource, StreamWorker}
 
 import java.util
 import java.util.Collections
@@ -27,16 +27,16 @@ class SinkExceptionTests {
     try {
       ActorSystem() || { sys =>
 
-        val tId = Thread.currentThread().threadId
+        val thread = Thread.currentThread()
 
         val data = Seq(0, 1, 2, 3, 4, 5).asSource.map { i =>
-          Assertions.assertTrue(Thread.currentThread().threadId == tId)
+          Assertions.assertTrue(Thread.currentThread() == thread)
           "s:" + i
         }
 
         val sink = new Sink[String] {
           override def accept(t: String): Unit = {
-            Assertions.assertTrue(Thread.currentThread().threadId == tId)
+            Assertions.assertTrue(Thread.currentThread() == thread)
             if (t == "w:s:4") throw new MyException("is 4")
             l.add(t)
           }

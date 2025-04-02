@@ -228,16 +228,16 @@ class BasicTests {
 
     ActorSystem() || { sys =>
 
-      val tId = Thread.currentThread().threadId
+      val thread = Thread.currentThread()
 
       val data = Seq(0, 1, 2, 3, 4, 5).asSource.map { i =>
-        Assertions.assertTrue(Thread.currentThread().threadId == tId)
+        Assertions.assertTrue(Thread.currentThread() == thread)
         "s:" + i
       }
 
       val sink = new Sink[String] {
         override def accept(t: String): Unit = {
-          Assertions.assertTrue(Thread.currentThread().threadId == tId)
+          Assertions.assertTrue(Thread.currentThread() == thread)
           l.add("d:" + t)
         }
       }
@@ -262,10 +262,10 @@ class BasicTests {
 
     ActorSystem() || { sys =>
 
-      val tId = Thread.currentThread().threadId
+      val tId = Thread.currentThread()
 
       val data = Seq(0, 1, 2, 3, 4, 5).asSource.map { i =>
-        Assertions.assertTrue(Thread.currentThread().threadId == tId)
+        Assertions.assertTrue(Thread.currentThread() == tId)
         "s:" + i
       }
       val src = RunnableSource(data)
