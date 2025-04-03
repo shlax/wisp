@@ -4,7 +4,7 @@ import scala.annotation.targetName
 import scala.util.control.NonFatal
 
 /** A utility for management of [[AutoCloseable]] */
-object using {
+object closeable {
 
   extension [T <: AutoCloseable](ac: T) {
 
@@ -63,7 +63,7 @@ object using {
   /**
    * Example:
    * {{{
-   * import org.wisp.using.*
+   * import org.wisp.closeable.*
    *
    * using{ use =>
    *   val in = use(new FileInputStream(...))

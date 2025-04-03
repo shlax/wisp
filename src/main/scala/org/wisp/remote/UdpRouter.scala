@@ -2,7 +2,7 @@ package org.wisp.remote
 
 import org.wisp.remote.exceptions.RemoteAskException
 import org.wisp.{ActorLink, Message}
-import org.wisp.using.*
+import org.wisp.closeable.*
 
 import java.io.{ByteArrayInputStream, ObjectInputStream}
 import java.net.SocketAddress

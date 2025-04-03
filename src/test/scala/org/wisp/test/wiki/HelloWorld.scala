@@ -1,7 +1,7 @@
 package org.wisp.test.wiki
 
 import org.junit.jupiter.api.Test
-import org.wisp.using.*
+import org.wisp.closeable.*
 import org.wisp.{AbstractActor, ActorLink, ActorSystem, ActorScheduler}
 
 class HelloWorld {

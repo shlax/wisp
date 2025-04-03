@@ -4,8 +4,8 @@ import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.ActorSystem
 import org.wisp.stream.typed.StreamGraph
 import org.wisp.stream.{Sink, Source}
-import org.wisp.test.impl.testSystem.*
-import org.wisp.using.*
+import org.wisp.test.impl.tests.*
+import org.wisp.closeable.*
 
 import java.sql.{DriverManager, PreparedStatement, ResultSet}
 import java.util.concurrent.atomic.AtomicInteger

@@ -1,11 +1,11 @@
 package org.wisp.test.impl
 
 import org.wisp.ActorSystem
-import org.wisp.using.*
+import org.wisp.closeable.*
 
 import scala.concurrent.ExecutionContext
 
-object testSystem {
+object tests {
 
   extension [T <: ActorSystem](as:T) {
     def || [R](fn: ExecutionContext ?=> T => R ):R = {

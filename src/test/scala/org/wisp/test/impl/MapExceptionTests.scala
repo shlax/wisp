@@ -3,7 +3,7 @@ package org.wisp.test.impl
 import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.{ActorLink, ActorSystem}
 import org.wisp.stream.Sink
-import testSystem.*
+import tests.*
 import org.wisp.stream.extensions.*
 import org.wisp.stream.iterator.{RunnableSourceSink, RunnableSource, RunnableSink, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
 

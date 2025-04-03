@@ -4,7 +4,7 @@ import java.io.{ByteArrayOutputStream, ObjectOutputStream}
 import java.net.SocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.DatagramChannel
-import org.wisp.using.*
+import org.wisp.closeable.*
 
 class UdpClient(address: Option[SocketAddress] = None) extends AutoCloseable {
 

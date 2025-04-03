@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test
 import org.wisp.ActorSystem
 import org.wisp.stream.typed.StreamGraph
 import org.wisp.stream.extensions.*
-import org.wisp.using.*
+import org.wisp.closeable.*
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.*

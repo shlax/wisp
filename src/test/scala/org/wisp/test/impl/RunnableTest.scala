@@ -4,7 +4,7 @@ import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.ActorSystem
 import org.wisp.stream.extensions.*
 import org.wisp.stream.typed.StreamGraph
-import org.wisp.test.impl.testSystem.*
+import org.wisp.test.impl.tests.*
 
 import java.util
 import java.util.Collections
