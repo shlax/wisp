@@ -3,6 +3,7 @@ package org.wisp
 import scala.annotation.targetName
 import scala.util.control.NonFatal
 
+/** A utility for management of [[AutoCloseable]] */
 object using {
 
   extension [T <: AutoCloseable](ac: T) {
@@ -35,6 +36,7 @@ object using {
   class UsingManager extends AutoCloseable{
     private var toClose:List[? <: AutoCloseable] = Nil
 
+    /** Register [[AutoCloseable]] with this manager */
     def apply[T <: AutoCloseable](t:T):T = {
       toClose = t :: toClose
       t
@@ -58,6 +60,18 @@ object using {
     }
   }
 
+  /**
+   * Example:
+   * {{{
+   * import org.wisp.using.*
+   *
+   * using{ use =>
+   *   val in = use(new FileInputStream(...))
+   *   val out = use(new FileOutputStream(...))
+   *   ...
+   * }
+   * }}}
+   */
   def using[R](f: UsingManager => R): R = {
     UsingManager() | { m =>
       f.apply(m)
