@@ -81,7 +81,7 @@ class BasicTests {
       for (i <- t) self.accept(i)
     }
 
-    data.forEach(y)
+    y.consume(data)
     Assertions.assertEquals(0 to 5, l)
   }
 
@@ -91,7 +91,7 @@ class BasicTests {
     
     val (s, f) = Promise[Int]().asSink[Int](0){ (a, b) => a + b }
     Assertions.assertFalse(f.isCompleted)
-    data.forEach(s)
+    s.consume(data)
 
     Assertions.assertEquals(Some(Success(6)), f.value)
   }
@@ -103,7 +103,7 @@ class BasicTests {
     val (s, p) = Promise[Int]().asSink[Int](0){ (a, b) => a + b }
     val f = s.filter( _ % 2 == 1 )
     Assertions.assertFalse(p.isCompleted)
-    data.forEach(f)
+    f.consume(data)
 
     Assertions.assertEquals(Some(Success(4)), p.value)
   }
@@ -129,7 +129,7 @@ class BasicTests {
 
     val t = Sink[Int](i => l += i).map[Int](_ + 1)
 
-    data.forEach(t)
+    t.consume(data)
 
     Assertions.assertEquals(List(2, 3, 4), l.toList)
   }
@@ -139,7 +139,7 @@ class BasicTests {
     val data = Seq(List(0, 1, 2), List(3, 4, 5)).asSource
     val l = ArrayBuffer[Int]()
 
-    data.flatMap( i => i.asSource ).each(i => l += i)
+    data.flatMap( i => i.asSource ).forEach(i => l += i)
 
     Assertions.assertEquals(0 to 5, l)
   }

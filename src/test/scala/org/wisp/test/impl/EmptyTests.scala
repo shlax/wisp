@@ -27,7 +27,7 @@ class EmptyTests {
       for (i <- t) self.accept(i)
     }
 
-    data.forEach(y)
+    y.consume(data)
     Assertions.assertTrue(l.isEmpty)
   }
 
@@ -37,7 +37,7 @@ class EmptyTests {
     
     val (s, f) = Promise[Int]().asSink[Int](0){ (a, b) => a + b }
     Assertions.assertFalse(f.isCompleted)
-    data.forEach(s)
+    s.consume(data)
 
     Assertions.assertEquals(Some(Success(0)), f.value)
   }
@@ -47,7 +47,7 @@ class EmptyTests {
     val data = Seq[List[Int]](List(), List()).asSource
     val l = ArrayBuffer[Int]()
 
-    data.flatMap(i => i.asSource).each(i => l += i)
+    data.flatMap(i => i.asSource).forEach(i => l += i)
 
     Assertions.assertTrue(l.isEmpty)
   }

@@ -108,21 +108,16 @@ trait Source[+T]{
   
   def fold[E](start:E)(collectFn: (E, T) => E): E = {
     var s = start
-    each{ i =>
+    forEach{ i =>
       s = collectFn(s, i)
     }
     s
   }
 
-  def forEach[E >: T](c: Sink[E]):Unit = {
-    each(c)
-    c.complete()
-  }
-
-  def each[E >: T](c: Consumer[E]):Unit = {
+  def forEach[E >: T](c: E => Unit):Unit = {
     var v = next()
     while (v.isDefined){
-      c.accept(v.get)
+      c.apply(v.get)
       v = next()
     }
   }
