@@ -1,5 +1,7 @@
 package org.wisp
 
+import org.wisp.stream.Source
+
 object Consumer {
 
   def apply[T](ref:ActorLink):Consumer[T] = {
@@ -54,4 +56,8 @@ trait Consumer[-T] {
     }
   }
 
+  def consume(s: Source[T]): Unit = {
+    s.forEach(accept)
+  }
+  
 }

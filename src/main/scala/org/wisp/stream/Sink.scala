@@ -86,8 +86,8 @@ trait Sink[-T] extends Consumer[T]{
     }
   }
 
-  def consume(s:Source[T]):Unit = {
-    s.forEach(accept)
+  override def consume(s:Source[T]):Unit = {
+    super.consume(s)
     complete()
   }
 
