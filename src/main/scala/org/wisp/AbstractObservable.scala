@@ -12,8 +12,8 @@ abstract class AbstractObservable[T] extends Observable[T]{
     def cancel(): Boolean = { subscriptions.remove(this) }
   }
 
-  override def subscribe(fn: T => Unit): Subscription = {
-    val s = new Unsubscribe(fn)
+  override def subscribe(subscriber: T => Unit): Subscription = {
+    val s = new Unsubscribe(subscriber)
     subscriptions.add(s)
     s
   }
@@ -24,7 +24,7 @@ abstract class AbstractObservable[T] extends Observable[T]{
     }
   }
 
-  def withSynchronization: Observable[T] = {
+  def withSynchronization(): Observable[T] = {
     val self = this
     new Observable[T]{
       private val lock = ReentrantLock()

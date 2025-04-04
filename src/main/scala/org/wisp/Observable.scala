@@ -11,7 +11,7 @@ trait Observable[T] extends Consumer[T]{
     def cancel():Boolean
   }
 
-  def subscribe(fn: T => Unit): Subscription
+  def subscribe(subscriber: T => Unit): Subscription
 
 }
 
