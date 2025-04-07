@@ -4,16 +4,16 @@ import java.util
 import java.util.concurrent.locks.ReentrantLock
 import org.wisp.lock.*
 
-abstract class AbstractObservable[T] extends Observable[T]{
+abstract class ListObservable[T] extends Observable[T]{
 
-  protected def subscriptions: util.List[AbstractSubscription]
+  protected def subscriptions: util.List[ListSubscription]
 
-  class AbstractSubscription(override val subscriber: T => Unit) extends Subscription {
+  class ListSubscription(override val subscriber: T => Unit) extends Subscription {
     def cancel(): Boolean = { subscriptions.remove(this) }
   }
 
   override def subscribe(subscriber: T => Unit): Subscription = {
-    val s = new AbstractSubscription(subscriber)
+    val s = new ListSubscription(subscriber)
     subscriptions.add(s)
     s
   }
