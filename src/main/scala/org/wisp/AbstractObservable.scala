@@ -6,14 +6,14 @@ import org.wisp.lock.*
 
 abstract class AbstractObservable[T] extends Observable[T]{
 
-  protected def subscriptions: util.List[Unsubscribe]
+  protected def subscriptions: util.List[AbstractSubscription]
 
-  class Unsubscribe(override val subscriber: T => Unit) extends Subscription {
+  class AbstractSubscription(override val subscriber: T => Unit) extends Subscription {
     def cancel(): Boolean = { subscriptions.remove(this) }
   }
 
   override def subscribe(subscriber: T => Unit): Subscription = {
-    val s = new Unsubscribe(subscriber)
+    val s = new AbstractSubscription(subscriber)
     subscriptions.add(s)
     s
   }
