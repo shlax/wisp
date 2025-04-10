@@ -58,26 +58,29 @@ object extensions {
     }
   }
 
-  extension [E](p: Promise[E]) {
-    def asSink[T](start: E)(fn: (E, T) => E): (Sink[T], Future[E]) = {
+  extension [E](promise: Promise[E]) {
+
+    /** Converts [[Promise]] to [[Sink]] where `promise` wil be completed with result of `fold` function. */
+    def asSink[T](start: E)(fold: (E, T) => E): (Sink[T], Future[E]) = {
       val s = new Sink[T] {
         private var value: E = start
 
         override def accept(t: T): Unit = {
           try {
-            value = fn(value, t)
+            value = fold(value, t)
           } catch {
             case NonFatal(e) =>
-              p.failure(e)
+              promise.failure(e)
           }
         }
 
         override def complete(): Unit = {
-          p.success(value)
+          promise.success(value)
         }
       }
-      (s, p.future)
+      (s, promise.future)
     }
+
   }
 
   extension [E](s: Iterable[Sink[E]]) {
