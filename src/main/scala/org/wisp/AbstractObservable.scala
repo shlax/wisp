@@ -4,7 +4,7 @@ import java.util
 import java.util.concurrent.locks.ReentrantLock
 import org.wisp.lock.*
 
-abstract class ListObservable[T] extends Observable[T]{
+abstract class AbstractObservable[T] extends Observable[T]{
 
   protected def subscriptions: util.List[ListSubscription]
 
