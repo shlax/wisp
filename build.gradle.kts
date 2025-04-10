@@ -7,7 +7,7 @@ repositories {
 }
 
 dependencies {
-    implementation("org.scala-lang:scala3-library_3:3.6.3")
+    implementation("org.scala-lang:scala3-library_3:3.6.4")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
