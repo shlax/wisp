@@ -83,16 +83,19 @@ object extensions {
 
   }
 
-  extension [E](s: Iterable[Sink[E]]) {
+  extension [E](iterable: Iterable[Sink[E]]) {
+
+    /** @return [[Sink]] that will call all sinks in `iterable`  */
     def asSink: Sink[E] = new Sink[E] {
       override def accept(t: E): Unit = {
-        for (i <- s) i.accept(t)
+        for (i <- iterable) i.accept(t)
       }
 
       override def complete(): Unit = {
-        for (i <- s) i.complete()
+        for (i <- iterable) i.complete()
       }
     }
+
   }
 
 }
