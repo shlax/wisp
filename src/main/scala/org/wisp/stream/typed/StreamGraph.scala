@@ -36,12 +36,14 @@ class StreamGraph(val system:ActorSystem){
     zip(streams)
   }
 
+  /** `Source` wil be run inside [[RunnableSource.run]] */
   def fromRunnable[T, R](s:Source[T])(fn : SourceNode[T] => R ) : (RunnableSource[T], R) = {
     val f = RunnableSource(s)
     val r = fn.apply(from(f))
     (f, r)
   }
 
+  /** `Source` and `Sink` wil be run inside [[RunnableSourceSink.run]] */
   def runnable[T, R](s:Source[T], c:Sink[R])(fn: SourceNode[T] => StreamNode[R]) : RunnableSourceSink[T, R] = {
     RunnableSourceSink(s, c ){ prev =>
       fn.apply(from(prev)).link

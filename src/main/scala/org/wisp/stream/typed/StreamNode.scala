@@ -2,7 +2,7 @@ package org.wisp.stream.typed
 
 import org.wisp.ActorLink
 import org.wisp.stream.{Sink, Source}
-import org.wisp.stream.iterator.{RunnableSink, SplitStream, StreamBuffer, StreamSink, StreamWorker}
+import org.wisp.stream.iterator.{RunnableSink, RunnableSourceSink, SplitStream, StreamBuffer, StreamSink, StreamWorker}
 
 import scala.concurrent.ExecutionContext
 
@@ -48,6 +48,7 @@ class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
     StreamSink(link, c)
   }
 
+  /** `Sink` wil be run inside [[RunnableSink.run]] */
   def toRunnable[E >: T](c: Sink[E]): RunnableSink[E] = {
     RunnableSink[E](link ,c)
   }
