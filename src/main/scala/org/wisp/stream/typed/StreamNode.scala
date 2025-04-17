@@ -2,7 +2,7 @@ package org.wisp.stream.typed
 
 import org.wisp.ActorLink
 import org.wisp.stream.{Sink, Source}
-import org.wisp.stream.iterator.{RunnableSink, RunnableSourceSink, SplitStream, StreamBuffer, StreamSink, StreamWorker}
+import org.wisp.stream.iterator.{RunnableSink, SplitStream, StreamBuffer, StreamSink, StreamWorker}
 
 import scala.concurrent.ExecutionContext
 
