@@ -37,7 +37,7 @@ class StreamGraph(val system:ActorSystem){
   }
 
   /** `Source` wil be run inside [[RunnableSource.run]] */
-  def fromRunnable[T, R](s:Source[T])(fn : SourceNode[T] => R ) : (RunnableSource[T], R) = {
+  def fromRunnable[T, R](s:Source[T])(fn : SourceNode[T] => R ) : (source:RunnableSource[T], value:R) = {
     val f = RunnableSource(s)
     val r = fn.apply(from(f))
     (f, r)

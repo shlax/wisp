@@ -61,7 +61,7 @@ object extensions {
   extension [E](promise: Promise[E]) {
 
     /** Converts [[Promise]] to [[Sink]] where `promise` wil be completed with result of `fold` function. */
-    def asSink[T](start: E)(fold: (E, T) => E): (Sink[T], Future[E]) = {
+    def asSink[T](start: E)(fold: (E, T) => E): (sink: Sink[T], future:Future[E]) = {
       val s = new Sink[T] {
         private var value: E = start
 
