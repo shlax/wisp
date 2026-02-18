@@ -1,7 +1,5 @@
 package org.wisp.stream
 
-import org.wisp.Consumer
-
 object Source{
 
   /** empty Source */
