@@ -16,12 +16,12 @@ object ReadWrite {
 
   inline def derived[T](using m: Mirror.Of[T]): ReadWrite[T] = {
     lazy val elemInstances = summonAll[Tuple.Map[m.MirroredElemTypes, ReadWrite]].toList.asInstanceOf[List[ReadWrite[Any]]]
-    m match
+    inline m match
       case s: Mirror.SumOf[T] => readWriteSum(s, elemInstances)
       case p: Mirror.ProductOf[T] => readWriteProduct(p, elemInstances)
   }
 
-  private def readWriteSum[T](s: Mirror.SumOf[T], instances: => List[ReadWrite[Any]] ): ReadWrite[T] = new ReadWrite[T] {
+  private inline def readWriteSum[T](s: Mirror.SumOf[T], instances: => List[ReadWrite[Any]] ): ReadWrite[T] = new ReadWrite[T] {
 
     override def read(in: ObjectInputStream): T = {
       val index = in.readInt()
@@ -36,7 +36,7 @@ object ReadWrite {
 
   }
 
-  private def readWriteProduct[T](p: Mirror.ProductOf[T], instances: => List[ReadWrite[Any]]): ReadWrite[T] = new ReadWrite[T] {
+  private inline def readWriteProduct[T](p: Mirror.ProductOf[T], instances: => List[ReadWrite[Any]]): ReadWrite[T] = new ReadWrite[T] {
 
     override def read(in: ObjectInputStream): T = {
       val l = instances.map( _.read(in) )
