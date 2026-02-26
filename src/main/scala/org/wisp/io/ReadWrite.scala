@@ -21,7 +21,7 @@ object ReadWrite {
       case p: Mirror.ProductOf[T] => readWriteProduct(p, elemInstances)
   }
 
-  private inline def readWriteSum[T](s: Mirror.SumOf[T], instances: => List[ReadWrite[Any]] ): ReadWrite[T] = new ReadWrite[T] {
+  private def readWriteSum[T](s: Mirror.SumOf[T], instances: => List[ReadWrite[Any]] ): ReadWrite[T] = new ReadWrite[T] {
 
     override def read(in: ObjectInputStream): T = {
       val index = in.readInt()
@@ -36,7 +36,7 @@ object ReadWrite {
 
   }
 
-  private inline def readWriteProduct[T](p: Mirror.ProductOf[T], instances: => List[ReadWrite[Any]]): ReadWrite[T] = new ReadWrite[T] {
+  private def readWriteProduct[T](p: Mirror.ProductOf[T], instances: => List[ReadWrite[Any]]): ReadWrite[T] = new ReadWrite[T] {
 
     override def read(in: ObjectInputStream): T = {
       val l = instances.map( _.read(in) )
