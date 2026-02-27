@@ -15,39 +15,46 @@ trait ReadWrite[T] {
 object ReadWrite {
 
   inline given derived[T](using m: Mirror.Of[T]): ReadWrite[T] = {
-    lazy val elemInstances = summonAll[Tuple.Map[m.MirroredElemTypes, ReadWrite]].toList.asInstanceOf[List[ReadWrite[Any]]]
+    lazy val elemInstances = summonAll[Tuple.Map[m.MirroredElemTypes, ReadWrite]]
     inline m match
       case s: Mirror.SumOf[T] => readWriteSum(s, elemInstances)
       case p: Mirror.ProductOf[T] => readWriteProduct(p, elemInstances)
   }
 
-  private def readWriteSum[T](s: Mirror.SumOf[T], instances: => List[ReadWrite[Any]] ): ReadWrite[T] = new ReadWrite[T] {
+  private def readWriteSum[T](s: Mirror.SumOf[T], instances: => Tuple ): ReadWrite[T] = new ReadWrite[T] {
 
     override def read(in: ObjectInputStream): T = {
       val index = in.readInt()
-      instances(index).read(in).asInstanceOf[T]
+      val rw = instances(index).asInstanceOf[ReadWrite[T]]
+      rw.read(in)
     }
 
     override def write(t: T, out: ObjectOutputStream): Unit = {
       val index = s.ordinal(t)
       out.writeInt(index)
-      instances(index).write(t, out)
+
+      val rw = instances(index).asInstanceOf[ReadWrite[T]]
+      rw.write(t, out)
     }
 
   }
 
-  private def readWriteProduct[T](p: Mirror.ProductOf[T], instances: => List[ReadWrite[Any]]): ReadWrite[T] = new ReadWrite[T] {
+  private def readWriteProduct[T](p: Mirror.ProductOf[T], instances: => Tuple): ReadWrite[T] = new ReadWrite[T] {
 
     override def read(in: ObjectInputStream): T = {
-      val l = instances.map( _.read(in) )
-      val t = l.foldRight[Tuple](EmptyTuple)( _ *: _ )
+      var t: Tuple = EmptyTuple
+      for(i <- 0 until instances.productArity){
+        val e = instances.productElement(i).asInstanceOf[ReadWrite[Any]].read(in)
+        t = t :* e
+      }
       p.fromProduct(t)
     }
 
     override def write(t: T, out: ObjectOutputStream): Unit = {
       val tp = t.asInstanceOf[Product]
-      tp.productIterator.zip(instances).foreach{ (e, i) =>
-        i.write(e, out)
+      for(i <- 0 until instances.productArity){
+        val rw = instances.productElement(i).asInstanceOf[ReadWrite[Any]]
+        rw.write(tp.productElement(i), out)
       }
     }
 
