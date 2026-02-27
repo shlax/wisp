@@ -43,4 +43,22 @@ class ReadWriteTest {
 
   }
 
+  @Test
+  def combineTest(): Unit = {
+    val id1 = IdEnum.EXEC(IdName(1, "test"))
+
+    val out = new ByteArrayOutputStream()
+    new ObjectOutputStream(out) | { os =>
+      id1.write(os)
+    }
+
+    val in = new ByteArrayInputStream(out.toByteArray)
+    val id2 = new ObjectInputStream(in) | { is =>
+      read[IdEnum](is)
+    }
+
+    Assertions.assertEquals(id1, id2)
+
+  }
+
 }
