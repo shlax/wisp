@@ -2,10 +2,8 @@ package org.wisp.remote
 
 import org.wisp.remote.exceptions.RemoteAskException
 import org.wisp.{ActorLink, Message}
-import org.wisp.closeable.*
-import org.wisp.io.ReadWrite
+import org.wisp.io.{ReadWrite, codec}
 
-import java.io.{ByteArrayInputStream, ObjectInputStream}
 import java.net.SocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.AsynchronousCloseException
@@ -57,9 +55,7 @@ class UdpRouter[K, M <: RemoteMessage[K] ](address: SocketAddress, capacity:Int)
   }
 
   protected def read(data: Array[Byte]):M = {
-    new ObjectInputStream(new ByteArrayInputStream(data)) | { in =>
-      rw.read(in)
-    }
+    codec.fromBytes[M](data)
   }
 
   protected def process(adr: SocketAddress, data: Array[Byte]): Unit = {

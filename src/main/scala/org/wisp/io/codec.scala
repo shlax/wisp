@@ -1,6 +1,8 @@
 package org.wisp.io
 
-import java.io.{ObjectInputStream, ObjectOutputStream}
+import org.wisp.closeable.*
+
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
 
 object codec {
 
@@ -8,10 +10,25 @@ object codec {
     rw.read(in)
   }
 
+  def fromBytes[T](in: Array[Byte])(using rw: ReadWrite[T]): T = {
+    new ObjectInputStream(new ByteArrayInputStream(in))|{ oin =>
+      ioRead(oin)
+    }
+  }
+
   extension [T](t: T)(using rw: ReadWrite[T]){
     def ioWrite(out: ObjectOutputStream): Unit = {
       rw.write(t, out)
     }
+    
+    def toBytes: Array[Byte] = {
+      val bOut = new ByteArrayOutputStream()
+      new ObjectOutputStream(bOut)|{ out =>
+        ioWrite(out)
+      }
+      bOut.toByteArray
+    } 
+    
   }
 
   given ReadWrite[Int] = new ReadWrite[Int] {

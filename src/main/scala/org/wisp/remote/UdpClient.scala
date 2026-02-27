@@ -1,11 +1,10 @@
 package org.wisp.remote
 
-import java.io.{ByteArrayOutputStream, ObjectOutputStream}
 import java.net.SocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.DatagramChannel
-import org.wisp.closeable.*
 import org.wisp.io.ReadWrite
+import org.wisp.io.codec.toBytes
 
 class UdpClient[T](address: Option[SocketAddress] = None)(using rw:ReadWrite[T]) extends AutoCloseable {
 
@@ -17,11 +16,7 @@ class UdpClient[T](address: Option[SocketAddress] = None)(using rw:ReadWrite[T])
   }
 
   protected def write(m: T): Array[Byte] = {
-    val bOut = new ByteArrayOutputStream()
-    new ObjectOutputStream(bOut) | { out =>
-      rw.write(m, out)
-    }
-    bOut.toByteArray
+    m.toBytes
   }
 
   def send(adr: SocketAddress, m: T): Unit = {
