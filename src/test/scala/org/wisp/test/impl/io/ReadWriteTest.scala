@@ -27,7 +27,7 @@ class ReadWriteTest {
 
   @Test
   def enumTest(): Unit = {
-    val id1 = IdEnum.WRITE
+    val id1 = IdEnum.WRITE("7")
 
     val out = new ByteArrayOutputStream()
     new ObjectOutputStream(out) | { os =>

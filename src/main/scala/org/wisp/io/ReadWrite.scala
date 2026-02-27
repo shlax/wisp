@@ -14,7 +14,7 @@ trait ReadWrite[T] {
 
 object ReadWrite {
 
-  inline def derived[T](using m: Mirror.Of[T]): ReadWrite[T] = {
+  inline given derived[T](using m: Mirror.Of[T]): ReadWrite[T] = {
     lazy val elemInstances = summonAll[Tuple.Map[m.MirroredElemTypes, ReadWrite]].toList.asInstanceOf[List[ReadWrite[Any]]]
     inline m match
       case s: Mirror.SumOf[T] => readWriteSum(s, elemInstances)
