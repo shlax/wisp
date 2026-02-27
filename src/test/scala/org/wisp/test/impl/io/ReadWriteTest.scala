@@ -8,7 +8,7 @@ import org.wisp.io.codec.*
 class ReadWriteTest {
 
   @Test
-  def baseTest(): Unit = {
+  def caseTest(): Unit = {
     val id1 = IdName(1, "test")
 
     val out = new ByteArrayOutputStream()
@@ -19,6 +19,24 @@ class ReadWriteTest {
     val in = new ByteArrayInputStream(out.toByteArray)
     val id2 = new ObjectInputStream(in)|{ is =>
       read[IdName](is)
+    }
+
+    Assertions.assertEquals(id1, id2)
+
+  }
+
+  @Test
+  def enumTest(): Unit = {
+    val id1 = IdEnum.WRITE
+
+    val out = new ByteArrayOutputStream()
+    new ObjectOutputStream(out) | { os =>
+      id1.write(os)
+    }
+
+    val in = new ByteArrayInputStream(out.toByteArray)
+    val id2 = new ObjectInputStream(in) | { is =>
+      read[IdEnum](is)
     }
 
     Assertions.assertEquals(id1, id2)
