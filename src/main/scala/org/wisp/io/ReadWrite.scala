@@ -1,14 +1,14 @@
 package org.wisp.io
 
-import java.io.{ObjectInputStream, ObjectOutputStream}
+import java.io.{DataInput, DataOutput}
 import scala.compiletime.*
 import scala.deriving.*
 
 trait ReadWrite[T] {
 
-  def read(in:ObjectInputStream): T
+  def read(in:DataInput): T
 
-  def write(t:T, out:ObjectOutputStream): Unit
+  def write(t:T, out:DataOutput): Unit
 
 }
 
@@ -23,13 +23,13 @@ object ReadWrite {
 
   private def readWriteSum[T](s: Mirror.SumOf[T], instances: => Tuple ): ReadWrite[T] = new ReadWrite[T] {
 
-    override def read(in: ObjectInputStream): T = {
+    override def read(in: DataInput): T = {
       val index = in.readInt()
       val rw = instances(index).asInstanceOf[ReadWrite[T]]
       rw.read(in)
     }
 
-    override def write(t: T, out: ObjectOutputStream): Unit = {
+    override def write(t: T, out: DataOutput): Unit = {
       val index = s.ordinal(t)
       out.writeInt(index)
 
@@ -41,7 +41,7 @@ object ReadWrite {
 
   private def readWriteProduct[T](p: Mirror.ProductOf[T], instances: => Tuple): ReadWrite[T] = new ReadWrite[T] {
 
-    override def read(in: ObjectInputStream): T = {
+    override def read(in: DataInput): T = {
       var t: Tuple = EmptyTuple
       for(i <- 0 until instances.productArity){
         val rw = instances.productElement(i).asInstanceOf[ReadWrite[Any]]
@@ -51,7 +51,7 @@ object ReadWrite {
       p.fromProduct(t)
     }
 
-    override def write(t: T, out: ObjectOutputStream): Unit = {
+    override def write(t: T, out: DataOutput): Unit = {
       val tp = t.asInstanceOf[Product]
       for(i <- 0 until instances.productArity){
         val rw = instances.productElement(i).asInstanceOf[ReadWrite[Any]]
