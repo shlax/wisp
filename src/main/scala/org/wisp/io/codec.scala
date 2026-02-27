@@ -72,11 +72,14 @@ object codec {
       if(size > 0){
         val rwk = summon[ReadWrite[K]]
         val rwv = summon[ReadWrite[V]]
-        val m = Map.newBuilder[K, V]
-        for(_ <- 0 until size){
-          m += rwk.read(in) -> rwv.read(in)
+        val b = Map.newBuilder[K, V]
+        b.sizeHint(size)
+        var i = 0
+        while(i < size){
+          b += rwk.read(in) -> rwv.read(in)
+          i += 1
         }
-        m.result()
+        b.result()
       }else Map.empty
     }
 
