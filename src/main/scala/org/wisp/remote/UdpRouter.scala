@@ -2,7 +2,7 @@ package org.wisp.remote
 
 import org.wisp.remote.exceptions.RemoteAskException
 import org.wisp.{ActorLink, Message}
-import org.wisp.io.{ReadWrite, codec}
+import org.wisp.io.{ReadWrite, extensions}
 
 import java.net.SocketAddress
 import java.nio.ByteBuffer
@@ -55,7 +55,7 @@ class UdpRouter[K, M <: RemoteMessage[K] ](address: SocketAddress, capacity:Int)
   }
 
   protected def read(data: Array[Byte]):M = {
-    codec.fromBytes[M](data)
+    extensions.fromBytes[M](data)
   }
 
   protected def process(adr: SocketAddress, data: Array[Byte]): Unit = {

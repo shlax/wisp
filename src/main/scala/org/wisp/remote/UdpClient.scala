@@ -4,7 +4,6 @@ import java.net.SocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.DatagramChannel
 import org.wisp.io.ReadWrite
-import org.wisp.io.codec.toBytes
 
 class UdpClient[T](address: Option[SocketAddress] = None)(using rw:ReadWrite[T]) extends AutoCloseable {
 

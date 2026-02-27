@@ -1,6 +1,8 @@
 package org.wisp.io
 
-import java.io.{DataInput, DataOutput}
+import org.wisp.closeable.*
+
+import java.io.{ByteArrayOutputStream, DataInput, DataOutput, DataOutputStream}
 import scala.compiletime.*
 import scala.deriving.*
 
@@ -9,6 +11,20 @@ trait ReadWrite[T] {
   def read(in:DataInput): T
 
   def write(t:T, out:DataOutput): Unit
+
+  extension (t: T)(using rw: ReadWrite[T]) {
+
+    def ioWrite(out: DataOutput): Unit = {
+      rw.write(t, out)
+    }
+
+    def toBytes: Array[Byte] = {
+      val bOut = new ByteArrayOutputStream()
+      new DataOutputStream(bOut) | { out => ioWrite(out) }
+      bOut.toByteArray
+    }
+
+  }
 
 }
 

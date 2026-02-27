@@ -2,9 +2,9 @@ package org.wisp.io
 
 import org.wisp.closeable.*
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, DataInput, DataInputStream, DataOutput, DataOutputStream}
+import java.io.{ByteArrayInputStream, DataInput, DataInputStream, DataOutput}
 
-object codec {
+object extensions {
 
   def ioRead[T](in: DataInput)(using rw: ReadWrite[T]): T = {
     rw.read(in)
@@ -12,20 +12,6 @@ object codec {
 
   def fromBytes[T](buff: Array[Byte])(using rw: ReadWrite[T]): T = {
     new DataInputStream(new ByteArrayInputStream(buff))|{ in => ioRead(in) }
-  }
-
-  extension [T](t: T)(using rw: ReadWrite[T]){
-
-    def ioWrite(out: DataOutput): Unit = {
-      rw.write(t, out)
-    }
-
-    def toBytes: Array[Byte] = {
-      val bOut = new ByteArrayOutputStream()
-      new DataOutputStream(bOut)|{ out => ioWrite(out) }
-      bOut.toByteArray
-    }
-
   }
 
   given [T: ReadWrite] => ReadWrite[Option[T]] = new ReadWrite[Option[T]] {

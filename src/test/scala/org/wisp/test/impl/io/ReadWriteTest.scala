@@ -3,7 +3,7 @@ package org.wisp.test.impl.io
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, DataInputStream, DataOutputStream}
 import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.closeable.*
-import org.wisp.io.codec.*
+import org.wisp.io.extensions.*
 
 class ReadWriteTest {
 
