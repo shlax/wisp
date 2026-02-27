@@ -44,7 +44,8 @@ object ReadWrite {
     override def read(in: ObjectInputStream): T = {
       var t: Tuple = EmptyTuple
       for(i <- 0 until instances.productArity){
-        val e = instances.productElement(i).asInstanceOf[ReadWrite[Any]].read(in)
+        val rw = instances.productElement(i).asInstanceOf[ReadWrite[Any]]
+        val e = rw.read(in)
         t = t :* e
       }
       p.fromProduct(t)
