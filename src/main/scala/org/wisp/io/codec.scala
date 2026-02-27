@@ -28,6 +28,72 @@ object codec {
 
   }
 
+  given [T: ReadWrite] => ReadWrite[Option[T]] = new ReadWrite[Option[T]] {
+    override def read(in: DataInput): Option[T] = {
+      if(in.readBoolean()){
+        val rw = summon[ReadWrite[T]]
+        Some(rw.read(in))
+      }else None
+    }
+    override def write(t: Option[T], out: DataOutput): Unit = {
+      t match {
+        case Some(v) =>
+          out.writeBoolean(true)
+          val rw = summon[ReadWrite[T]]
+          rw.write(v, out)
+        case None =>
+          out.writeBoolean(false)
+      }
+    }
+  }
+
+  given [T: ReadWrite] => ReadWrite[List[T]] = new ReadWrite[List[T]] {
+    override def read(in: DataInput): List[T] = {
+      val size = in.readInt()
+      if(size > 0){
+        val rw = summon[ReadWrite[T]]
+        List.fill(size)(rw.read(in))
+      }else Nil
+    }
+
+    override def write(t: List[T], out: DataOutput): Unit = {
+      val size = t.size
+      out.writeInt(size)
+      if(size > 0){
+        val rw = summon[ReadWrite[T]]
+        for(i <- t){ rw.write(i, out) }
+      }
+    }
+  }
+
+  given [K: ReadWrite, V:ReadWrite] => ReadWrite[Map[K, V]] = new ReadWrite[Map[K, V]] {
+    override def read(in: DataInput): Map[K, V] = {
+      val size = in.readInt()
+      if(size > 0){
+        val rwk = summon[ReadWrite[K]]
+        val rwv = summon[ReadWrite[V]]
+        val m = Map.newBuilder[K, V]
+        for(_ <- 0 until size){
+          m += rwk.read(in) -> rwv.read(in)
+        }
+        m.result()
+      }else Map.empty
+    }
+
+    override def write(t: Map[K, V], out: DataOutput): Unit = {
+      val size = t.size
+      out.writeInt(size)
+      if(size > 0){
+        val rwk = summon[ReadWrite[K]]
+        val rwv = summon[ReadWrite[V]]
+        for((k, v) <- t){
+          rwk.write(k, out)
+          rwv.write(v, out)
+        }
+      }
+    }
+  }
+
   given ReadWrite[Int] = new ReadWrite[Int] {
     override def read(in: DataInput): Int = in.readInt()
     override def write(t: Int, out: DataOutput): Unit = out.writeInt(t)
