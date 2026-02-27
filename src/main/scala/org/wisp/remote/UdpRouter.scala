@@ -3,6 +3,7 @@ package org.wisp.remote
 import org.wisp.remote.exceptions.RemoteAskException
 import org.wisp.{ActorLink, Message}
 import org.wisp.closeable.*
+import org.wisp.io.ReadWrite
 
 import java.io.{ByteArrayInputStream, ObjectInputStream}
 import java.net.SocketAddress
@@ -12,15 +13,15 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentMap}
 import scala.concurrent.{ExecutionContext, Future}
 
-class UdpRouter(address: SocketAddress, capacity:Int)(using executor: ExecutionContext) extends UdpClient(Some(address)), Runnable{
+class UdpRouter[K, M <: RemoteMessage[K] ](address: SocketAddress, capacity:Int)(using executor: ExecutionContext, rw:ReadWrite[M]) extends UdpClient(Some(address)), Runnable{
 
-  protected val bindMap: ConcurrentMap[String, ActorLink] = createBindMap()
+  protected val bindMap: ConcurrentMap[K, ActorLink] = createBindMap()
 
-  protected def createBindMap():ConcurrentMap[String, ActorLink] = {
-    ConcurrentHashMap[String, ActorLink]()
+  protected def createBindMap():ConcurrentMap[K, ActorLink] = {
+    ConcurrentHashMap[K, ActorLink]()
   }
 
-  def register(path:String, ref:ActorLink) : Option[ActorLink] = {
+  def register(path:K, ref:ActorLink) : Option[ActorLink] = {
     Option(bindMap.put(path, ref))
   }
 
@@ -55,9 +56,9 @@ class UdpRouter(address: SocketAddress, capacity:Int)(using executor: ExecutionC
     }
   }
 
-  protected def read(data: Array[Byte]):RemoteMessage = {
+  protected def read(data: Array[Byte]):M = {
     new ObjectInputStream(new ByteArrayInputStream(data)) | { in =>
-      RemoteMessage(in.readUTF(), in.readObject())
+      rw.read(in)
     }
   }
 
@@ -72,15 +73,15 @@ class UdpRouter(address: SocketAddress, capacity:Int)(using executor: ExecutionC
     ref.accept( Message( new ActorLink{
         override def accept(t: Message): Unit = {
           t.value match {
-            case m : RemoteMessage =>
-              send(adr, m)
+            case m : RemoteMessage[?] =>
+              send(adr, m.asInstanceOf[M])
           }
         }
 
         override def call(v: Any): Future[Message] = {
           throw RemoteAskException(v)
         }
-      }, rm.value) )
+      }, rm) )
   }
 
   override def close(): Unit = {

@@ -5,7 +5,7 @@ import org.wisp.io.codec.given
 
 enum IdEnum derives ReadWrite{
 
-  case READ(id:Int)
+  case READ(id:IdMode)
   case WRITE(id:String)
   case EXEC(id:IdName)
 

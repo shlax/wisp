@@ -1,3 +1,7 @@
 package org.wisp.remote
 
-case class RemoteMessage(path:String, value:Any)
+trait RemoteMessage[K]{
+
+  def path : K
+
+}

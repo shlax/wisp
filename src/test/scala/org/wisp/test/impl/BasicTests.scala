@@ -4,11 +4,12 @@ import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.remote.{RemoteLink, UdpClient, UdpRouter}
 import org.wisp.stream.Sink
 import org.wisp.stream.extensions.*
-import org.wisp.stream.iterator.{RunnableSourceSink, RunnableSource, RunnableSink, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
+import org.wisp.stream.iterator.{RunnableSink, RunnableSource, RunnableSourceSink, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
 import org.wisp.stream.typed.StreamGraph
 import tests.*
 import org.wisp.closeable.*
-import org.wisp.{AbstractActor, ActorLink, ActorSystem, ActorScheduler}
+import org.wisp.test.impl.io.IdName
+import org.wisp.{AbstractActor, ActorLink, ActorScheduler, ActorSystem}
 
 import java.net.InetSocketAddress
 import java.util
@@ -197,28 +198,29 @@ class BasicTests {
     val res = Collections.synchronizedSet(new util.HashSet[Any]())
 
     using { use =>
-      val s = use(ActorSystem())
+      given ec : ActorSystem = use(ActorSystem())
+      import IdName.given
 
-      val r = use(UdpRouter(adr, 2024)(using s))
-      r.register("echo", s.create(i => new AbstractActor(i) {
+      val r = use(UdpRouter[Int, IdName](adr, 2024))
+      r.register(1, ec.create(i => new AbstractActor(i) {
         override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
           case x: Any =>
             res.add(x)
             cd.countDown()
         }
       }))
-      s.execute(r)
+      ec.execute(r)
 
       val c = use(UdpClient())
-      val l = RemoteLink(c, adr, "echo")
+      val l = RemoteLink(c, adr)
 
-      l << "ab"
-      l << "cd"
+      l << IdName(1, "ab")
+      l << IdName(1, "cd")
 
       cd.await(3, TimeUnit.SECONDS)
     }
 
-    Assertions.assertEquals(Set("ab", "cd"), res.asScala)
+    Assertions.assertEquals(Set(IdName(1, "ab"), IdName(1, "cd")), res.asScala)
 
   }
 

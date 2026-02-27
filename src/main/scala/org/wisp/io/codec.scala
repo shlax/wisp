@@ -4,12 +4,12 @@ import java.io.{ObjectInputStream, ObjectOutputStream}
 
 object codec {
 
-  def read[T](in: ObjectInputStream)(using rw: ReadWrite[T]): T = {
+  def ioRead[T](in: ObjectInputStream)(using rw: ReadWrite[T]): T = {
     rw.read(in)
   }
 
   extension [T](t: T)(using rw: ReadWrite[T]){
-    def write(out: ObjectOutputStream): Unit = {
+    def ioWrite(out: ObjectOutputStream): Unit = {
       rw.write(t, out)
     }
   }

@@ -13,12 +13,12 @@ class ReadWriteTest {
 
     val out = new ByteArrayOutputStream()
     new ObjectOutputStream(out) | { os =>
-      id1.write(os)
+      id1.ioWrite(os)
     }
 
     val in = new ByteArrayInputStream(out.toByteArray)
     val id2 = new ObjectInputStream(in)|{ is =>
-      read[IdName](is)
+      ioRead[IdName](is)
     }
 
     Assertions.assertEquals(id1, id2)
@@ -31,12 +31,12 @@ class ReadWriteTest {
 
     val out = new ByteArrayOutputStream()
     new ObjectOutputStream(out) | { os =>
-      id1.write(os)
+      id1.ioWrite(os)
     }
 
     val in = new ByteArrayInputStream(out.toByteArray)
     val id2 = new ObjectInputStream(in) | { is =>
-      read[IdEnum](is)
+      ioRead[IdEnum](is)
     }
 
     Assertions.assertEquals(id1, id2)
@@ -49,12 +49,48 @@ class ReadWriteTest {
 
     val out = new ByteArrayOutputStream()
     new ObjectOutputStream(out) | { os =>
-      id1.write(os)
+      id1.ioWrite(os)
     }
 
     val in = new ByteArrayInputStream(out.toByteArray)
     val id2 = new ObjectInputStream(in) | { is =>
-      read[IdEnum](is)
+      ioRead[IdEnum](is)
+    }
+
+    Assertions.assertEquals(id1, id2)
+
+  }
+
+  @Test
+  def simpleEnumTest(): Unit = {
+    val id1 = IdMode.Y
+
+    val out = new ByteArrayOutputStream()
+    new ObjectOutputStream(out) | { os =>
+      id1.ioWrite(os)
+    }
+
+    val in = new ByteArrayInputStream(out.toByteArray)
+    val id2 = new ObjectInputStream(in) | { is =>
+      ioRead[IdMode](is)
+    }
+
+    Assertions.assertEquals(id1, id2)
+
+  }
+
+  @Test
+  def combineSimpleTest(): Unit = {
+    val id1 = IdEnum.READ(IdMode.Z)
+
+    val out = new ByteArrayOutputStream()
+    new ObjectOutputStream(out) | { os =>
+      id1.ioWrite(os)
+    }
+
+    val in = new ByteArrayInputStream(out.toByteArray)
+    val id2 = new ObjectInputStream(in) | { is =>
+      ioRead[IdEnum](is)
     }
 
     Assertions.assertEquals(id1, id2)

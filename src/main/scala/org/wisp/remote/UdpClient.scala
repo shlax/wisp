@@ -5,8 +5,9 @@ import java.net.SocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.DatagramChannel
 import org.wisp.closeable.*
+import org.wisp.io.ReadWrite
 
-class UdpClient(address: Option[SocketAddress] = None) extends AutoCloseable {
+class UdpClient[T](address: Option[SocketAddress] = None)(using rw:ReadWrite[T]) extends AutoCloseable {
 
   protected val channel: DatagramChannel = createDatagramChannel(address)
   protected def createDatagramChannel(adr: Option[SocketAddress]): DatagramChannel = {
@@ -15,16 +16,15 @@ class UdpClient(address: Option[SocketAddress] = None) extends AutoCloseable {
     dc
   }
 
-  protected def write(m: RemoteMessage): Array[Byte] = {
+  protected def write(m: T): Array[Byte] = {
     val bOut = new ByteArrayOutputStream()
     new ObjectOutputStream(bOut) | { out =>
-      out.writeUTF(m.path)
-      out.writeObject(m.value)
+      rw.write(m, out)
     }
     bOut.toByteArray
   }
 
-  def send(adr: SocketAddress, m: RemoteMessage): Unit = {
+  def send(adr: SocketAddress, m: T): Unit = {
     val buff = write(m)
     val r = channel.send(ByteBuffer.wrap(buff), adr)
     if (r != buff.length) {

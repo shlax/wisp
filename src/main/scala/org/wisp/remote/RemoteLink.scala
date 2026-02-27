@@ -6,10 +6,10 @@ import org.wisp.{ActorLink, Message}
 import java.net.SocketAddress
 import scala.concurrent.Future
 
-class RemoteLink(c: UdpClient, adr:SocketAddress, path:String) extends ActorLink{
+class RemoteLink[T](c: UdpClient[T], adr:SocketAddress) extends ActorLink{
 
   override def accept(t: Message): Unit = {
-    c.send(adr, RemoteMessage(path, t.value))
+    c.send(adr, t.value.asInstanceOf[T])
   }
 
   override def call(v:Any) : Future[Message] = {
