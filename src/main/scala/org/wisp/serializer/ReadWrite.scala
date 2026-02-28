@@ -7,7 +7,6 @@ import java.util.zip.{Deflater, DeflaterOutputStream}
 import scala.compiletime.*
 import scala.deriving.*
 
-
 /**
  * A type class for reading and writing values of type T to/from binary streams.
  */
