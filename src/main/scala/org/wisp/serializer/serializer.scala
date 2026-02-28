@@ -1,17 +1,17 @@
-package org.wisp.io
+package org.wisp
 
 import org.wisp.closeable.*
 
 import java.io.{ByteArrayInputStream, DataInput, DataInputStream, DataOutput}
 
-object extensions {
+package object serializer {
 
-  def ioRead[T](in: DataInput)(using rw: ReadWrite[T]): T = {
+  def readFrom[T](in: DataInput)(using rw: ReadWrite[T]): T = {
     rw.read(in)
   }
 
   def fromBytes[T](buff: Array[Byte])(using rw: ReadWrite[T]): T = {
-    new DataInputStream(new ByteArrayInputStream(buff))|{ in => ioRead(in) }
+    new DataInputStream(new ByteArrayInputStream(buff))|{ in => readFrom(in) }
   }
 
   given [T: ReadWrite] => ReadWrite[Option[T]] = new ReadWrite[Option[T]] {

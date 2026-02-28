@@ -3,7 +3,7 @@ package org.wisp.test.impl.io
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, DataInputStream, DataOutputStream}
 import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.closeable.*
-import org.wisp.io.extensions.*
+import org.wisp.serializer.*
 
 class ReadWriteTest {
 
@@ -13,12 +13,12 @@ class ReadWriteTest {
 
     val out = new ByteArrayOutputStream()
     new DataOutputStream(out) | { os =>
-      id1.ioWrite(os)
+      id1.writeTo(os)
     }
 
     val in = new ByteArrayInputStream(out.toByteArray)
     val id2 = new DataInputStream(in)|{ is =>
-      ioRead[IdName](is)
+      readFrom[IdName](is)
     }
 
     Assertions.assertEquals(id1, id2)
@@ -31,12 +31,12 @@ class ReadWriteTest {
 
     val out = new ByteArrayOutputStream()
     new DataOutputStream(out) | { os =>
-      id1.ioWrite(os)
+      id1.writeTo(os)
     }
 
     val in = new ByteArrayInputStream(out.toByteArray)
     val id2 = new DataInputStream(in) | { is =>
-      ioRead[IdEnum](is)
+      readFrom[IdEnum](is)
     }
 
     Assertions.assertEquals(id1, id2)
@@ -49,12 +49,12 @@ class ReadWriteTest {
 
     val out = new ByteArrayOutputStream()
     new DataOutputStream(out) | { os =>
-      id1.ioWrite(os)
+      id1.writeTo(os)
     }
 
     val in = new ByteArrayInputStream(out.toByteArray)
     val id2 = new DataInputStream(in) | { is =>
-      ioRead[IdEnum](is)
+      readFrom[IdEnum](is)
     }
 
     Assertions.assertEquals(id1, id2)
@@ -67,12 +67,12 @@ class ReadWriteTest {
 
     val out = new ByteArrayOutputStream()
     new DataOutputStream(out) | { os =>
-      id1.ioWrite(os)
+      id1.writeTo(os)
     }
 
     val in = new ByteArrayInputStream(out.toByteArray)
     val id2 = new DataInputStream(in) | { is =>
-      ioRead[IdMode](is)
+      readFrom[IdMode](is)
     }
 
     Assertions.assertEquals(id1, id2)
@@ -85,12 +85,12 @@ class ReadWriteTest {
 
     val out = new ByteArrayOutputStream()
     new DataOutputStream(out) | { os =>
-      id1.ioWrite(os)
+      id1.writeTo(os)
     }
 
     val in = new ByteArrayInputStream(out.toByteArray)
     val id2 = new DataInputStream(in) | { is =>
-      ioRead[IdEnum](is)
+      readFrom[IdEnum](is)
     }
 
     Assertions.assertEquals(id1, id2)

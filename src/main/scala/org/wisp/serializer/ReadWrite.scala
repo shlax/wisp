@@ -1,4 +1,4 @@
-package org.wisp.io
+package org.wisp.serializer
 
 import org.wisp.closeable.*
 
@@ -14,13 +14,13 @@ trait ReadWrite[T] {
 
   extension (t: T)(using rw: ReadWrite[T]) {
 
-    def ioWrite(out: DataOutput): Unit = {
+    def writeTo(out: DataOutput): Unit = {
       rw.write(t, out)
     }
 
     def toBytes: Array[Byte] = {
       val bOut = new ByteArrayOutputStream()
-      new DataOutputStream(bOut) | { out => ioWrite(out) }
+      new DataOutputStream(bOut) | { out => writeTo(out) }
       bOut.toByteArray
     }
 

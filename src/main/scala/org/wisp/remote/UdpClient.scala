@@ -3,7 +3,7 @@ package org.wisp.remote
 import java.net.SocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.DatagramChannel
-import org.wisp.io.ReadWrite
+import org.wisp.serializer.ReadWrite
 
 class UdpClient[T](address: Option[SocketAddress] = None)(using rw:ReadWrite[T]) extends AutoCloseable {
 
