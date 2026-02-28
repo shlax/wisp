@@ -7,18 +7,49 @@ import java.util.zip.{Deflater, DeflaterOutputStream}
 import scala.compiletime.*
 import scala.deriving.*
 
+
+/**
+ * A type class for reading and writing values of type T to/from binary streams.
+ */
 trait ReadWrite[T] {
 
-  def read(in:DataInput): T
+  /**
+   * Reads a value of type T from the given DataInput stream.
+   *
+   * @param dataInput the DataInput stream to read from
+   * @return the deserialized value of type T
+   */
+  def read(dataInput: DataInput): T
 
-  def write(t:T, out:DataOutput): Unit
+  /**
+   * Writes a value of type T to the given DataOutput stream.
+   *
+   * @param value   the value to serialize
+   * @param dataOutput the DataOutput stream to write to
+   */
+  def write(value:T, dataOutput:DataOutput): Unit
 
   extension (t: T)(using rw: ReadWrite[T]) {
 
-    def writeTo(out: DataOutput): Unit = {
-      rw.write(t, out)
+    /**
+     * Writes this value to the given DataOutput stream using the implicit ReadWrite instance.
+     *
+     * @param dataOutput the DataOutput stream to write to
+     */
+    def writeTo(dataOutput: DataOutput): Unit = {
+      rw.write(t, dataOutput)
     }
 
+    /**
+     * Serializes the value to a byte array with optional compression.
+     *
+     * The returned byte array has the following format:
+     * - First byte: compression flag (1 if compressed, 0 if uncompressed)
+     * - Remaining bytes: the serialized data (either compressed or uncompressed)
+     *
+     * @return A byte array containing the compression flag followed by the serialized
+     *         (and possibly compressed) representation of the value.
+     */
     def toBytes: Array[Byte] = {
       var buff = new ByteArrayOutputStream()
       new DataOutputStream(buff) | { out =>
@@ -45,6 +76,9 @@ trait ReadWrite[T] {
 
 }
 
+/**
+ * Companion object providing automatic derivation of ReadWrite instances for case classes
+ */
 object ReadWrite {
 
   inline given derived[T](using m: Mirror.Of[T]): ReadWrite[T] = {
