@@ -56,11 +56,8 @@ class UdpRouter[K, M <: RemoteMessage[K] ](address: SocketAddress, capacity:Int)
   }
 
   protected def read(data: Array[Byte]):M = {
-    val buff = new Array[Byte](data.length - 4)
-    System.arraycopy(data, 4, buff, 0, buff.length)
-
     val crc = new CRC32C()
-    crc.update(buff)
+    crc.update(data, 4, data.length - 4)
     val sum = crc.getValue
 
     var result:Long = 0
@@ -75,7 +72,7 @@ class UdpRouter[K, M <: RemoteMessage[K] ](address: SocketAddress, capacity:Int)
       throw new RuntimeException("crc error " + result + " != " + sum)
     }
 
-    fromBytes[M](buff)
+    fromBytes[M](data, 4, data.length - 4)
   }
 
   protected def process(adr: SocketAddress, data: Array[Byte]): Unit = {

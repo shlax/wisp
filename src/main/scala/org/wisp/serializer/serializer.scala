@@ -11,9 +11,11 @@ package object serializer {
     rw.read(in)
   }
 
-  def fromBytes[T](buff: Array[Byte])(using rw: ReadWrite[T]): T = {
-    val in = new ByteArrayInputStream(buff, 1, buff.length - 1)
-    if(buff(0) == 0){
+  def fromBytes[T](buff: Array[Byte], offest:Int = -1, length: Int = -1)(using rw: ReadWrite[T]): T = {
+    val off = if(offest >= 0) offest else 0
+    val len = if(length >= 0) length else buff.length
+    val in = new ByteArrayInputStream(buff, 1 + off, len - 1)
+    if(buff(0 + off) == 0){
       new DataInputStream(in) | { in =>
         readFrom(in)
       }
