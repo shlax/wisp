@@ -5,6 +5,8 @@ import java.nio.ByteBuffer
 import java.nio.channels.DatagramChannel
 import org.wisp.serializer.ReadWrite
 
+import java.util.zip.CRC32C
+
 class UdpClient[T](address: Option[SocketAddress] = None)(using rw:ReadWrite[T]) extends AutoCloseable {
 
   protected val channel: DatagramChannel = createDatagramChannel(address)
@@ -15,7 +17,23 @@ class UdpClient[T](address: Option[SocketAddress] = None)(using rw:ReadWrite[T])
   }
 
   protected def write(m: T): Array[Byte] = {
-    m.toBytes
+    val buff = m.toBytes
+
+    val crc = new CRC32C()
+    crc.update(buff)
+    var sum = crc.getValue
+
+    val result = new Array[Byte](buff.length + 4)
+    System.arraycopy(buff, 0, result, 4, buff.length)
+
+    var i = 3
+    while (i >= 0) {
+      result(i) = (sum & 0xFF).asInstanceOf[Byte]
+      sum >>= 8
+      i -= 1
+    }
+
+    result
   }
 
   def send(adr: SocketAddress, m: T): Unit = {

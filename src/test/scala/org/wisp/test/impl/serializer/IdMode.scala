@@ -1,4 +1,4 @@
-package org.wisp.test.impl.io
+package org.wisp.test.impl.serializer
 
 import org.wisp.serializer.ReadWrite
 

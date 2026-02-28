@@ -3,6 +3,7 @@ package org.wisp
 import org.wisp.closeable.*
 
 import java.io.{ByteArrayInputStream, DataInput, DataInputStream, DataOutput}
+import java.util.zip.{Inflater, InflaterInputStream}
 
 package object serializer {
 
@@ -11,7 +12,18 @@ package object serializer {
   }
 
   def fromBytes[T](buff: Array[Byte])(using rw: ReadWrite[T]): T = {
-    new DataInputStream(new ByteArrayInputStream(buff))|{ in => readFrom(in) }
+    val in = new ByteArrayInputStream(buff, 1, buff.length - 1)
+    if(buff(0) == 0){
+      new DataInputStream(in) | { in =>
+        readFrom(in)
+      }
+    }else{
+      new InflaterInputStream(in, new Inflater(true))|{ zip =>
+        new DataInputStream(zip) | { in =>
+          readFrom(in)
+        }
+      }
+    }
   }
 
   given [T: ReadWrite] => ReadWrite[Option[T]] = new ReadWrite[Option[T]] {

@@ -9,6 +9,7 @@ import java.nio.ByteBuffer
 import java.nio.channels.AsynchronousCloseException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentMap}
+import java.util.zip.CRC32C
 import scala.concurrent.{ExecutionContext, Future}
 
 class UdpRouter[K, M <: RemoteMessage[K] ](address: SocketAddress, capacity:Int)(using executor: ExecutionContext, rw:ReadWrite[M]) extends UdpClient(Some(address)), Runnable{
@@ -55,7 +56,26 @@ class UdpRouter[K, M <: RemoteMessage[K] ](address: SocketAddress, capacity:Int)
   }
 
   protected def read(data: Array[Byte]):M = {
-    fromBytes[M](data)
+    val buff = new Array[Byte](data.length - 4)
+    System.arraycopy(data, 4, buff, 0, buff.length)
+
+    val crc = new CRC32C()
+    crc.update(buff)
+    val sum = crc.getValue
+
+    var result:Long = 0
+    var i = 0
+    while (i < 4) {
+      result <<= 8
+      result |= (data(i) & 0xFF)
+      i += 1
+    }
+
+    if(result != sum){
+      throw new RuntimeException("crc error " + result + " != " + sum)
+    }
+
+    fromBytes[M](buff)
   }
 
   protected def process(adr: SocketAddress, data: Array[Byte]): Unit = {

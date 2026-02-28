@@ -3,6 +3,7 @@ package org.wisp.serializer
 import org.wisp.closeable.*
 
 import java.io.{ByteArrayOutputStream, DataInput, DataOutput, DataOutputStream}
+import java.util.zip.{Deflater, DeflaterOutputStream}
 import scala.compiletime.*
 import scala.deriving.*
 
@@ -19,9 +20,25 @@ trait ReadWrite[T] {
     }
 
     def toBytes: Array[Byte] = {
-      val bOut = new ByteArrayOutputStream()
-      new DataOutputStream(bOut) | { out => writeTo(out) }
-      bOut.toByteArray
+      var buff = new ByteArrayOutputStream()
+      new DataOutputStream(buff) | { out =>
+        writeTo(out)
+      }
+      val data = buff.toByteArray
+      buff = new ByteArrayOutputStream()
+      new DeflaterOutputStream(buff, new Deflater(Deflater.BEST_COMPRESSION, true) )|{ zip =>
+        zip.write(data)
+      }
+      val zip = buff.toByteArray
+      val res = new Array[Byte](zip.length.min(data.length) + 1)
+      if(zip.length < data.length){
+        res(0) = 1
+        System.arraycopy(zip, 0, res, 1, zip.length)
+      }else{
+        res(0) = 0
+        System.arraycopy(data, 0, res, 1, data.length)
+      }
+      res
     }
 
   }

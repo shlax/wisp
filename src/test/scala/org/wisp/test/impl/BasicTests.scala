@@ -8,7 +8,7 @@ import org.wisp.stream.iterator.{RunnableSink, RunnableSource, RunnableSourceSin
 import org.wisp.stream.typed.StreamGraph
 import tests.*
 import org.wisp.closeable.*
-import org.wisp.test.impl.io.IdName
+import org.wisp.test.impl.serializer.IdName
 import org.wisp.{AbstractActor, ActorLink, ActorScheduler, ActorSystem}
 
 import java.net.InetSocketAddress

@@ -1,4 +1,4 @@
-package org.wisp.test.impl.io
+package org.wisp.test.impl.serializer
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, DataInputStream, DataOutputStream}
 import org.junit.jupiter.api.{Assertions, Test}
@@ -45,19 +45,24 @@ class ReadWriteTest {
 
   @Test
   def combineTest(): Unit = {
-    val id1 = IdEnum.EXEC(IdName(1, "test"))
+    val id1 = IdEnum.EXEC(IdName(1, "test test test test test" ))
 
     val out = new ByteArrayOutputStream()
     new DataOutputStream(out) | { os =>
       id1.writeTo(os)
     }
 
+    val buff = id1.toBytes
+
     val in = new ByteArrayInputStream(out.toByteArray)
     val id2 = new DataInputStream(in) | { is =>
       readFrom[IdEnum](is)
     }
 
+    val id3 = fromBytes[IdEnum](buff)
+
     Assertions.assertEquals(id1, id2)
+    Assertions.assertEquals(id1, id3)
 
   }
 
