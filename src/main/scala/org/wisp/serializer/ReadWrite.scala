@@ -46,6 +46,7 @@ trait ReadWrite[T] {
      * - First byte: compression flag (1 if compressed, 0 if uncompressed)
      * - Remaining bytes: the serialized data (either compressed or uncompressed)
      *
+     * @param compress whether to check and handle compression
      * @return A byte array containing the compression flag followed by the serialized
      *         (and possibly compressed) representation of the value.
      */

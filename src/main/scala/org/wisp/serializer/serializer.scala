@@ -32,6 +32,7 @@ package object serializer {
    *
    * @tparam T the type of value to deserialize
    * @param data   the byte array containing the serialized data
+   * @param compress whether to check and handle compression
    * @param offest the starting offset in the byte array (default: 0)
    * @param length the number of bytes to read (default: data.length)
    * @param readWrite     the implicit ReadWrite instance for type T
