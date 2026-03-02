@@ -9,10 +9,10 @@ import scala.concurrent.ExecutionContext
 
 /** Combine multiple `streams` into one
  * @param streams streams to combine */
-class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends StreamActorLink, ActorLink{
+class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends StreamActorLink, ActorLink, NodeFlow{
   def this(l:ActorLink*)(using ExecutionContext) = this(l)
 
-  protected val nodes: util.Queue[ActorLink] = createNodes()
+  protected override val nodes: util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
 
   protected var exception: Option[Throwable] = None
@@ -78,21 +78,13 @@ class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends Str
       if(ex.isDefined){
         exception = ex
 
-        var n = nodes.poll()
-        while (n != null) {
-          n << End(exception)
-          n = nodes.poll()
-        }
+        sendEnd(exception)
       }else {
         requested = false
         ended = true
 
         if(state.values.forall(_.isFinished)){
-          var n = nodes.poll()
-          while (n != null) {
-            n << End(exception)
-            n = nodes.poll()
-          }
+          sendEnd(exception)
         }
 
       }

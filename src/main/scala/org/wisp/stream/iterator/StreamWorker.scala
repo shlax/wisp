@@ -27,22 +27,14 @@ object StreamWorker {
 }
 
 /** creates new `stream` applying `flatMap` function */
-class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => Source[T])(using ExecutionContext) extends AbstractActor(inbox), StreamConsumer{
+class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => Source[T])(using ExecutionContext) extends AbstractActor(inbox), StreamConsumer, NodeFlow{
 
-  protected val nodes:util.Queue[ActorLink] = createNodes()
+  protected override val nodes:util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
 
   protected var exception: Option[Throwable] = None
   protected var source: Option[Source[T]] = None
   protected var ended = false
-
-  protected def sendEnd():Unit = {
-    var a = nodes.poll()
-    while (a != null) {
-      a << End(exception)
-      a = nodes.poll()
-    }
-  }
 
   override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
     case Next(v) =>
@@ -60,7 +52,7 @@ class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => S
       }
 
       if(exception.isDefined){
-        sendEnd()
+        sendEnd(exception)
       }else {
         var hasNext = true
         while (exception.isEmpty && hasNext && !nodes.isEmpty) {
@@ -82,7 +74,7 @@ class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => S
         }
 
         if(exception.isDefined){
-          sendEnd()
+          sendEnd(exception)
         }else {
           if (hasNext) {
             source = Some(opt.get)
@@ -115,7 +107,7 @@ class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => S
 
           if (exception.isDefined) {
             from << End(exception)
-            sendEnd()
+            sendEnd(exception)
           } else {
             if (v.isDefined) {
               from << Next(v.get)
@@ -132,7 +124,7 @@ class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => S
       if(ex.isDefined) exception = ex
       else ended = true
 
-      sendEnd()
+      sendEnd(exception)
 
       if(source.isDefined) throw new IllegalStateException("dropped value " + source.get)
   }

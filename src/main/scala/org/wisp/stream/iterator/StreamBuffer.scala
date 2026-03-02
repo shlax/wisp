@@ -8,12 +8,12 @@ import scala.concurrent.ExecutionContext
 
 /** Prefetch element from `stream`
  * @param size maximum no of elements to prefetch */
-class StreamBuffer(stream:ActorLink, size:Int)(using ExecutionContext) extends StreamActorLink, ActorLink{
+class StreamBuffer(stream:ActorLink, size:Int)(using ExecutionContext) extends StreamActorLink, ActorLink, NodeFlow{
 
   protected val queue:util.Queue[Any] = createQueue()
   protected def createQueue(): util.Queue[Any] = { util.LinkedList[Any]() }
 
-  protected val nodes: util.Queue[ActorLink] = createNodes()
+  protected override val nodes: util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
 
   protected var exception: Option[Throwable] = None
@@ -73,11 +73,7 @@ class StreamBuffer(stream:ActorLink, size:Int)(using ExecutionContext) extends S
       ended = true
 
       if (queue.isEmpty) {
-        var a = nodes.poll()
-        while (a != null) {
-          a << End(exception)
-          a = nodes.poll()
-        }
+        sendEnd(exception)
       }
 
       if(wasEnded){
