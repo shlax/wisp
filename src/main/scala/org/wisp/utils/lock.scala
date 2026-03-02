@@ -1,4 +1,4 @@
-package org.wisp
+package org.wisp.utils
 
 import java.util.concurrent.locks.ReentrantLock
 

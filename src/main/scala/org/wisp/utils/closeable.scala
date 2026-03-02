@@ -1,4 +1,4 @@
-package org.wisp
+package org.wisp.utils
 
 import scala.annotation.targetName
 import scala.util.control.NonFatal

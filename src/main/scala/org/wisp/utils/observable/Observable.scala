@@ -1,4 +1,6 @@
-package org.wisp
+package org.wisp.utils.observable
+
+import org.wisp.Consumer
 
 import java.util
 

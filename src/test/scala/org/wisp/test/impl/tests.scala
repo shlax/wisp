@@ -1,7 +1,7 @@
 package org.wisp.test.impl
 
 import org.wisp.ActorSystem
-import org.wisp.closeable.*
+import org.wisp.utils.closeable.*
 
 import scala.concurrent.ExecutionContext
 

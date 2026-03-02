@@ -1,7 +1,7 @@
 package org.wisp.stream.iterator
 
 import org.wisp.{ActorLink, Message}
-import org.wisp.lock.*
+import org.wisp.utils.lock.*
 import org.wisp.stream.iterator.message.{HasNext, Next, End}
 
 import java.util

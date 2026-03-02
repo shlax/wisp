@@ -7,7 +7,7 @@ import org.wisp.stream.extensions.*
 import org.wisp.stream.iterator.{RunnableSink, RunnableSource, RunnableSourceSink, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
 import org.wisp.stream.typed.StreamGraph
 import tests.*
-import org.wisp.closeable.*
+import org.wisp.utils.closeable.*
 import org.wisp.test.impl.serializer.IdName
 import org.wisp.{AbstractActor, ActorLink, ActorScheduler, ActorSystem}
 

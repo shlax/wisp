@@ -1,6 +1,6 @@
 package org.wisp.stream.iterator
 
-import org.wisp.lock.*
+import org.wisp.utils.lock.*
 import org.wisp.stream.Sink
 import org.wisp.stream.iterator.message.Operation
 import org.wisp.{ActorLink, Message}

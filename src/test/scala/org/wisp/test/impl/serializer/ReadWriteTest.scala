@@ -2,8 +2,9 @@ package org.wisp.test.impl.serializer
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, DataInputStream, DataOutputStream}
 import org.junit.jupiter.api.{Assertions, Test}
-import org.wisp.closeable.*
+import org.wisp.utils.closeable.*
 import org.wisp.serializer.*
+import org.wisp.utils.FromMap
 
 class ReadWriteTest {
 
@@ -100,6 +101,19 @@ class ReadWriteTest {
 
     Assertions.assertEquals(id1, id2)
 
+  }
+
+  def fromMap[T](m: Map[String, ?])(using fm: FromMap[T]): T = {
+    fm.fromMap(m)
+  }
+
+  @Test
+  def fromMapTest(): Unit = {
+    // IdName.apply.tupled(b = "test", a = 1)
+    // IdName(id:Int, name:String)
+    val m = Map("id" -> 1, "name" -> "test")
+    val n = fromMap[IdName](m)
+    Assertions.assertEquals(IdName(1,"test"), n)
   }
 
 }

@@ -1,6 +1,6 @@
 package org.wisp
 
-import org.wisp.lock.withLock
+import org.wisp.utils.lock.withLock
 
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock

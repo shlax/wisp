@@ -1,6 +1,6 @@
 package org.wisp.serializer
 
-import org.wisp.closeable.*
+import org.wisp.utils.closeable.*
 
 import java.io.{ByteArrayOutputStream, DataInput, DataOutput, DataOutputStream}
 import java.util.zip.{Deflater, DeflaterOutputStream}

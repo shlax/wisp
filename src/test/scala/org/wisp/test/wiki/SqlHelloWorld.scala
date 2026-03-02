@@ -5,7 +5,7 @@ import org.wisp.ActorSystem
 import org.wisp.stream.typed.StreamGraph
 import org.wisp.stream.{Sink, Source}
 import org.wisp.test.impl.tests.*
-import org.wisp.closeable.*
+import org.wisp.utils.closeable.*
 
 import java.sql.{DriverManager, PreparedStatement, ResultSet}
 import java.util.concurrent.atomic.AtomicInteger

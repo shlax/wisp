@@ -5,7 +5,7 @@ import org.wisp.ActorLink
 import org.wisp.stream.iterator.message.*
 
 import java.util
-import org.wisp.lock.*
+import org.wisp.utils.lock.*
 
 import java.util.concurrent.locks.Condition
 import scala.concurrent.ExecutionContext

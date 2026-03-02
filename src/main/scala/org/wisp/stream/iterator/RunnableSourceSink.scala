@@ -3,7 +3,7 @@ package org.wisp.stream.iterator
 import org.wisp.ActorLink
 import org.wisp.stream.{Sink, Source}
 import org.wisp.stream.iterator.message.{End, HasNext, Next, Operation}
-import org.wisp.lock.*
+import org.wisp.utils.lock.*
 
 import java.util
 import java.util.concurrent.locks.Condition

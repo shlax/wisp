@@ -1,6 +1,6 @@
 package org.wisp
 
-import org.wisp.closeable.*
+import org.wisp.utils.closeable.*
 
 import java.io.{ByteArrayInputStream, DataInput, DataInputStream, DataOutput}
 import java.util.zip.{Inflater, InflaterInputStream}

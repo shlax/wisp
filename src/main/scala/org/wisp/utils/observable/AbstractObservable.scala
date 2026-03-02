@@ -1,8 +1,9 @@
-package org.wisp
+package org.wisp.utils.observable
+
+import org.wisp.utils.lock.*
 
 import java.util
 import java.util.concurrent.locks.ReentrantLock
-import org.wisp.lock.*
 
 abstract class AbstractObservable[T] extends Observable[T]{
 

@@ -6,7 +6,7 @@ import java.util
 import java.util.concurrent.locks.{Condition, ReentrantLock}
 import scala.annotation.targetName
 import scala.util.control.NonFatal
-import org.wisp.lock.*
+import org.wisp.utils.lock.*
 
 import scala.concurrent.ExecutionContext
 
