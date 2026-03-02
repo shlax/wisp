@@ -26,19 +26,7 @@ class ActorSystem(inboxCapacity:Int = 3, executionContext:Option[ExecutionContex
 
   protected val closed: AtomicBoolean = AtomicBoolean(false)
 
-  /** in case of [[scala.util.control.NonFatal]] exception in `command` report it to [[reportFailure]] */
-  protected def handleFailure(command: Runnable):Runnable = {
-    () => {
-      try {
-        command.run()
-      } catch {
-        case NonFatal(ex) =>
-          reportFailure(ex)
-      }
-    }
-  }
-
-  protected val lock = new ReentrantLock()
+  protected val lock:ReentrantLock = new ReentrantLock()
   protected var finalizeWith:Option[ExecutionContext] = None
 
   protected def createFinalizeWith() : ExecutionContext = {
@@ -47,7 +35,7 @@ class ActorSystem(inboxCapacity:Int = 3, executionContext:Option[ExecutionContex
 
   override def execute(command: Runnable): Unit = {
     try {
-      executor.execute(handleFailure(command))
+      executor.execute(command)
     }catch{
       case e : RejectedExecutionException =>
         if(closed.get()) {
