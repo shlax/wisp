@@ -3,6 +3,21 @@ package org.wisp.utils
 import scala.compiletime.*
 import scala.deriving.*
 
+/**
+ * conversion from Map to case class
+ *
+ * usage:
+ * {{{
+ *   case class IdName(id:Int, name:String) derives FromMap
+ *
+ *   def fromMap[T](m: Map[String, ?])(using fm: FromMap[T]): T = {
+ *     fm.fromMap(m)
+ *   }
+ *
+ *   val map = Map("id" -> 1, "name" -> "test")
+ *   val idName = fromMap[IdName](map)
+ * }}}
+ * */
 trait FromMap[T] {
 
   def fromMap(map:Map[String, ?]):T
