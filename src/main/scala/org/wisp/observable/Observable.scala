@@ -1,4 +1,4 @@
-package org.wisp.utils.observable
+package org.wisp.observable
 
 import org.wisp.Consumer
 
