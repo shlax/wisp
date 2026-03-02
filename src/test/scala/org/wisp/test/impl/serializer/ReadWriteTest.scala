@@ -52,7 +52,7 @@ class ReadWriteTest {
       id1.writeTo(os)
     }
 
-    val buff = id1.toBytes
+    val buff = id1.toBytes()
 
     val in = new ByteArrayInputStream(out.toByteArray)
     val id2 = new DataInputStream(in) | { is =>

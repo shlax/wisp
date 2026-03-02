@@ -49,26 +49,30 @@ trait ReadWrite[T] {
      * @return A byte array containing the compression flag followed by the serialized
      *         (and possibly compressed) representation of the value.
      */
-    def toBytes: Array[Byte] = {
+    def toBytes(compress:Boolean = true): Array[Byte] = {
       var buff = new ByteArrayOutputStream()
       new DataOutputStream(buff) | { out =>
         writeTo(out)
       }
       val data = buff.toByteArray
-      buff = new ByteArrayOutputStream()
-      new DeflaterOutputStream(buff, new Deflater(Deflater.BEST_COMPRESSION, true) )|{ zip =>
-        zip.write(data)
-      }
-      val zip = buff.toByteArray
-      val res = new Array[Byte](zip.length.min(data.length) + 1)
-      if(zip.length < data.length){
-        res(0) = 1
-        System.arraycopy(zip, 0, res, 1, zip.length)
+      if(compress) {
+        buff = new ByteArrayOutputStream()
+        new DeflaterOutputStream(buff, new Deflater(Deflater.BEST_COMPRESSION, true)) | { zip =>
+          zip.write(data)
+        }
+        val zip = buff.toByteArray
+        val res = new Array[Byte](zip.length.min(data.length) + 1)
+        if (zip.length < data.length) {
+          res(0) = 1
+          System.arraycopy(zip, 0, res, 1, zip.length)
+        } else {
+          res(0) = 0
+          System.arraycopy(data, 0, res, 1, data.length)
+        }
+        res
       }else{
-        res(0) = 0
-        System.arraycopy(data, 0, res, 1, data.length)
+        data
       }
-      res
     }
 
   }

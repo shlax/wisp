@@ -37,19 +37,25 @@ package object serializer {
    * @param readWrite     the implicit ReadWrite instance for type T
    * @return the deserialized value of type T
    */
-  def fromBytes[T](data: Array[Byte], offest:Int = -1, length: Int = -1)(using readWrite: ReadWrite[T]): T = {
-    val off = if(offest >= 0) offest else 0
-    val len = if(length >= 0) length else data.length
-    val in = new ByteArrayInputStream(data, 1 + off, len - 1)
-    if(data(0 + off) == 0){
-      new DataInputStream(in) | { in =>
-        readFrom(in)
-      }
-    }else{
-      new InflaterInputStream(in, new Inflater(true))|{ zip =>
-        new DataInputStream(zip) | { in =>
+  def fromBytes[T](data: Array[Byte], compress:Boolean = true, offest:Int = -1, length: Int = -1)(using readWrite: ReadWrite[T]): T = {
+    if(compress) {
+      val off = if (offest >= 0) offest else 0
+      val len = if (length >= 0) length else data.length
+      val in = new ByteArrayInputStream(data, 1 + off, len - 1)
+      if (data(0 + off) == 0) {
+        new DataInputStream(in) | { in =>
           readFrom(in)
         }
+      } else {
+        new InflaterInputStream(in, new Inflater(true)) | { zip =>
+          new DataInputStream(zip) | { in =>
+            readFrom(in)
+          }
+        }
+      }
+    }else{
+      new DataInputStream(new ByteArrayInputStream(data)) | { in =>
+        readFrom(in)
       }
     }
   }

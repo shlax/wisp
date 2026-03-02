@@ -72,7 +72,7 @@ class UdpRouter[K, M <: RemoteMessage[K] ](address: SocketAddress, capacity:Int)
       throw new RuntimeException("crc error " + result + " != " + sum)
     }
 
-    fromBytes[M](data, 4, data.length - 4)
+    fromBytes[M](data, true, 4, data.length - 4)
   }
 
   protected def process(adr: SocketAddress, data: Array[Byte]): Unit = {

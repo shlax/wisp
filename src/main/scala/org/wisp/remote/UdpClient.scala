@@ -17,7 +17,7 @@ class UdpClient[T](address: Option[SocketAddress] = None)(using rw:ReadWrite[T])
   }
 
   protected def write(m: T): Array[Byte] = {
-    val buff = m.toBytes
+    val buff = m.toBytes()
 
     val crc = new CRC32C()
     crc.update(buff)
