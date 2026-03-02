@@ -2,16 +2,16 @@ package org.wisp.stream.iterator
 
 import org.wisp.ActorLink
 import org.wisp.stream.{Sink, Source}
-import org.wisp.stream.iterator.message.{End, HasNext, Operation, Next}
+import org.wisp.stream.iterator.message.{End, HasNext, Next, Operation}
 import org.wisp.lock.*
 
 import java.util
 import java.util.concurrent.locks.Condition
-
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
-class RunnableSourceSink[F, T](src:Source[F], sink:Sink[T])(link: RunnableSourceSink[F, T] => ActorLink)(using ExecutionContext) extends SourceActorLink, RunnableStream {
+class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: RunnableSourceSink[F, T] => ActorLink)(using ExecutionContext)
+  extends SourceActorLink, RunnableStream, SinkExecution[T]{
 
   protected val nodes: util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
@@ -39,6 +39,12 @@ class RunnableSourceSink[F, T](src:Source[F], sink:Sink[T])(link: RunnableSource
     this
   }
 
+  protected var sinkException: Option[Throwable] = None
+
+  protected override def onSinkException(t: Throwable): Unit = {
+    sinkException = Some(t)
+  }
+
   override def run(): Unit = lock.withLock {
     if (started) {
       throw new IllegalStateException("started")
@@ -52,7 +58,7 @@ class RunnableSourceSink[F, T](src:Source[F], sink:Sink[T])(link: RunnableSource
 
       for (v <- value) {
         value = None
-        sink.accept(v)
+        tryAccept(v)
         next()
       }
 
@@ -92,6 +98,10 @@ class RunnableSourceSink[F, T](src:Source[F], sink:Sink[T])(link: RunnableSource
 
     complete(sink, exceptionDst)
 
+    if (sinkException.isDefined) {
+      throw sinkException.get
+    }
+    
   }
 
   override def accept(sender: ActorLink): PartialFunction[Operation, Unit] = {

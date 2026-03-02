@@ -9,7 +9,7 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.control.NonFatal
 
 /** for each element of `stream` `sink.accept(...)` is called */
-class StreamSink[T](stream :ActorLink, sink:Sink[T])(using ExecutionContext) extends StreamActorLink{
+class StreamSink[T](stream :ActorLink, override val sink:Sink[T])(using ExecutionContext) extends StreamActorLink, SinkExecution[T]{
 
   protected val completed:Promise[Unit] = Promise()
   protected var started:Boolean = false
@@ -24,6 +24,12 @@ class StreamSink[T](stream :ActorLink, sink:Sink[T])(using ExecutionContext) ext
 
     stream.call(HasNext).onComplete(accept)
     completed.future
+  }
+
+  protected var sinkException: Option[Throwable] = None
+
+  protected override def onSinkException(t: Throwable): Unit = {
+    sinkException = Some(t)
   }
 
   override def accept(from: ActorLink): PartialFunction[Operation, Unit] = {
@@ -49,12 +55,16 @@ class StreamSink[T](stream :ActorLink, sink:Sink[T])(using ExecutionContext) ext
             err = Some(exc)
         }
       }
-      
-      if(err.isEmpty){
+
+      if(err.isEmpty && sinkException.isEmpty){
         val c = completed.trySuccess(())
         if (!c) throw new IllegalStateException("ended")
       }else {
-        completed.failure(err.get)
+        if(err.isDefined) {
+          completed.failure(err.get)
+        }else{
+          completed.failure(sinkException.get)
+        }
       }
 
   }

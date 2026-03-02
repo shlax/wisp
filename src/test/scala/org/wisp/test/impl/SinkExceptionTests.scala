@@ -56,7 +56,7 @@ class SinkExceptionTests {
         ar.set(e)
     }
 
-    Assertions.assertEquals(List("w:s:0", "w:s:1", "w:s:2", "w:s:3"), l.asScala)
+    Assertions.assertEquals(List("w:s:0", "w:s:1", "w:s:2", "w:s:3", "w:s:5"), l.asScala)
     Assertions.assertTrue(ar.get().isInstanceOf[MyException])
     Assertions.assertEquals(ar.get().getMessage, "is 4")
 
@@ -131,7 +131,7 @@ class SinkExceptionTests {
         ar.set(e)
     }
 
-    Assertions.assertEquals(List("w:s:0", "w:s:1", "w:s:2", "w:s:3"), l.asScala)
+    Assertions.assertEquals(List("w:s:0", "w:s:1", "w:s:2", "w:s:3", "w:s:5"), l.asScala)
     Assertions.assertTrue(ar.get().isInstanceOf[MyException])
     Assertions.assertEquals(ar.get().getMessage, "is 4")
 

@@ -8,7 +8,7 @@ import org.wisp.stream.Sink
 import java.util.concurrent.locks.Condition
 import scala.concurrent.ExecutionContext
 
-class RunnableSink[T](prev:ActorLink, sink:Sink[T])(using ExecutionContext) extends StreamActorLink, RunnableStream{
+class RunnableSink[T](prev:ActorLink, override val sink:Sink[T])(using ExecutionContext) extends StreamActorLink, RunnableStream, SinkExecution[T]{
 
   protected val condition: Condition = lock.newCondition()
 
@@ -20,6 +20,12 @@ class RunnableSink[T](prev:ActorLink, sink:Sink[T])(using ExecutionContext) exte
 
   protected def next(): Unit = {
     prev.call(HasNext).onComplete(accept)
+  }
+
+  protected var sinkException: Option[Throwable] = None
+
+  protected override def onSinkException(t: Throwable): Unit = {
+    sinkException = Some(t)
   }
 
   override def run(): Unit = lock.withLock {
@@ -35,7 +41,7 @@ class RunnableSink[T](prev:ActorLink, sink:Sink[T])(using ExecutionContext) exte
 
       for (v <- value) {
         value = None
-        sink.accept(v)
+        tryAccept(v)
         next()
       }
 
@@ -46,6 +52,11 @@ class RunnableSink[T](prev:ActorLink, sink:Sink[T])(using ExecutionContext) exte
     }
 
     complete(sink, exception)
+
+    if (sinkException.isDefined) {
+      throw sinkException.get
+    }
+
   }
 
   override def accept(from: ActorLink): PartialFunction[Operation, Unit] = {
