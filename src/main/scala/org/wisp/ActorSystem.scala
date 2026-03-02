@@ -8,9 +8,12 @@ import java.util.concurrent.{Executors, RejectedExecutionException}
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 import scala.util.control.NonFatal
 
-/** Hold [[scala.concurrent.ExecutionContext]] for actors
+/**
+ * Hold [[scala.concurrent.ExecutionContext]] for actors
+ *
  * @param inboxCapacity default size for inboxes
- * @param executionContext where the calls to [[execute]] are redirected */
+ * @param executionContext where the calls to [[execute]] are redirected
+ */
 class ActorSystem(inboxCapacity:Int = 3, executionContext:Option[ExecutionContextExecutorService] = None) extends ExecutionContext, AutoCloseable{
 
   protected val executor: ExecutionContextExecutorService = createExecutor()
@@ -55,8 +58,18 @@ class ActorSystem(inboxCapacity:Int = 3, executionContext:Option[ExecutionContex
     }
   }
 
+
+  /**
+   * If a custom execution context was provided, delegates failure to it.
+   * Otherwise, prints the stack trace to standard error.
+   */
   override def reportFailure(cause: Throwable): Unit = {
-    cause.printStackTrace()
+    executionContext match {
+      case Some(ec) =>
+        ec.reportFailure(cause)
+      case None =>
+        cause.printStackTrace()
+    }
   }
 
   /** Create new [[Actor]] with [[inboxCapacity]] queue size */
