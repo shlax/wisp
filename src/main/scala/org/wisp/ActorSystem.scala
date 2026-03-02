@@ -1,20 +1,27 @@
 package org.wisp
 
+import org.wisp.lock.withLock
+
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.{Executors, RejectedExecutionException}
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 import scala.util.control.NonFatal
 
 /** Hold [[scala.concurrent.ExecutionContext]] for actors
  * @param inboxCapacity default size for inboxes
- * @param finalizeWith where the calls to [[execute]] are redirected in case [[executor]] is closed */
-class ActorSystem(inboxCapacity:Int = 3, finalizeWith:Option[ExecutionContext] = Some(ExecutionContext.parasitic)) extends ExecutionContext, AutoCloseable{
+ * @param executionContext where the calls to [[execute]] are redirected */
+class ActorSystem(inboxCapacity:Int = 3, executionContext:Option[ExecutionContextExecutorService] = None) extends ExecutionContext, AutoCloseable{
 
   protected val executor: ExecutionContextExecutorService = createExecutor()
 
   /** creates virtual thread executor */
   protected def createExecutor() : ExecutionContextExecutorService = {
-    ExecutionContext.fromExecutorService( Executors.newVirtualThreadPerTaskExecutor(), reportFailure )
+    executionContext  match {
+      case Some(e) => e
+      case None =>
+        ExecutionContext.fromExecutorService( Executors.newVirtualThreadPerTaskExecutor(), reportFailure )
+    }
   }
 
   protected val closed: AtomicBoolean = AtomicBoolean(false)
@@ -31,13 +38,29 @@ class ActorSystem(inboxCapacity:Int = 3, finalizeWith:Option[ExecutionContext] =
     }
   }
 
+  protected val lock = new ReentrantLock()
+  protected var finalizeWith:Option[ExecutionContext] = None
+
+  protected def createFinalizeWith() : ExecutionContext = {
+    ExecutionContext.parasitic
+  }
+
   override def execute(command: Runnable): Unit = {
     try {
       executor.execute(handleFailure(command))
     }catch{
       case e : RejectedExecutionException =>
-        if(closed.get() && finalizeWith.isDefined) {
-          finalizeWith.get.execute(handleFailure(command))
+        if(closed.get()) {
+          val ex = lock.withLock {
+            finalizeWith match {
+              case Some(ec) => ec
+              case None =>
+                val x = createFinalizeWith()
+                finalizeWith = Some(x)
+                x
+            }
+          }
+          ex.execute(command)
         }else{
           throw e
         }
@@ -61,7 +84,9 @@ class ActorSystem(inboxCapacity:Int = 3, finalizeWith:Option[ExecutionContext] =
 
   override def close(): Unit = {
     closed.set(true)
-    executor.close()
+    if(executionContext.isEmpty) {
+      executor.close()
+    }
   }
 
 }
