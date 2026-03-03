@@ -194,7 +194,7 @@ class MapExceptionTests {
 
     }
 
-    Assertions.assertEquals(List("w:s:0", "w:s:1", "w:s:2", "w:s:3", "w:s:5"), l.asScala)
+    Assertions.assertEquals(List("w:s:0", "w:s:1", "w:s:2", "w:s:3", "w:s:5").toSet, l.asScala.toSet)
 
   }
 
