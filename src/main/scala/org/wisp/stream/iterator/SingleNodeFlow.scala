@@ -5,7 +5,7 @@ import org.wisp.stream.iterator.message.End
 
 import java.util
 
-trait NodeFlow {
+trait SingleNodeFlow {
 
   protected def nodes:util.Queue[ActorLink]
 
