@@ -5,6 +5,8 @@ import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.utils.closeable.*
 import org.wisp.serializer.*
 import org.wisp.utils.FromMap
+import org.wisp.utils.conversions.*
+
 
 class ReadWriteTest {
 
@@ -103,17 +105,18 @@ class ReadWriteTest {
 
   }
 
-  def fromMap[T](m: Map[String, ?])(using fm: FromMap[T]): T = {
-    fm.fromMap(m)
-  }
-
   @Test
   def fromMapTest(): Unit = {
     // IdName.apply.tupled(b = "test", a = 1)
     // IdName(id:Int, name:String)
     val m = Map("id" -> 1, "name" -> "test")
+
     val n = fromMap[IdName](m)
     Assertions.assertEquals(IdName(1,"test"), n)
+
+    val o = n.toMap
+    Assertions.assertEquals(o, m)
+
   }
 
 }

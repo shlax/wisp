@@ -20,7 +20,7 @@ import scala.deriving.*
  * */
 trait FromMap[T] {
 
-  def fromMap(map:Map[String, ?]):T
+  def fromMap(map:Map[String, Any]):T
 
 }
 
