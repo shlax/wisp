@@ -16,8 +16,8 @@ trait SinkExecution[T](using executionContext: ExecutionContext) {
       sink.accept(t)
     }catch {
       case NonFatal(e) =>
-        executionContext.reportFailure(e)
         onSinkException(e)
+        executionContext.reportFailure(e)
     }
   }
 
