@@ -10,7 +10,7 @@ import java.util.concurrent.locks.Condition
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
-class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: RunnableSourceSink[F, T] => ActorLink)(using ExecutionContext)
+class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: RunnableSourceSink[F, T] => ActorLink)(using ec : ExecutionContext)
   extends SourceActorLink, RunnableStream, SinkExecution[T]{
 
   protected val nodes: util.Queue[ActorLink] = createNodes()
@@ -73,6 +73,7 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
             } catch {
               case NonFatal(ex) =>
                 sourceException = Some(ex)
+                ec.reportFailure(ex)
             }
           }
           if (srcEnded || sourceException.isDefined) {

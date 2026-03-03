@@ -11,7 +11,7 @@ import java.util.concurrent.locks.Condition
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
-class RunnableSource[T](src:Source[T])(using ExecutionContext) extends SourceActorLink, RunnableStream{
+class RunnableSource[T](src:Source[T])(using ec : ExecutionContext) extends SourceActorLink, RunnableStream{
 
   protected val nodes:util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
@@ -41,6 +41,7 @@ class RunnableSource[T](src:Source[T])(using ExecutionContext) extends SourceAct
           } catch {
             case NonFatal(ex) =>
               sourceException = Some(ex)
+              ec.reportFailure(ex)
           }
         }
 

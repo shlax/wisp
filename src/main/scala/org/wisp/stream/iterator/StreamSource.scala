@@ -8,7 +8,7 @@ import org.wisp.utils.lock.*
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
-class StreamSource[T](src:Source[T])(using ExecutionContext) extends SourceActorLink {
+class StreamSource[T](src:Source[T])(using ec : ExecutionContext) extends SourceActorLink {
 
   protected var ended = false
 
@@ -33,6 +33,7 @@ class StreamSource[T](src:Source[T])(using ExecutionContext) extends SourceActor
           }catch{
             case NonFatal(e)=>
               sourceException = Some(e)
+              ec.reportFailure(e)
           }
 
           if(sourceException.isDefined){
