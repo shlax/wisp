@@ -11,7 +11,7 @@ object conversions {
           for(i <- p.productElementNames){
             s -= i
           }
-          throw new IllegalArgumentException(s"Unexpected fields: ${s.mkString(", ")}")
+          throw new IllegalArgumentException(s"Unexpected fields: [${s.mkString(", ")}]")
         }
     }
     res
