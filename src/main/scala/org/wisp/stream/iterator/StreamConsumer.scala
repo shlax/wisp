@@ -17,8 +17,7 @@ trait StreamConsumer extends Consumer[Message]{
       case Success(v) =>
         accept(v)
       case Failure(u) =>
-        val end = End(Some(u))
-        accept(Message( x => { throw UndeliveredException(x) }, end))
+        throw u
     }
   }
 

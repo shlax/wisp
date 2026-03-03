@@ -27,12 +27,11 @@ object StreamWorker {
 }
 
 /** creates new `stream` applying `flatMap` function */
-class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => Source[T])(using ExecutionContext) extends AbstractActor(inbox), StreamConsumer, NodeFlow{
+class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => Source[T])(using ec : ExecutionContext) extends AbstractActor(inbox), StreamConsumer, NodeFlow{
 
   protected override val nodes:util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
 
-  protected var exception: Option[Throwable] = None
   protected var source: Option[Source[T]] = None
   protected var ended = false
 
@@ -48,83 +47,62 @@ class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => S
         opt = Some(r)
       }catch{
         case NonFatal(ex) =>
-          exception = Some(ex)
+          ec.reportFailure(ex)
       }
 
-      if(exception.isDefined){
-        sendEnd(exception)
-      }else {
-        var hasNext = true
-        while (exception.isEmpty && hasNext && !nodes.isEmpty) {
-          var optVal:Option[T] = None
-          try{
-            optVal = opt.get.next()
-          }catch{
-            case NonFatal(ex) =>
-              exception = Some(ex)
-          }
-
-          optVal match {
-            case Some(v) =>
-              val n = nodes.poll()
-              n << Next(v)
-            case None =>
-              hasNext = false
-          }
+      var hasNext = true
+      while (hasNext && !nodes.isEmpty) {
+        var optVal:Option[T] = None
+        try{
+          optVal = opt.get.next()
+        }catch{
+          case NonFatal(ex) =>
+            ec.reportFailure(ex)
         }
 
-        if(exception.isDefined){
-          sendEnd(exception)
-        }else {
-          if (hasNext) {
-            source = Some(opt.get)
-          } else if (!hasNext && !nodes.isEmpty) {
-            stream.call(HasNext).onComplete(accept)
-          }
+        optVal match {
+          case Some(v) =>
+            val n = nodes.poll()
+            n << Next(v)
+          case None =>
+            hasNext = false
         }
+      }
 
+      if (hasNext) {
+        source = Some(opt.get)
+      } else if (!hasNext && !nodes.isEmpty) {
+        stream.call(HasNext).onComplete(accept)
       }
 
     case HasNext =>
-      if(exception.isDefined){
-        from << End(exception)
-      }else {
-        if (ended) {
-          from << End()
+      if (ended) {
+        from << End
+      } else {
+        var v:Option[T] = None
+        if(source.isDefined){
+          try {
+            v = source.get.next()
+          }catch{
+            case NonFatal(ex) =>
+              ec.reportFailure(ex)
+          }
+          if(v.isEmpty){
+            source = None
+          }
+        }
+
+        if (v.isDefined) {
+          from << Next(v.get)
         } else {
-          var v:Option[T] = None
-          if(source.isDefined){
-            try {
-              v = source.get.next()
-            }catch{
-              case NonFatal(ex) =>
-                exception = Some(ex)
-            }
-            if(v.isEmpty){
-              source = None
-            }
-          }
-
-          if (exception.isDefined) {
-            from << End(exception)
-            sendEnd(exception)
-          } else {
-            if (v.isDefined) {
-              from << Next(v.get)
-            } else {
-              nodes.add(from)
-              stream.call(HasNext).onComplete(accept)
-            }
-          }
-
+          nodes.add(from)
+          stream.call(HasNext).onComplete(accept)
         }
       }
 
-    case End(ex) =>
-      if(ex.isDefined) exception = ex
-      else ended = true
-
-      sendEnd(exception)
+    case End =>
+      ended = true
+      sendEnd()
 
       if(source.isDefined) throw new IllegalStateException("dropped value " + source.get)
   }

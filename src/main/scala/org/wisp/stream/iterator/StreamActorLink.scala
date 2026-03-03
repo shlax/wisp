@@ -20,9 +20,4 @@ abstract class StreamActorLink extends StreamConsumer{
     f.apply(t.value.asInstanceOf[Operation])
   }
 
-  protected def complete(c: Sink[?], tr: Option[Throwable]): Unit = {
-    if(tr.isDefined) throw tr.get
-    c.complete()
-  }
-
 }

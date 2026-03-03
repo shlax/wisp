@@ -83,8 +83,17 @@ class SinkExceptionTests {
         if (q == "w:s:4") throw new MyException("is 4")
         l.add(q)
       }).start()
-      
-      src.failOn(f).run()
+
+      var srcEx:Option[Throwable] = None
+
+      try {
+        src.failOn(f).run()
+      }catch {
+        case NonFatal(se) =>
+          srcEx = Some(se)
+      }
+
+      Assertions.assertTrue(srcEx.get.isInstanceOf[MyException])
 
       Await.ready(f, 1.second)
       val v = f.value.get

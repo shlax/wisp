@@ -19,9 +19,6 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
   protected val condition: Condition = lock.newCondition()
   protected val prev: ActorLink = link.apply(this)
 
-  protected var exceptionSrc: Option[Throwable] = None
-  protected var exceptionDst: Option[Throwable] = None
-
   protected var started: Boolean = false
 
   protected var srcEnded = false
@@ -33,8 +30,10 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
     prev.call(HasNext).onComplete(accept)
   }
 
+  protected var sourceException: Option[Throwable] = None
+
   override def failOn(e: Throwable): this.type = lock.withLock {
-    exceptionSrc = Some(e)
+    sourceException = Some(e)
     condition.signal()
     this
   }
@@ -54,7 +53,7 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
 
     next()
 
-    while (!dstEnded && exceptionDst.isEmpty) {
+    while (!dstEnded) {
 
       for (v <- value) {
         value = None
@@ -65,52 +64,51 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
       var a = nodes.poll()
       while (a != null) {
         if (srcEnded) {
-          a << End()
+          a << End
         } else {
           var n: Option[F] = None
-          if (!srcEnded && exceptionSrc.isEmpty) {
+          if (!srcEnded && sourceException.isEmpty) {
             try {
               n = src.next()
             } catch {
               case NonFatal(ex) =>
-                exceptionSrc = Some(ex)
+                sourceException = Some(ex)
             }
           }
-          if (srcEnded || exceptionSrc.isDefined) {
-            a << End(exceptionSrc)
+          if (srcEnded || sourceException.isDefined) {
+            a << End
           } else {
             n match {
               case Some(v) =>
                 a << Next(v)
               case None =>
                 srcEnded = true
-                a << End()
+                a << End
             }
           }
         }
         a = nodes.poll()
       }
 
-      if (!dstEnded && exceptionDst.isEmpty) {
+      if (!dstEnded) {
         condition.await()
       }
     }
 
-    complete(sink, exceptionDst)
+    sink.complete()
 
-    if (sinkException.isDefined) {
-      throw sinkException.get
-    }
-    
+    for(e <- sourceException) throw e
+    for(e <- sinkException) throw e
+
   }
 
   override def accept(sender: ActorLink): PartialFunction[Operation, Unit] = {
     case HasNext =>
-      if(exceptionSrc.isDefined){
-        sender << End(exceptionSrc)
+      if(sourceException.isDefined){
+        sender << End
       }else {
         if (srcEnded) {
-          sender << End()
+          sender << End
         } else {
           nodes.add(sender)
           condition.signal()
@@ -124,18 +122,14 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
       value = Some(v.asInstanceOf[T])
       condition.signal()
 
-    case End(ex) =>
-      if(ex.isDefined){
-        exceptionDst = ex
-        condition.signal()
-      }else{
-        val wasEnded = dstEnded
-        dstEnded = true
-        condition.signal()
-        if(wasEnded){
-          throw new IllegalStateException("ended")
-        }
+    case End =>
+      val wasEnded = dstEnded
+      dstEnded = true
+      condition.signal()
+      if(wasEnded){
+        throw new IllegalStateException("ended")
       }
+
   }
 
 }

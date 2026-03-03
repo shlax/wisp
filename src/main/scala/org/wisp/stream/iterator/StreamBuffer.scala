@@ -16,8 +16,6 @@ class StreamBuffer(stream:ActorLink, size:Int)(using ExecutionContext) extends S
   protected override val nodes: util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
 
-  protected var exception: Option[Throwable] = None
-
   protected var requested = false
   protected var ended = false
 
@@ -33,21 +31,17 @@ class StreamBuffer(stream:ActorLink, size:Int)(using ExecutionContext) extends S
 
   override def accept(sender: ActorLink): PartialFunction[Operation, Unit] = {
     case HasNext =>
-      if(exception.isDefined){
-        sender << End(exception)
-      }else{
-        val e = queue.poll()
-        if (e == null) {
-          if (ended) {
-            sender << End(exception)
-          } else {
-            nodes.add(sender)
-            next()
-          }
+      val e = queue.poll()
+      if (e == null) {
+        if (ended) {
+          sender << End
         } else {
-          sender << Next(e)
+          nodes.add(sender)
           next()
         }
+      } else {
+        sender << Next(e)
+        next()
       }
 
     case Next(v) =>
@@ -65,15 +59,14 @@ class StreamBuffer(stream:ActorLink, size:Int)(using ExecutionContext) extends S
 
       next()
 
-    case End(ex) =>
+    case End =>
       val wasEnded = ended
-      if(ex.isDefined) exception = ex
 
       requested = false
       ended = true
 
       if (queue.isEmpty) {
-        sendEnd(exception)
+        sendEnd()
       }
 
       if(wasEnded){

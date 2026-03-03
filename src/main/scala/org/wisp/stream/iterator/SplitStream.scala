@@ -34,7 +34,7 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
 
   protected val lock = new ReentrantLock()
   protected var requested:Boolean = false
-  protected var exception:Option[Throwable] = None
+
   protected var ended = false
 
   protected val nextTo: List[SplitActorLink] = {
@@ -51,12 +51,8 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
       case Next(v) =>
         for(n <- nextTo) n.next(v)
         pullNext()
-      case End(v) =>
-        if(v.isDefined){
-          exception = v
-        }else{
-          ended = true
-        }
+      case End=>
+        ended = true
 
         for(n <- nextTo) n.end()
     }
@@ -82,7 +78,7 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
       var n = nodes.poll()
       if(n == null) throw new IllegalStateException("nodes are empty")
       while(n != null){
-        n << End(exception)
+        n << End
         n = nodes.poll()
       }
     }
@@ -90,8 +86,8 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
     override def accept(t: Message): Unit = lock.withLock {
       t.value match {
         case HasNext =>
-          if(exception.isDefined || ended){
-            t.sender << End(exception)
+          if(ended){
+            t.sender << End
           }else{
             nodes.add(t.sender)
             pullNext()

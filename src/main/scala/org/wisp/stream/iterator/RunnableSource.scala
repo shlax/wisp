@@ -17,58 +17,62 @@ class RunnableSource[T](src:Source[T])(using ExecutionContext) extends SourceAct
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
 
   protected val condition: Condition = lock.newCondition()
-
-  protected var exception: Option[Throwable] = None
+  
   protected var ended = false
 
+  protected var sourceException: Option[Throwable] = None
+  
   override def failOn(e:Throwable):this.type = lock.withLock {
-    exception = Some(e)
+    sourceException = Some(e)
     condition.signal()
     this
   }
 
   override def run():Unit = lock.withLock {
 
-    while (!ended && exception.isEmpty){
+    while (!ended && sourceException.isEmpty){
 
       var a = nodes.poll()
       while (a != null) {
         var n: Option[T] = None
-        if (!ended && exception.isEmpty) {
+        if (!ended && sourceException.isEmpty) {
           try {
             n = src.next()
           } catch {
             case NonFatal(ex) =>
-              exception = Some(ex)
+              sourceException = Some(ex)
           }
         }
 
-        if(ended || exception.isDefined){
-          a << End(exception)
+        if(ended || sourceException.isDefined){
+          a << End
         }else{
           n match {
             case Some(v) =>
               a << Next(v)
             case None =>
               ended = true
-              a << End()
+              a << End
           }
         }
 
         a = nodes.poll()
       }
 
-      if(!ended && exception.isEmpty){
+      if(!ended && sourceException.isEmpty){
         condition.await()
       }
 
     }
+    
+    for(e <- sourceException) throw e
+    
   }
 
   override def accept(sender: ActorLink): PartialFunction[Operation, Unit] = {
     case HasNext =>
       if (ended) {
-        sender << End(exception)
+        sender << End
       } else {
         nodes.add(sender)
         condition.signal()

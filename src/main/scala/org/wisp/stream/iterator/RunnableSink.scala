@@ -13,8 +13,7 @@ class RunnableSink[T](prev:ActorLink, override val sink:Sink[T])(using Execution
   protected val condition: Condition = lock.newCondition()
 
   protected var value: Option[T] = None
-  protected var exception: Option[Throwable] = None
-
+  
   protected var started: Boolean = false
   protected var ended = false
 
@@ -37,7 +36,7 @@ class RunnableSink[T](prev:ActorLink, override val sink:Sink[T])(using Execution
 
     next()
 
-    while (!ended && exception.isEmpty) {
+    while (!ended) {
 
       for (v <- value) {
         value = None
@@ -45,14 +44,14 @@ class RunnableSink[T](prev:ActorLink, override val sink:Sink[T])(using Execution
         next()
       }
 
-      if (!ended && exception.isEmpty) {
+      if (!ended) {
         condition.await()
       }
 
     }
 
-    complete(sink, exception)
-
+    sink.complete()
+    
     if (sinkException.isDefined) {
       throw sinkException.get
     }
@@ -66,18 +65,15 @@ class RunnableSink[T](prev:ActorLink, override val sink:Sink[T])(using Execution
 
       value = Some(v.asInstanceOf[T])
       condition.signal()
-    case End(ex) =>
-      if(ex.isDefined){
-        exception = ex
-        condition.signal()
-      }else{
-        val wasEnded = ended
-        ended = true
-        condition.signal()
-        if(wasEnded){
-          throw new IllegalStateException("ended")
-        }
+    case End =>
+      val wasEnded = ended
+      
+      ended = true
+      condition.signal()
+      if(wasEnded){
+        throw new IllegalStateException("ended")
       }
+      
   }
 
 }

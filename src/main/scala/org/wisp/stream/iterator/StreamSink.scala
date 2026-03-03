@@ -44,16 +44,14 @@ class StreamSink[T](stream :ActorLink, override val sink:Sink[T])(using Executio
           completed.failure(exc)
       }
 
-    case End(ex) =>
-      var err = ex
+    case End =>
+      var err:Option[Throwable] = None
 
-      if(err.isEmpty) {
-        try {
-          sink.complete()
-        } catch {
-          case NonFatal(exc) =>
-            err = Some(exc)
-        }
+      try {
+        sink.complete()
+      } catch {
+        case NonFatal(exc) =>
+          err = Some(exc)
       }
 
       if(err.isEmpty && sinkException.isEmpty){
