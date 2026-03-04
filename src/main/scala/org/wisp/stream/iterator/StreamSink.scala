@@ -35,14 +35,8 @@ class StreamSink[T](stream :ActorLink, override val sink:Sink[T])(using Executio
   override def accept(from: ActorLink): PartialFunction[Operation, Unit] = {
 
     case Next(v) =>
-      if(completed.isCompleted) throw new IllegalStateException("ended")
-      try {
-        sink.accept(v.asInstanceOf[T])
-        stream.call(HasNext).onComplete(accept)
-      }catch{
-        case NonFatal(exc) =>
-          completed.failure(exc)
-      }
+      tryAccept(v.asInstanceOf[T])
+      stream.call(HasNext).onComplete(accept)
 
     case End =>
       var err:Option[Throwable] = None
