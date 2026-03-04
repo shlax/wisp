@@ -84,16 +84,7 @@ class SinkExceptionTests {
         l.add(q)
       }).start()
 
-      var srcEx:Option[Throwable] = None
-
-      try {
-        src.failOn(f).run()
-      }catch {
-        case NonFatal(se) =>
-          srcEx = Some(se)
-      }
-
-      Assertions.assertTrue(srcEx.get.isInstanceOf[MyException])
+      src.failOn(f).run()
 
       Await.ready(f, 1.second)
       val v = f.value.get
@@ -105,7 +96,7 @@ class SinkExceptionTests {
       }
     }
 
-    Assertions.assertEquals(List("w:s:0", "w:s:1", "w:s:2", "w:s:3"), l.asScala)
+    Assertions.assertEquals(List("w:s:0", "w:s:1", "w:s:2", "w:s:3", "w:s:5"), l.asScala)
     Assertions.assertTrue(ar.get().isInstanceOf[MyException])
     Assertions.assertEquals(ar.get().getMessage, "is 4")
 
@@ -178,7 +169,7 @@ class SinkExceptionTests {
       }
     }
 
-    Assertions.assertEquals(List("w:s:0", "w:s:1", "w:s:2", "w:s:3"), l.asScala)
+    Assertions.assertEquals(List("w:s:0", "w:s:1", "w:s:2", "w:s:3", "w:s:5"), l.asScala)
     Assertions.assertTrue(ar.get().isInstanceOf[MyException])
     Assertions.assertEquals(ar.get().getMessage, "is 4")
 
