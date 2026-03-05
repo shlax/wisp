@@ -33,7 +33,7 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
   }
 
   protected val lock = new ReentrantLock()
-  protected var requested:Boolean = true
+  protected var requested = true
 
   protected var ended = false
 
