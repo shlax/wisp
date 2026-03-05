@@ -8,8 +8,8 @@ import java.util
 import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.ExecutionContext
 
-/** Duplicate `original` stream into links created with `link.next()`
- * Data from `original` is pulled after every link created with `link.next()` is pulled.
+/** Duplicate `original` stream into links created with `link.copy`
+ * Data from `original` is pulled after every link created with `link.copy` is pulled.
  * @note elements are not duplicated */
 class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using ExecutionContext) extends StreamConsumer {
 
