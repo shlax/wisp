@@ -33,11 +33,9 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
   }
 
   protected val lock = new ReentrantLock()
-  protected var requested:Boolean = false
+  protected var requested:Boolean = true
 
   protected var ended = false
-
-  protected var building:Boolean = true
 
   protected val nextTo: List[SplitActorLink] = {
     val s = SplitBuilder()
@@ -46,7 +44,7 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
   }
 
   lock.withLock {
-    building = false
+    requested = false
     pullNext()
   }
 
@@ -66,7 +64,6 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
   }
 
   protected def pullNext():Unit = {
-    if(building) return
     if (!requested && nextTo.forall(i => !i.nodes.isEmpty)) {
       requested = true
       original.call(HasNext).onComplete(SplitStream.this.accept)
