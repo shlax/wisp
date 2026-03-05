@@ -24,7 +24,7 @@ class Streams {
       // create stream from source then add 1 and print result
       val stream = graph.from(source).map(_ + 1).to(println)
       // start execution and wait for completion
-      Await.ready(stream.start(), 1.second)
+      Await.ready(stream.start, 1.second)
     }
   }
 
@@ -58,7 +58,7 @@ class Streams {
         Seq(w1, w2)
       }
       // start execution and wait for completion
-      Await.ready(Future.sequence(stream.map(_.start())), 1.second)
+      Await.ready(Future.sequence(stream.map(_.start)), 1.second)
     }
   }
 
@@ -94,7 +94,7 @@ class Streams {
         graph.zip(Seq(w1, w2)).to(println)
       }
       // start execution and wait for completion
-      Await.ready(stream.start(), 1.second)
+      Await.ready(stream.start, 1.second)
     }
   }
 
@@ -118,13 +118,13 @@ class Streams {
         src.split{ split =>
 
           // create worker 1
-          val w1 = split.next().map(i => {
+          val w1 = split.copy.map(i => {
             Thread.sleep(10)
             "w1:" + i
           }).to(println) // to sink 1
 
           // create worker 2
-          val w2 = split.next().map(i => {
+          val w2 = split.copy.map(i => {
             Thread.sleep(20)
             "w2:" + i
           }).to(println) // to sink 2
@@ -134,7 +134,7 @@ class Streams {
 
       }
       // start execution and wait for completion
-      Await.ready(Future.sequence(stream.map(_.start())), 1.second)
+      Await.ready(Future.sequence(stream.map(_.start)), 1.second)
     }
   }
 

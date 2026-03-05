@@ -82,7 +82,7 @@ class SinkExceptionTests {
       val f = StreamSink(w, (q:String) => {
         if (q == "w:s:4") throw new MyException("is 4")
         l.add(q)
-      }).start()
+      }).start
 
       src.failOn(f).run()
 
@@ -157,7 +157,7 @@ class SinkExceptionTests {
       val f = StreamSink(w, (q:String) =>{
         if (q == "w:s:4") throw new MyException("is 4")
         l.add(q)
-      }).start()
+      }).start
 
       Await.ready(f, 1.second)
       val v = f.value.get

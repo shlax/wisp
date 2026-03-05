@@ -15,7 +15,7 @@ class StreamSink[T](stream :ActorLink, override val sink:Sink[T])(using Executio
   protected var started:Boolean = false
 
   /** start precessing data */
-  def start(): Future[Unit] = lock.withLock{
+  def start: Future[Unit] = lock.withLock{
     if(started){
       throw new IllegalStateException("started")
     }else{

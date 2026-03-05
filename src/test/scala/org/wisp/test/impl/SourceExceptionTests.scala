@@ -82,7 +82,7 @@ class SourceExceptionTests {
         "w:" + q
       ))
 
-      val f = StreamSink(w, l.add).start()
+      val f = StreamSink(w, l.add).start
 
       var srcEx:Option[Throwable] = None
 
@@ -146,7 +146,7 @@ class SourceExceptionTests {
         "w:" + q
       ))
 
-      val f = StreamSink(w, l.add).start()
+      val f = StreamSink(w, l.add).start
 
       Await.ready(f, 1.second)
       val v = f.value.get
@@ -176,7 +176,7 @@ class SourceExceptionTests {
         "w:" + q
       ))
 
-      val f = StreamSink(w, l.add).start()
+      val f = StreamSink(w, l.add).start
 
       Await.ready(f, 1.second)
       val v = f.value.get
@@ -210,7 +210,7 @@ class SourceExceptionTests {
 
       val r = ZipStream(w1, w2)
 
-      val f = StreamSink(r, l.add).start()
+      val f = StreamSink(r, l.add).start
 
       Await.ready(f, 1.second)
       val v = f.value.get

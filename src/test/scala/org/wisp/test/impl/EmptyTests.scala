@@ -67,7 +67,7 @@ class EmptyTests {
     val l = Collections.synchronizedList(new util.ArrayList[Int]())
 
     ActorSystem() || { sys =>
-      val p = StreamGraph(sys).from(data).map(i => i + 1).to(l.add).start()
+      val p = StreamGraph(sys).from(data).map(i => i + 1).to(l.add).start
       Await.result(p, 1.second)
     }
 
@@ -88,7 +88,7 @@ class EmptyTests {
       val s2 = Sink[String](l2.add).map[Int]("b:" + _).map[Int](i => i * 2 + 1)
       val t = s1.thenTo(s2)
 
-      val p = StreamGraph(sys).from(data).map(i => i + 1).to(t).start()
+      val p = StreamGraph(sys).from(data).map(i => i + 1).to(t).start
       Await.result(p, 1.second)
     }
 
@@ -149,7 +149,7 @@ class EmptyTests {
         "w:" + q
       ))
 
-      val p = StreamSink(w, l.add).start()
+      val p = StreamSink(w, l.add).start
       src.failOn(p).run()
       Await.ready(p, 1.second)
 
@@ -197,7 +197,7 @@ class EmptyTests {
         "w:" + q
       ))
 
-      val p = StreamSink(w, l.add).start()
+      val p = StreamSink(w, l.add).start
       Await.ready(p, 1.second)
     }
 
@@ -218,7 +218,7 @@ class EmptyTests {
         "w:" + q
       ))
 
-      val p = StreamSink(w, l.add).start()
+      val p = StreamSink(w, l.add).start
       Await.ready(p, 1.second)
 
     }
@@ -246,7 +246,7 @@ class EmptyTests {
 
       val r = ZipStream(w1, w2)
 
-      val p = StreamSink(r, l.add).start()
+      val p = StreamSink(r, l.add).start
       Await.ready(p, 1.second)
 
     }
@@ -268,11 +268,11 @@ class EmptyTests {
       var sl: List[StreamSink[?]] = Nil
 
       val r = SplitStream(src) { b =>
-        sl = StreamSink(b.next(), l1.add) :: sl
-        sl = StreamSink(b.next(), l2.add) :: sl
+        sl = StreamSink(b.copy, l1.add) :: sl
+        sl = StreamSink(b.copy, l2.add) :: sl
       }
 
-      val p = Future.sequence(sl.map(_.start()))
+      val p = Future.sequence(sl.map(_.start))
       Await.ready(p, 1.second)
 
     }

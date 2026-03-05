@@ -83,7 +83,7 @@ class FlatMapExceptionTests {
         }else List("w:" + q).asSource
       ))
 
-      val f = StreamSink(w, l.add).start()
+      val f = StreamSink(w, l.add).start
 
       src.failOn(f).run()
 
@@ -151,7 +151,7 @@ class FlatMapExceptionTests {
         }else List("w:" + q).asSource
       ))
 
-      val f = StreamSink(w, l.add).start()
+      val f = StreamSink(w, l.add).start
 
       Await.ready(f, 1.second)
       val v = f.value.get

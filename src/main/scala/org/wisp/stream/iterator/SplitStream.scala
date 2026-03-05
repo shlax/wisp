@@ -14,13 +14,13 @@ import scala.concurrent.ExecutionContext
 class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using ExecutionContext) extends StreamConsumer {
 
   trait Split {
-    def next(): ActorLink
+    def copy: ActorLink
   }
 
   protected class SplitBuilder extends Split {
     var links:List[SplitActorLink] = Nil
 
-    override def next(): SplitActorLink = {
+    override def copy: SplitActorLink = {
       val link = SplitActorLink()
       links = link :: links
       link

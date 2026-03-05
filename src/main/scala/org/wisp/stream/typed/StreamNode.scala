@@ -30,7 +30,7 @@ class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
 
   class SplitNode(from: SplitStream#Split) {
     /** Create new copy */
-    def next(): StreamNode[T] = StreamNode[T](graph, from.next())
+    def copy: StreamNode[T] = StreamNode[T](graph, from.copy)
   }
 
   /** Duplicate current stream
