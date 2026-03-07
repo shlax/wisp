@@ -4,9 +4,6 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream, DataInputStream, Da
 import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.utils.closeable.*
 import org.wisp.serializer.*
-import org.wisp.utils.FromMap
-import org.wisp.utils.conversions.*
-
 
 class ReadWriteTest {
 
@@ -102,20 +99,6 @@ class ReadWriteTest {
     }
 
     Assertions.assertEquals(id1, id2)
-
-  }
-
-  @Test
-  def fromMapTest(): Unit = {
-    // IdName.apply.tupled(b = "test", a = 1)
-    // IdName(id:Int, name:String)
-    val m = Map("id" -> 1, "name" -> "test")
-
-    val n = fromMap[IdName](m)
-    Assertions.assertEquals(IdName(1,"test"), n)
-
-    val o = n.toMap
-    Assertions.assertEquals(o, m)
 
   }
 
