@@ -28,7 +28,7 @@ class UdpClient[T](address: Option[SocketAddress] = None)(using rw:ReadWrite[T])
     System.arraycopy(buff, 0, result, 4, buff.length)
 
     val hex = HexFormat.of().parseHex(sum)
-    System.arraycopy(hex, 0, result, 0, hex.length)
+    System.arraycopy(hex, 0, result, 0, 4)
 
     result
   }
