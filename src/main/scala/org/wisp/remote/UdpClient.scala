@@ -5,6 +5,7 @@ import java.nio.ByteBuffer
 import java.nio.channels.DatagramChannel
 import org.wisp.serializer.ReadWrite
 
+import java.util.HexFormat
 import java.util.zip.CRC32C
 
 class UdpClient[T](address: Option[SocketAddress] = None)(using rw:ReadWrite[T]) extends AutoCloseable {
@@ -21,17 +22,13 @@ class UdpClient[T](address: Option[SocketAddress] = None)(using rw:ReadWrite[T])
 
     val crc = new CRC32C()
     crc.update(buff)
-    var sum = crc.getValue
+    val sum = crc.getValue.toHexString
 
     val result = new Array[Byte](buff.length + 4)
     System.arraycopy(buff, 0, result, 4, buff.length)
 
-    var i = 3
-    while (i >= 0) {
-      result(i) = (sum & 0xFF).asInstanceOf[Byte]
-      sum >>= 8
-      i -= 1
-    }
+    val hex = HexFormat.of().parseHex(sum)
+    System.arraycopy(hex, 0, result, 0, hex.length)
 
     result
   }

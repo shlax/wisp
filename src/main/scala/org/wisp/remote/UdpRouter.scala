@@ -7,6 +7,7 @@ import org.wisp.serializer.*
 import java.net.SocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.AsynchronousCloseException
+import java.util.HexFormat
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentMap}
 import java.util.zip.CRC32C
@@ -58,18 +59,12 @@ class UdpRouter[K, M <: RemoteMessage[K] ](address: SocketAddress, capacity:Int)
   protected def read(data: Array[Byte]):M = {
     val crc = new CRC32C()
     crc.update(data, 4, data.length - 4)
-    val sum = crc.getValue
+    val sum = crc.getValue.toHexString
 
-    var result:Long = 0
-    var i = 0
-    while (i < 4) {
-      result <<= 8
-      result |= (data(i) & 0xFF)
-      i += 1
-    }
+    val hex = HexFormat.of().formatHex(data, 0, 4)
 
-    if(result != sum){
-      throw new RuntimeException("crc error " + result + " != " + sum)
+    if(hex != sum){
+      throw new RuntimeException("crc error " + hex + " != " + sum)
     }
 
     fromBytes[M](data, true, 4, data.length - 4)
