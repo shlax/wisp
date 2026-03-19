@@ -59,7 +59,8 @@ class UdpRouter[K, M <: RemoteMessage[K] ](address: SocketAddress, capacity:Int)
   protected def read(data: Array[Byte]):M = {
     val crc = new CRC32C()
     crc.update(data, 4, data.length - 4)
-    val sum = crc.getValue.toHexString
+    var sum = crc.getValue.toHexString
+    while(sum.length < 8) sum = "0"+sum
 
     val hex = HexFormat.of().formatHex(data, 0, 4)
 

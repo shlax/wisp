@@ -22,13 +22,14 @@ class UdpClient[T](address: Option[SocketAddress] = None)(using rw:ReadWrite[T])
 
     val crc = new CRC32C()
     crc.update(buff)
-    val sum = crc.getValue.toHexString
+    var sum = crc.getValue.toHexString
+    while(sum.length < 8) sum = "0"+sum
 
     val result = new Array[Byte](buff.length + 4)
     System.arraycopy(buff, 0, result, 4, buff.length)
 
     val hex = HexFormat.of().parseHex(sum)
-    System.arraycopy(hex, 0, result, 0, hex.length)
+    System.arraycopy(hex, 0, result, 4 - hex.length, hex.length)
 
     result
   }
