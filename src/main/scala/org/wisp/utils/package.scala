@@ -15,7 +15,7 @@ package object utils {
   }
 
   def bytesToUnsignedInt(data:Array[Byte]):Long = {
-    ByteBuffer.wrap(data, 0, 4).getInt & 0xffffffffL
+    Integer.toUnsignedLong(ByteBuffer.wrap(data, 0, 4).getInt)
   }
 
 }
