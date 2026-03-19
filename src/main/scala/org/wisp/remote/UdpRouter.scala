@@ -62,7 +62,8 @@ class UdpRouter[K, M <: RemoteMessage[K] ](address: SocketAddress, capacity:Int)
     var sum = crc.getValue.toHexString
     while(sum.length < 8) sum = "0"+sum
 
-    val hex = HexFormat.of().formatHex(data, 0, 4)
+    var hex = HexFormat.of().formatHex(data, 0, 4)
+    while (hex.length < 8) hex = "0" + hex
 
     if(hex != sum){
       throw new RuntimeException("crc error " + hex + " != " + sum)
