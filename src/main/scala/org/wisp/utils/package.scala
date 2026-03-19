@@ -5,7 +5,7 @@ import java.nio.ByteBuffer
 package object utils {
 
   /**
-   * @param data unsigned int (0 - 4,294,967,295)
+   * @param data unsigned int
    * @return packed byte array [4]
    */
   def unsignedIntToBytes(data:Long): Array[Byte] = {
@@ -14,6 +14,10 @@ package object utils {
     res
   }
 
+  /**
+   * @param data packed byte array [4]
+   * @return unsigned int
+   */
   def bytesToUnsignedInt(data:Array[Byte]):Long = {
     Integer.toUnsignedLong(ByteBuffer.wrap(data, 0, 4).getInt)
   }
