@@ -3,11 +3,11 @@ package org.wisp.remote
 import org.wisp.remote.exceptions.RemoteAskException
 import org.wisp.{ActorLink, Message}
 import org.wisp.serializer.*
+import org.wisp.utils.bytesToUnsignedInt
 
 import java.net.SocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.AsynchronousCloseException
-import java.util.HexFormat
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentMap}
 import java.util.zip.CRC32C
@@ -59,11 +59,9 @@ class UdpRouter[K, M <: RemoteMessage[K] ](address: SocketAddress, capacity:Int)
   protected def read(data: Array[Byte]):M = {
     val crc = new CRC32C()
     crc.update(data, 4, data.length - 4)
-    var sum = crc.getValue.toHexString
-    while(sum.length < 8) sum = "0"+sum
+    val sum = crc.getValue
 
-    var hex = HexFormat.of().formatHex(data, 0, 4)
-    while (hex.length < 8) hex = "0" + hex
+    val hex = bytesToUnsignedInt(data)
 
     if(hex != sum){
       throw new RuntimeException("crc error " + hex + " != " + sum)

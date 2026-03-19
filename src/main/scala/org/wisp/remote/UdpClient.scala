@@ -4,8 +4,8 @@ import java.net.SocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.DatagramChannel
 import org.wisp.serializer.ReadWrite
+import org.wisp.utils.unsignedIntToBytes
 
-import java.util.HexFormat
 import java.util.zip.CRC32C
 
 class UdpClient[T](address: Option[SocketAddress] = None)(using rw:ReadWrite[T]) extends AutoCloseable {
@@ -22,17 +22,18 @@ class UdpClient[T](address: Option[SocketAddress] = None)(using rw:ReadWrite[T])
 
     val crc = new CRC32C()
     crc.update(buff)
-    var sum = crc.getValue.toHexString
-    while(sum.length < 8) sum = "0"+sum
+    val sum = crc.getValue
 
     val result = new Array[Byte](buff.length + 4)
     System.arraycopy(buff, 0, result, 4, buff.length)
 
-    val hex = HexFormat.of().parseHex(sum)
-    System.arraycopy(hex, 0, result, 4 - hex.length, hex.length)
+    val hex = unsignedIntToBytes(sum)
+    System.arraycopy(hex, 0, result, 0, 4)
 
     result
   }
+
+
 
   def send(adr: SocketAddress, m: T): Unit = {
     val buff = write(m)
