@@ -33,8 +33,6 @@ class UdpClient[T](address: Option[SocketAddress] = None)(using rw:ReadWrite[T])
     result
   }
 
-
-
   def send(adr: SocketAddress, m: T): Unit = {
     val buff = write(m)
     val r = channel.send(ByteBuffer.wrap(buff), adr)
