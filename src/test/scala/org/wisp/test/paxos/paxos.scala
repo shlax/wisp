@@ -1,15 +1,21 @@
 package org.wisp.test.paxos
 
+import org.wisp.remote.RemoteMessage
+import org.wisp.serializer.{ReadWrite, given}
 import org.wisp.{AbstractActor, ActorLink, ActorScheduler}
 
 import java.util.concurrent.CompletableFuture
 import scala.concurrent.ExecutionContext
 import scala.util.Random
 
-type Value = Any
+type Value = String
 type NodeId = Int
 
-case class GenerationNumber(seq: Int, nodeId: NodeId) extends Ordered[GenerationNumber] {
+trait PaxosMessage extends RemoteMessage[String] {
+  override def path: String = "paxos"
+}
+
+case class GenerationNumber(seq: Int, nodeId: NodeId) extends Ordered[GenerationNumber] derives ReadWrite {
   override def compare(o: GenerationNumber): Int = {
     var r = seq.compareTo(o.seq)
     if (r == 0) r = nodeId.compareTo(o.nodeId)
@@ -17,20 +23,20 @@ case class GenerationNumber(seq: Int, nodeId: NodeId) extends Ordered[Generation
   }
 }
 
-case class GenerationValue(n: GenerationNumber, value: Value) extends Ordered[GenerationValue] {
+case class GenerationValue(n: GenerationNumber, value: Value) extends Ordered[GenerationValue] derives ReadWrite {
   override def compare(that: GenerationValue): Int = n.compare(that.n)
 }
 
-case class Prepare(from:String, n: GenerationNumber)
-case class Promise(from:String, n: GenerationNumber, lastAccepted: Option[GenerationValue])
-case class Accept(from:String, n: GenerationValue)
-case class Accepted(from:String, n: GenerationValue)
+case class Prepare(from:String, n: GenerationNumber) extends PaxosMessage derives ReadWrite
+case class Promise(from:String, n: GenerationNumber, lastAccepted: Option[GenerationValue]) extends PaxosMessage derives ReadWrite
+case class Accept(from:String, n: GenerationValue) extends PaxosMessage derives ReadWrite
+case class Accepted(from:String, n: GenerationValue) extends PaxosMessage derives ReadWrite
 
-case class Ignore(n: GenerationNumber)
+case class Ignore(n: GenerationNumber) extends PaxosMessage derives ReadWrite
 
-case class TryRun(n: Option[GenerationNumber])
+case class TryRun(n: Option[GenerationNumber]) extends PaxosMessage derives ReadWrite
 
-class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorLink], learner: CompletableFuture[Any], scheduler: ActorScheduler)(using ExecutionContext) extends AbstractActor(scheduler) {
+class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorLink], learner: CompletableFuture[String], scheduler: ActorScheduler)(using ExecutionContext) extends AbstractActor(scheduler) {
   val quorum: Int = {
     val s = acceptors.size
     val n2 = if (s % 2 == 0) s / 2 else (s - 1) / 2
