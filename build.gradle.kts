@@ -7,9 +7,9 @@ repositories {
 }
 
 dependencies {
-    implementation("org.scala-lang:scala3-library_3:3.8.1")
+    implementation("org.scala-lang:scala3-library_3:3.8.3")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:6.0.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.0.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     testImplementation("com.h2database:h2:2.4.240")
