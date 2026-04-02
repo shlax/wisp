@@ -41,9 +41,8 @@ case class Accepted(from:NodeId, n: GenerationValue) extends PaxosMessage derive
 case class Ignore(n: GenerationNumber) extends PaxosMessage derives ReadWrite {
   override def path: String = "proposer"
 }
-case class TryRun(n: Option[GenerationNumber]) extends PaxosMessage derives ReadWrite {
-  override def path: String = "proposer"
-}
+
+case class TryRun(n: Option[GenerationNumber])
 
 class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorLink], learner: CompletableFuture[String], scheduler: ActorScheduler)(using ExecutionContext) extends AbstractActor(scheduler) {
   val quorum: Int = {

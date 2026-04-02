@@ -1,6 +1,6 @@
 package org.wisp.test.paxos
 
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.ActorSystem
 import org.wisp.remote.{RemoteLink, UdpClient, UdpRouter}
 import org.wisp.serializer.{*, given}
@@ -9,7 +9,6 @@ import java.io.{DataInput, DataOutput}
 import java.net.InetSocketAddress
 import java.util.concurrent.CompletableFuture
 import scala.concurrent.ExecutionContext
-import scala.util.Random
 
 class PaxosTest {
 
@@ -23,7 +22,6 @@ class PaxosTest {
         case 3 => readFrom[Accept](dataInput)
         case 4 => readFrom[Accepted](dataInput)
         case 5 => readFrom[Ignore](dataInput)
-        case 6 => readFrom[TryRun](dataInput)
       }
     }
 
@@ -34,81 +32,70 @@ class PaxosTest {
         case m:Accept => dataOutput.writeInt(3); m.writeTo(dataOutput)
         case m:Accepted => dataOutput.writeInt(4); m.writeTo(dataOutput)
         case m:Ignore => dataOutput.writeInt(5); m.writeTo(dataOutput)
-        case m:TryRun => dataOutput.writeInt(6); m.writeTo(dataOutput)
       }
     }
 
   }
 
-  def udpRouter(as:ActorSystem, id:Int): UdpRouter[String, PaxosMessage] = {
-    given ExecutionContext = as
-    val adr = InetSocketAddress("localhost", 9840 + id)
-    UdpRouter[String, PaxosMessage](adr, 2024)
-  }
+  class Node(id:Int, ids:List[Int], value:String) extends AutoCloseable{
+    private val actorSystem = new ActorSystem
+    given ExecutionContext = actorSystem
 
-  def createAcceptor(id:Int, acceptorsIds: List[Int]): (ActorSystem, UdpRouter[String, PaxosMessage], UdpClient[PaxosMessage]) = {
-    val actorSystem = new ActorSystem
-    val router = udpRouter(actorSystem, id)
-    val udpClient = UdpClient()
-    val acceptors = acceptorsIds.map { id =>
+    private val address = InetSocketAddress("localhost", 9840 + id)
+    private val router = UdpRouter[String, PaxosMessage](address, 2024)
+    private val udpClient = UdpClient()
+
+    private val links = ids.map { id =>
       val adr = InetSocketAddress("localhost", 9840 + id)
-      RemoteLink[PaxosMessage](udpClient, adr)
-    }
-    val acceptor = actorSystem.create(a => new Acceptor(id, id => acceptors(id) ,a))
+      (id, RemoteLink[PaxosMessage](udpClient, adr))
+    }.toMap
+
+    private val acceptor = actorSystem.create(a => new Acceptor(id, nId => links(nId), a))
     router.register("acceptor", acceptor)
-    (actorSystem, router, udpClient)
-  }
 
-  def createProposer(nodeId: Int, as: ActorSystem, router:UdpRouter[String, PaxosMessage], acceptorsIds: List[Int], value: String, learner: CompletableFuture[String]): (Proposer, UdpClient[PaxosMessage]) = {
-    given ExecutionContext = as
-    val udpClient = UdpClient()
-    val acceptors = acceptorsIds.map{ id =>
-      val adr = InetSocketAddress("localhost", 9840 + id)
-      RemoteLink[PaxosMessage](udpClient, adr)
-    }
-    val proposer = as.create(c => new Proposer(nodeId, value, acceptors, learner, c))
+    val learner : CompletableFuture[String] = new CompletableFuture[String]
+
+    val proposer: Proposer = actorSystem.create(c => new Proposer(id, value, links.values.toList, learner, c))
     router.register("proposer", proposer)
-    (proposer, udpClient)
+
+    override def close(): Unit = {
+      try{
+        try{
+          udpClient.close()
+        }finally {
+          router.close()
+        }
+      }finally {
+        actorSystem.close()
+      }
+    }
   }
 
   @Test
   def test() :Unit = {
-    val learner = new CompletableFuture[String]
-
     val ids = List(1, 2, 3)
 
-    val n1 = createAcceptor(1, ids)
-    val n2 = createAcceptor(2, ids)
-    val n3 = createAcceptor(3, ids)
+    val n1 = Node(1, ids, "cat")
+    val n2 = Node(1, ids, "dog")
+    val n3 = Node(1, ids, "mouse")
 
-    val p1 = createProposer(1, n1._1, n1._2, ids, "cat", learner)
-    val p2 = createProposer(2, n2._1, n2._2, ids, "dog", learner)
-    val p3 = createProposer(3, n3._1, n3._2, ids, "mouse", learner)
+    n1.proposer << TryRun(None)
+    n2.proposer << TryRun(None)
+    n3.proposer << TryRun(None)
 
-    p1._1 << TryRun(None)
-    p2._1 << TryRun(None)
-    p3._1 << TryRun(None)
+    val res1 = n1.learner.get()
+    val res2 = n2.learner.get()
+    Assertions.assertEquals(res1, res2)
+    val res3 = n3.learner.get()
+    Assertions.assertEquals(res2, res3)
 
-    val res = learner.get()
-    println(res)
+    println(res3)
 
     Thread.sleep(30 * 1000)
 
-    p1._2.close()
-    p2._2.close()
-    p3._2.close()
-
-    n1._3.close()
-    n2._3.close()
-    n3._3.close()
-
-    n1._2.close()
-    n2._2.close()
-    n3._2.close()
-
-    n1._1.close()
-    n2._1.close()
-    n3._1.close()
+    n1.close()
+    n2.close()
+    n3.close()
   }
 
 }
