@@ -86,9 +86,15 @@ class PaxosTest {
     val res = learner.get()
     println(res)
 
+    Thread.sleep(30 * 1000)
+
     p1._2.close()
     p2._2.close()
     p3._2.close()
+
+    n1._2.close()
+    n2._2.close()
+    n3._2.close()
 
     n1._1.close()
     n2._1.close()
