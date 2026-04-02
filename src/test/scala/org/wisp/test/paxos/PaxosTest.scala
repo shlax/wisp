@@ -46,38 +46,44 @@ class PaxosTest {
     UdpRouter[String, PaxosMessage](adr, 2024)
   }
 
-  def createAcceptor(id:Int): (ActorSystem, UdpRouter[String, PaxosMessage]) = {
+  def createAcceptor(id:Int, acceptorsIds: List[Int]): (ActorSystem, UdpRouter[String, PaxosMessage], UdpClient[PaxosMessage]) = {
     val actorSystem = new ActorSystem
     val router = udpRouter(actorSystem, id)
-    val acceptor = actorSystem.create(a => new Acceptor(id, a))
-    router.register("paxos", acceptor)
-    (actorSystem, router)
+    val udpClient = UdpClient()
+    val acceptors = acceptorsIds.map { id =>
+      val adr = InetSocketAddress("localhost", 9840 + id)
+      RemoteLink[PaxosMessage](udpClient, adr)
+    }
+    val acceptor = actorSystem.create(a => new Acceptor(id, id => acceptors(id) ,a))
+    router.register("acceptor", acceptor)
+    (actorSystem, router, udpClient)
   }
 
-  def createProposer(nodeId: Int, as: ActorSystem, acceptorsIds: List[Int], value: String, learner: CompletableFuture[String]): (Proposer, UdpClient[PaxosMessage]) = {
+  def createProposer(nodeId: Int, as: ActorSystem, router:UdpRouter[String, PaxosMessage], acceptorsIds: List[Int], value: String, learner: CompletableFuture[String]): (Proposer, UdpClient[PaxosMessage]) = {
     given ExecutionContext = as
     val udpClient = UdpClient()
     val acceptors = acceptorsIds.map{ id =>
       val adr = InetSocketAddress("localhost", 9840 + id)
       RemoteLink[PaxosMessage](udpClient, adr)
     }
-    val res = as.create(c => new Proposer(nodeId, value, acceptors, learner, c))
-    (res, udpClient)
+    val proposer = as.create(c => new Proposer(nodeId, value, acceptors, learner, c))
+    router.register("proposer", proposer)
+    (proposer, udpClient)
   }
 
   @Test
   def test() :Unit = {
     val learner = new CompletableFuture[String]
 
-    val n1 = createAcceptor(1)
-    val n2 = createAcceptor(2)
-    val n3 = createAcceptor(3)
-
     val ids = List(1, 2, 3)
 
-    val p1 = createProposer(1, n1._1, Random.shuffle(ids), "cat", learner)
-    val p2 = createProposer(2, n2._1, Random.shuffle(ids), "dog", learner)
-    val p3 = createProposer(3, n3._1, Random.shuffle(ids), "mouse", learner)
+    val n1 = createAcceptor(1, ids)
+    val n2 = createAcceptor(2, ids)
+    val n3 = createAcceptor(3, ids)
+
+    val p1 = createProposer(1, n1._1, n1._2, ids, "cat", learner)
+    val p2 = createProposer(2, n2._1, n2._2, ids, "dog", learner)
+    val p3 = createProposer(3, n3._1, n3._2, ids, "mouse", learner)
 
     p1._1 << TryRun(None)
     p2._1 << TryRun(None)
@@ -91,6 +97,10 @@ class PaxosTest {
     p1._2.close()
     p2._2.close()
     p3._2.close()
+
+    n1._3.close()
+    n2._3.close()
+    n3._3.close()
 
     n1._2.close()
     n2._2.close()

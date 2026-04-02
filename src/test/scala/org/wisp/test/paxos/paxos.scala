@@ -1,6 +1,6 @@
 package org.wisp.test.paxos
 
-import org.wisp.remote.RemoteMessage
+import org.wisp.remote.{RemoteLink, RemoteMessage}
 import org.wisp.serializer.{ReadWrite, given}
 import org.wisp.{AbstractActor, ActorLink, ActorScheduler}
 
@@ -11,9 +11,7 @@ import scala.util.Random
 type Value = String
 type NodeId = Int
 
-trait PaxosMessage extends RemoteMessage[String] {
-  override def path: String = "paxos"
-}
+trait PaxosMessage extends RemoteMessage[String]
 
 case class GenerationNumber(seq: Int, nodeId: NodeId) extends Ordered[GenerationNumber] derives ReadWrite {
   override def compare(o: GenerationNumber): Int = {
@@ -27,14 +25,25 @@ case class GenerationValue(n: GenerationNumber, value: Value) extends Ordered[Ge
   override def compare(that: GenerationValue): Int = n.compare(that.n)
 }
 
-case class Prepare(from:String, n: GenerationNumber) extends PaxosMessage derives ReadWrite
-case class Promise(from:String, n: GenerationNumber, lastAccepted: Option[GenerationValue]) extends PaxosMessage derives ReadWrite
-case class Accept(from:String, n: GenerationValue) extends PaxosMessage derives ReadWrite
-case class Accepted(from:String, n: GenerationValue) extends PaxosMessage derives ReadWrite
+case class Prepare(from:NodeId, n: GenerationNumber) extends PaxosMessage derives ReadWrite {
+  override def path: String = "acceptor"
+}
+case class Promise(from:NodeId, n: GenerationNumber, lastAccepted: Option[GenerationValue]) extends PaxosMessage derives ReadWrite {
+  override def path: String = "proposer"
+}
+case class Accept(from:NodeId, n: GenerationValue) extends PaxosMessage derives ReadWrite {
+  override def path: String = "acceptor"
+}
+case class Accepted(from:NodeId, n: GenerationValue) extends PaxosMessage derives ReadWrite {
+  override def path: String = "proposer"
+}
 
-case class Ignore(n: GenerationNumber) extends PaxosMessage derives ReadWrite
-
-case class TryRun(n: Option[GenerationNumber]) extends PaxosMessage derives ReadWrite
+case class Ignore(n: GenerationNumber) extends PaxosMessage derives ReadWrite {
+  override def path: String = "proposer"
+}
+case class TryRun(n: Option[GenerationNumber]) extends PaxosMessage derives ReadWrite {
+  override def path: String = "proposer"
+}
 
 class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorLink], learner: CompletableFuture[String], scheduler: ActorScheduler)(using ExecutionContext) extends AbstractActor(scheduler) {
   val quorum: Int = {
@@ -50,7 +59,7 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorLink], learner:
   var promiseCount:Int = 0
   var acceptedCount:Int = 0
 
-  override def accept(sender: ActorLink): PartialFunction[Any, Unit] = {
+  override def accept(? : ActorLink): PartialFunction[Any, Unit] = {
     case TryRun(n) =>
       if(n.nonEmpty){
         if(n.get.nodeId != nodeId) throw new IllegalStateException("message:nodeId != nodeId "+n.get.nodeId+"/"+nodeId)
@@ -62,10 +71,10 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorLink], learner:
 
         seq += 1
 
-        val genId = Prepare("Proposer["+nodeId+"]",GenerationNumber(seq, nodeId))
+        val genId = Prepare(nodeId,GenerationNumber(seq, nodeId))
         for (a <- Random.shuffle(acceptors)){
           Thread.sleep(Random.between(0, 100))
-          a.call(genId).map(accept)
+          a << genId
         }
       }
 
@@ -90,10 +99,10 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorLink], learner:
         }
 
         if (promiseCount == quorum) {
-          val av = Accept("Proposer["+nodeId+"]", GenerationValue(n, current.map(_.value).getOrElse(value)))
+          val av = Accept(nodeId, GenerationValue(n, current.map(_.value).getOrElse(value)))
           for (a <- Random.shuffle(acceptors)){
             Thread.sleep(Random.between(0, 100))
-            a.call(av).map(accept)
+            a << av
           }
         }
       }
@@ -130,46 +139,45 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorLink], learner:
 
 }
 
-
-class Acceptor(id:Int, scheduler: ActorScheduler) extends AbstractActor(scheduler) {
+class Acceptor(nodeId:NodeId, link: NodeId => RemoteLink[PaxosMessage], scheduler: ActorScheduler) extends AbstractActor(scheduler) {
 
   var promised:Option[GenerationNumber] = None
   var lastValue:Option[GenerationValue] = None
 
-  override def accept(sender: ActorLink): PartialFunction[Any, Unit] = {
+  override def accept(? : ActorLink): PartialFunction[Any, Unit] = {
     case Prepare(from, n) =>
-      println("Acceptor["+id+"]<|"+from+":Prepare("+n+")|>"+promised+"|"+lastValue)
+      println("Acceptor["+nodeId+"]<|"+from+":Prepare("+n+")|>"+promised+"|"+lastValue)
       Thread.sleep(Random.between(0, 100))
 
       if(promised.isEmpty){
         promised = Some(n)
-        sender << Promise("Acceptor["+id+"]", n, lastValue)
+        link(from) << Promise(nodeId, n, lastValue)
       }else{
         val act = promised.get
         if(n < act){ // ignore
-          sender << Ignore(n)
+          link(from) << Ignore(n)
         }else{
           promised = Some(n)
-          sender << Promise("Acceptor["+id+"]",n, lastValue)
+          link(from) << Promise(nodeId,n, lastValue)
         }
       }
 
     case Accept(from, gv) =>
-      println("Acceptor["+id+"]<|"+from+":Accept("+gv+")|>"+promised+"|"+lastValue)
+      println("Acceptor["+nodeId+"]<|"+from+":Accept("+gv+")|>"+promised+"|"+lastValue)
       Thread.sleep(Random.between(0, 100))
 
       if(promised.isEmpty){
         promised = Some(gv.n)
         lastValue = Some(gv)
-        sender << Accepted("Acceptor[" + id + "]", gv)
+        link(from) << Accepted(nodeId, gv)
       }else {
         val act = promised.get
         if (gv.n < act) { // ignore
-          sender << Ignore(gv.n)
+          link(from) << Ignore(gv.n)
         } else {
           promised = Some(gv.n)
           lastValue = Some(gv)
-          sender << Accepted("Acceptor[" + id + "]", gv)
+          link(from) << Accepted(nodeId, gv)
         }
       }
 
