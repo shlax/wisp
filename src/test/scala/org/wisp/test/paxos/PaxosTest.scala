@@ -44,9 +44,9 @@ class PaxosTest {
     private val address = InetSocketAddress("localhost", 9840 + id)
     private val router = UdpRouter[String, PaxosMessage](address, 2024)
 
-    private val links = ids.map { id =>
-      val adr = InetSocketAddress("localhost", 9840 + id)
-      (id, RemoteLink[PaxosMessage](router, adr))
+    private val links = ids.map { i =>
+      val adr = InetSocketAddress("localhost", 9840 + i)
+      (i, RemoteLink[PaxosMessage](router, adr))
     }.toMap
 
     private val acceptor = actorSystem.create(a => new Acceptor(id, nId => links(nId), a))
