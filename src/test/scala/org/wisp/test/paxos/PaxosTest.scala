@@ -15,7 +15,7 @@ class PaxosTest {
   given ReadWrite[PaxosMessage] = new ReadWrite[PaxosMessage] {
 
     override def read(dataInput: DataInput): PaxosMessage = {
-      val id = dataInput.readInt()
+      val id = dataInput.readByte()
       id match {
         case 1 => readFrom[Prepare](dataInput)
         case 2 => readFrom[Promise](dataInput)
@@ -27,11 +27,11 @@ class PaxosTest {
 
     override def write(value: PaxosMessage, dataOutput: DataOutput): Unit = {
       value match {
-        case m:Prepare => dataOutput.writeInt(1); m.writeTo(dataOutput)
-        case m:Promise => dataOutput.writeInt(2); m.writeTo(dataOutput)
-        case m:Accept => dataOutput.writeInt(3); m.writeTo(dataOutput)
-        case m:Accepted => dataOutput.writeInt(4); m.writeTo(dataOutput)
-        case m:Ignore => dataOutput.writeInt(5); m.writeTo(dataOutput)
+        case m:Prepare => dataOutput.writeByte(1); m.writeTo(dataOutput)
+        case m:Promise => dataOutput.writeByte(2); m.writeTo(dataOutput)
+        case m:Accept => dataOutput.writeByte(3); m.writeTo(dataOutput)
+        case m:Accepted => dataOutput.writeByte(4); m.writeTo(dataOutput)
+        case m:Ignore => dataOutput.writeByte(5); m.writeTo(dataOutput)
       }
     }
 
@@ -71,8 +71,8 @@ class PaxosTest {
     val ids = List(1, 2, 3)
 
     val n1 = Node(1, ids, "cat")
-    val n2 = Node(1, ids, "dog")
-    val n3 = Node(1, ids, "mouse")
+    val n2 = Node(2, ids, "dog")
+    val n3 = Node(3, ids, "mouse")
 
     n1.proposer << TryRun(None)
     n2.proposer << TryRun(None)
