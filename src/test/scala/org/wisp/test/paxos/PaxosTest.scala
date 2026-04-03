@@ -2,8 +2,8 @@ package org.wisp.test.paxos
 
 import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.ActorSystem
-import org.wisp.remote.{RemoteLink, UdpClient, UdpRouter}
-import org.wisp.serializer.{*, given}
+import org.wisp.remote.{RemoteLink, UdpRouter}
+import org.wisp.serializer.{ReadWrite, readFrom}
 
 import java.io.{DataInput, DataOutput}
 import java.net.InetSocketAddress
@@ -43,11 +43,10 @@ class PaxosTest {
 
     private val address = InetSocketAddress("localhost", 9840 + id)
     private val router = UdpRouter[String, PaxosMessage](address, 2024)
-    private val udpClient = UdpClient()
 
     private val links = ids.map { id =>
       val adr = InetSocketAddress("localhost", 9840 + id)
-      (id, RemoteLink[PaxosMessage](udpClient, adr))
+      (id, RemoteLink[PaxosMessage](router, adr))
     }.toMap
 
     private val acceptor = actorSystem.create(a => new Acceptor(id, nId => links(nId), a))
@@ -60,11 +59,7 @@ class PaxosTest {
 
     override def close(): Unit = {
       try{
-        try{
-          udpClient.close()
-        }finally {
-          router.close()
-        }
+        router.close()
       }finally {
         actorSystem.close()
       }

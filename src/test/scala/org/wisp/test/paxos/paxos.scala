@@ -61,7 +61,7 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorLink], learner:
   override def accept(? : ActorLink): PartialFunction[Any, Unit] = {
     case TryRun(n) =>
       if(n.nonEmpty){
-        if(n.get.nodeId != nodeId) throw new IllegalStateException("message:nodeId != nodeId "+n.get.nodeId+"/"+nodeId)
+        if(n.get.nodeId != nodeId) throw new IllegalStateException("nodeId: "+n.get.nodeId+" != "+nodeId)
       }
 
       if(n.isEmpty || n.get.seq == seq) { // check if is for current run
@@ -81,7 +81,7 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorLink], learner:
       println("Proposer["+nodeId+"]<|"+from+":Promise("+n+","+lastValue+")|>"+current+"|"+seq+"|"+acceptedCount+"|"+promiseCount)
       Thread.sleep(Random.between(0, 100))
 
-      if(n.nodeId != nodeId) throw new IllegalStateException("message:nodeId != nodeId "+n.nodeId+"/"+nodeId)
+      if(n.nodeId != nodeId) throw new IllegalStateException("nodeId: "+n.nodeId+" != "+nodeId)
 
       if(n.seq == seq) { // check if is for current run
         promiseCount += 1
@@ -110,7 +110,7 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorLink], learner:
       println("Proposer["+nodeId+"]<|"+from+":Accepted("+gv+")|>"+current+"|"+seq+"|"+acceptedCount+"|"+promiseCount)
       Thread.sleep(Random.between(0, 100))
 
-      if(gv.n.nodeId != nodeId) throw new IllegalStateException("message:nodeId != nodeId "+gv.n.nodeId+"/"+nodeId)
+      if(gv.n.nodeId != nodeId) throw new IllegalStateException("nodeId: "+gv.n.nodeId+" != "+nodeId)
 
       if(gv.n.seq == seq) { // check if is for current run
         acceptedCount += 1
@@ -128,7 +128,7 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorLink], learner:
       }
 
     case Ignore(n) =>
-      if(n.nodeId != nodeId) throw new IllegalStateException("message:nodeId != nodeId "+n.nodeId+"/"+nodeId)
+      if(n.nodeId != nodeId) throw new IllegalStateException("nodeId: "+n.nodeId+" != "+nodeId)
 
       if(n.seq == seq) { // check if is for current run
         this << TryRun(Some(n))
