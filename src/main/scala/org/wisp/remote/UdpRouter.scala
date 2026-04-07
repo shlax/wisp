@@ -31,6 +31,10 @@ class UdpRouter[K, M <: RemoteMessage[K] ](address: SocketAddress, capacity:Int)
 
   protected val closed:AtomicBoolean = new AtomicBoolean(false)
 
+  def start: Future[Unit] = Future{
+    run()
+  }
+
   override def run(): Unit = {
     val buff = ByteBuffer.allocateDirect(capacity)
     while(!closed.get()){

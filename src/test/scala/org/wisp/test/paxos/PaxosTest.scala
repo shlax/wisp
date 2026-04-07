@@ -68,7 +68,7 @@ class PaxosTest {
     val proposer: Proposer = actorSystem.create(c => new Proposer(id, value, links.values.toList, learner, c))
     router.register("proposer", proposer)
 
-    val f = Future{ router.run() }
+    private val f = router.start
 
     override def close(): Unit = {
       try{
