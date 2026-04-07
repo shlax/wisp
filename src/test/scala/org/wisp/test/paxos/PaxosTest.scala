@@ -27,11 +27,21 @@ class PaxosTest {
 
     override def write(value: PaxosMessage, dataOutput: DataOutput): Unit = {
       value match {
-        case m:Prepare => dataOutput.writeByte(1); m.writeTo(dataOutput)
-        case m:Promise => dataOutput.writeByte(2); m.writeTo(dataOutput)
-        case m:Accept => dataOutput.writeByte(3); m.writeTo(dataOutput)
-        case m:Accepted => dataOutput.writeByte(4); m.writeTo(dataOutput)
-        case m:Ignore => dataOutput.writeByte(5); m.writeTo(dataOutput)
+        case m:Prepare =>
+          dataOutput.writeByte(1)
+          summon[ReadWrite[Prepare]].write(m, dataOutput)
+        case m:Promise =>
+          dataOutput.writeByte(2)
+          summon[ReadWrite[Promise]].write(m, dataOutput)
+        case m:Accept =>
+          dataOutput.writeByte(3)
+          summon[ReadWrite[Accept]].write(m, dataOutput)
+        case m:Accepted =>
+          dataOutput.writeByte(4)
+          summon[ReadWrite[Accepted]].write(m, dataOutput)
+        case m:Ignore =>
+          dataOutput.writeByte(5)
+          summon[ReadWrite[Ignore]].write(m, dataOutput)
       }
     }
 
