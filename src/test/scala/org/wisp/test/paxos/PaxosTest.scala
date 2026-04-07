@@ -8,7 +8,8 @@ import org.wisp.serializer.{ReadWrite, readFrom}
 import java.io.{DataInput, DataOutput}
 import java.net.InetSocketAddress
 import java.util.concurrent.CompletableFuture
-import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 class PaxosTest {
 
@@ -67,12 +68,15 @@ class PaxosTest {
     val proposer: Proposer = actorSystem.create(c => new Proposer(id, value, links.values.toList, learner, c))
     router.register("proposer", proposer)
 
+    val f = Future{ router.run() }
+
     override def close(): Unit = {
       try{
         router.close()
       }finally {
         actorSystem.close()
       }
+      Await.ready(f, 10.seconds)
     }
   }
 
@@ -96,7 +100,7 @@ class PaxosTest {
 
     println(res3)
 
-    Thread.sleep(30 * 1000)
+    Thread.sleep(10 * 1000)
 
     n1.close()
     n2.close()
