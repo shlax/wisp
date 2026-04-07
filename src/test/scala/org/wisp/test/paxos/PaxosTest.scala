@@ -9,7 +9,7 @@ import java.io.{DataInput, DataOutput}
 import java.net.InetSocketAddress
 import java.util.concurrent.CompletableFuture
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext}
 
 // https://www.youtube.com/watch?v=d7nAGI_NZPk
 class PaxosTest {
