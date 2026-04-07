@@ -11,6 +11,7 @@ import java.util.concurrent.CompletableFuture
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContext, Future}
 
+// https://www.youtube.com/watch?v=d7nAGI_NZPk
 class PaxosTest {
 
   given ReadWrite[PaxosMessage] = new ReadWrite[PaxosMessage] {
