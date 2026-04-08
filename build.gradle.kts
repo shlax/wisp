@@ -15,6 +15,20 @@ dependencies {
     testImplementation("com.h2database:h2:2.4.240")
 }
 
+java{
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+tasks.withType<ScalaCompile>{
+    scalaCompileOptions.additionalParameters = listOf("-Xunchecked-java-output-version:25")
+    options.compilerArgs = listOf("-parameters")
+}
+
+tasks.withType<JavaCompile>{
+    options.compilerArgs = listOf("-parameters")
+}
+
 tasks.test{
     useJUnitPlatform()
 }
