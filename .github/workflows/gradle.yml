@@ -18,7 +18,8 @@ jobs:
 
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      packages: write
+      contents: read
 
     steps:
     - uses: actions/checkout@v4
@@ -39,7 +40,7 @@ jobs:
     - name: Publish
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: ./gradlew publish --no-daemon
+      run: ./gradlew publish
 
     # NOTE: The Gradle Wrapper is the default and recommended way to run Gradle (https://docs.gradle.org/current/userguide/gradle_wrapper.html).
     # If your project does not have the Gradle Wrapper configured, you can use the following configuration to run Gradle with a specified version.
