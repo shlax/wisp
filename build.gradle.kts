@@ -54,7 +54,7 @@ publishing{
             url = uri("https://maven.pkg.github.com/shlax/wisp")
             credentials {
                 username = "shlax"
-                password = System.getenv("TOKEN")
+                password = System.getenv("GITHUB_TOKEN")
             }
         }
     }
