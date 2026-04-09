@@ -7,7 +7,7 @@ import java.util.concurrent.locks.ReentrantLock
 
 abstract class AbstractObservable[T] extends Observable[T]{
 
-  protected def subscriptions: util.List[ListSubscription]
+  protected def subscriptions: util.Collection[ListSubscription]
 
   class ListSubscription(override val subscriber: T => Unit) extends Subscription {
     def cancel(): Boolean = { subscriptions.remove(this) }

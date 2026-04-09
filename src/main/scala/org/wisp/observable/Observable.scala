@@ -20,7 +20,7 @@ trait Observable[T] extends Consumer[T]{
 object Observable {
 
   def apply[T](): AbstractObservable[T] = new AbstractObservable[T]{
-    override protected val subscriptions: util.List[ListSubscription] = util.LinkedList[ListSubscription]()
+    override protected val subscriptions: util.Collection[ListSubscription] = util.LinkedList[ListSubscription]()
   }
 
 }
