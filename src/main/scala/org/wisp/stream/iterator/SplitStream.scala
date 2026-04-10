@@ -52,14 +52,16 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
     if(!requested) throw new IllegalStateException("not requested")
     requested = false
 
-    t.value match {
-      case Next(v) =>
-        for(n <- nextTo) n.next(v)
-        pullNext()
-      case End=>
-        ended = true
+    t.process(SplitStream.this.getClass) {
+      t.value match {
+        case Next(v) =>
+          for (n <- nextTo) n.next(v)
+          pullNext()
+        case End =>
+          ended = true
 
-        for(n <- nextTo) n.end()
+          for (n <- nextTo) n.end()
+      }
     }
   }
 
@@ -89,14 +91,16 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
     }
 
     override def accept(t: Message): Unit = lock.withLock {
-      t.value match {
-        case HasNext =>
-          if(ended){
-            t.sender << End
-          }else{
-            nodes.add(t.sender)
-            pullNext()
-          }
+      t.process(SplitStream.this.getClass) {
+        t.value match {
+          case HasNext =>
+            if (ended) {
+              t.sender << End
+            } else {
+              nodes.add(t.sender)
+              pullNext()
+            }
+        }
       }
     }
   }

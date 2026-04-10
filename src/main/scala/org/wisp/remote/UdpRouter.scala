@@ -84,9 +84,11 @@ class UdpRouter[K, M <: RemoteMessage[K] ](address: SocketAddress, capacity:Int)
 
     ref.accept( Message( new ActorLink{
         override def accept(t: Message): Unit = {
-          t.value match {
-            case m : RemoteMessage[?] =>
-              send(adr, m.asInstanceOf[M])
+          t.process(UdpRouter.this.getClass) {
+            t.value match {
+              case m: RemoteMessage[?] =>
+                send(adr, m.asInstanceOf[M])
+            }
           }
         }
 

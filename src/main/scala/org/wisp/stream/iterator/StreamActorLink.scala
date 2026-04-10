@@ -16,8 +16,10 @@ abstract class StreamActorLink extends StreamConsumer{
   def accept(from:ActorLink): PartialFunction[Operation, Unit]
 
   override def accept(t: Message): Unit = lock.withLock{
-    val f = accept(t.sender)
-    f.apply(t.value.asInstanceOf[Operation])
+    t.process(StreamActorLink.this.getClass) {
+      val f = accept(t.sender)
+      f.apply(t.value.asInstanceOf[Operation])
+    }
   }
 
 }

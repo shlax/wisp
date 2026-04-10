@@ -1,8 +1,6 @@
 package org.wisp.stream.iterator
 
-import org.wisp.exceptions.UndeliveredException
-import org.wisp.{ActorLink, Consumer, Message}
-import org.wisp.stream.iterator.message.End
+import org.wisp.{Consumer, Message}
 
 import scala.util.{Failure, Success, Try}
 

@@ -1,6 +1,6 @@
 package org.wisp
 
-import org.wisp.jfr.MessageCreated
+import org.wisp.jfr.{MessageCreated, MessageProcessed}
 import java.util.UUID
 
 /**
@@ -22,6 +22,27 @@ case class Message(sender:ActorLink, value:Any) {
       event.commit()
       Some(id)
     }else None
+  }
+
+  /** capture JFR data related to processing this message */
+  def process[T](consumerClass: => Class[?])(fn: => T) : T = {
+    val event = MessageProcessed()
+    event.begin()
+    try{
+      fn
+    }finally {
+      event.end()
+      if (event.shouldCommit) {
+        event.consumer = consumerClass
+        for (id <- jfrId) {
+          event.uuid = id.toString
+        }
+        if (value != null) {
+          event.value = value.toString
+        }
+        event.commit()
+      }
+    }
   }
 
 }
