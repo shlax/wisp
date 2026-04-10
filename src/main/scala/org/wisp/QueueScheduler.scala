@@ -1,6 +1,7 @@
 package org.wisp
 
 import org.wisp.exceptions.ProcessingException
+import org.wisp.jfr.MessageProcessed
 
 import java.util
 import java.util.concurrent.locks.{Condition, ReentrantLock}
@@ -45,6 +46,8 @@ class QueueScheduler[T <: Actor](inboxCapacity:Int, fn: ActorScheduler => T)(usi
           var next = pull()
           while(next.isDefined){
             val n = next.get
+            val event = MessageProcessed()
+            event.begin()
             try {
               actor.accept(new ActorLink{
                   @targetName("send")
@@ -54,6 +57,18 @@ class QueueScheduler[T <: Actor](inboxCapacity:Int, fn: ActorScheduler => T)(usi
             } catch {
               case NonFatal(e) =>
                 executor.reportFailure(ProcessingException(n, actor, e))
+            }finally {
+              event.end()
+              if(event.shouldCommit){
+                event.actor = actor.getClass
+                for(jfrId <- n.jfrId){
+                  event.uuid = jfrId.toString
+                }
+                if(n.value != null){
+                  event.value = n.value.toString
+                }
+                event.commit()
+              }
             }
             next = pull()
           }

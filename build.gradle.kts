@@ -1,5 +1,6 @@
 plugins {
     scala
+    java
     `maven-publish`
     `java-library`
 }
