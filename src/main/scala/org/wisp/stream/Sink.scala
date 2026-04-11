@@ -4,6 +4,7 @@ import org.wisp.Consumer
 
 object Sink {
 
+  /** Creates [[Sink]] from function */
   def apply[T](fn: T => Unit): Sink[T] = {
     (t: T) => {
       fn.apply(t)
@@ -12,11 +13,11 @@ object Sink {
 
 }
 
+/** Extends [[Consumer]] with `complete` method */
 @FunctionalInterface
 trait Sink[-T] extends Consumer[T]{
 
-  /** Indicates end of stream
-   * @note for grouping operation */
+  /** Indicates end of stream */
   def complete(): Unit = {}
 
   override def map[R](fn: R => T): Sink[R] = {

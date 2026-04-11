@@ -4,6 +4,14 @@ import org.wisp.stream.Source
 
 object Consumer {
 
+  /** Creates [[Consumer]] from function */
+  def apply[T](fn: T => Unit): Consumer[T] = {
+    (t: T) => {
+      fn.apply(t)
+    }
+  }
+
+  /** Creates [[Consumer]] that sends messages to [[ActorLink]] */
   def apply[T](ref:ActorLink):Consumer[T] = {
     (t: T) => {
       ref << t
