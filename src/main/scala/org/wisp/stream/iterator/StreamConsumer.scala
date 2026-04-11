@@ -6,14 +6,14 @@ import scala.util.{Failure, Success, Try}
 
 trait StreamConsumer extends Consumer[Message]{
 
-  /** Convert [[Try]] to stream [[Consumer.accept]].
+  /** Convert [[Try]] to stream [[Consumer.apply]].
    * [[Failure]] will be mapped to [[End]] with `exception`
    *
-   * Example: `[ActorLink].call(HasNext).onComplete(accept)` */
-  def accept(t: Try[Message]): Unit = {
+   * Example: `[ActorLink].call(HasNext).onComplete(apply)` */
+  def apply(t: Try[Message]): Unit = {
     t match{
       case Success(v) =>
-        accept(v)
+        apply(v)
       case Failure(u) =>
         throw u
     }

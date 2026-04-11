@@ -13,11 +13,11 @@ abstract class StreamActorLink extends StreamConsumer{
   protected val lock = new ReentrantLock()
 
   /** method is running with lock */
-  def accept(from:ActorLink): PartialFunction[Operation, Unit]
+  def apply(from:ActorLink): PartialFunction[Operation, Unit]
 
-  override def accept(t: Message): Unit = lock.withLock{
+  override def apply(t: Message): Unit = lock.withLock{
     t.process(StreamActorLink.this.getClass) {
-      val f = accept(t.sender)
+      val f = apply(t.sender)
       f.apply(t.value.asInstanceOf[Operation])
     }
   }

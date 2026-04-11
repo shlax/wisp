@@ -22,7 +22,7 @@ class SqlHelloWorld {
 
   extension (i: PreparedStatement) {
     def asSink[T](thread:Thread, cntAcc: AtomicInteger, cntCom: AtomicInteger)(fn: T => Unit): Sink[T] = new Sink{
-      override def accept(x: T): Unit = {
+      override def apply(x: T): Unit = {
         Assertions.assertEquals(thread, Thread.currentThread())
         cntAcc.incrementAndGet()
         fn.apply(x)

@@ -10,7 +10,9 @@ abstract class AbstractObservable[T] extends Observable[T]{
   protected def subscriptions: util.Collection[CollectionSubscription]
 
   class CollectionSubscription(override val subscriber: T => Unit) extends Subscription {
-    def cancel(): Boolean = { subscriptions.remove(this) }
+    def cancel(): Boolean = {
+      subscriptions.remove(this)
+    }
   }
 
   override def subscribe(subscriber: T => Unit): Subscription = {
@@ -19,7 +21,7 @@ abstract class AbstractObservable[T] extends Observable[T]{
     s
   }
 
-  override def accept(t: T): Unit = {
+  override def apply(t: T): Unit = {
     subscriptions.forEach { i =>
       i.subscriber.apply(t)
     }
@@ -41,8 +43,8 @@ abstract class AbstractObservable[T] extends Observable[T]{
         }
       }
 
-      override def accept(t: T): Unit = lock.withLock {
-        self.accept(t)
+      override def apply(t: T): Unit = lock.withLock {
+        self.apply(t)
       }
 
     }

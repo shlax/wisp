@@ -48,11 +48,11 @@ class QueueScheduler[T <: Actor](inboxCapacity:Int, fn: ActorScheduler => T)(usi
             val n = next.get
             n.process(actor.getClass) {
               try {
-                actor.accept(new ActorLink {
+                actor.apply(new ActorLink {
                   @targetName("send")
-                  override def <<(v: Any): Unit = accept(Message(actor, v))
+                  override def <<(v: Any): Unit = apply(Message(actor, v))
 
-                  override def accept(t: Message): Unit = n.sender.accept(t)
+                  override def apply(t: Message): Unit = n.sender.apply(t)
                 }).apply(n.value)
               } catch {
                 case NonFatal(e) =>

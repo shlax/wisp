@@ -70,7 +70,7 @@ class RunnableSource[T](src:Source[T])(using ec : ExecutionContext) extends Sour
     
   }
 
-  override def accept(sender: ActorLink): PartialFunction[Operation, Unit] = {
+  override def apply(sender: ActorLink): PartialFunction[Operation, Unit] = {
     case HasNext =>
       if (ended) {
         sender << End

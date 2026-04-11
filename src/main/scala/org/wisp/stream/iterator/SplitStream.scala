@@ -48,7 +48,7 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
     pullNext()
   }
 
-  override def accept(t:Message):Unit = lock.withLock {
+  override def apply(t:Message):Unit = lock.withLock {
     if(!requested) throw new IllegalStateException("not requested")
     requested = false
 
@@ -68,7 +68,7 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
   protected def pullNext():Unit = {
     if (!requested && nextTo.forall(i => !i.nodes.isEmpty)) {
       requested = true
-      original.call(HasNext).onComplete(SplitStream.this.accept)
+      original.call(HasNext).onComplete(SplitStream.this.apply)
     }
   }
 
@@ -90,7 +90,7 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
       }
     }
 
-    override def accept(t: Message): Unit = lock.withLock {
+    override def apply(t: Message): Unit = lock.withLock {
       t.process(SplitStream.this.getClass) {
         t.value match {
           case HasNext =>

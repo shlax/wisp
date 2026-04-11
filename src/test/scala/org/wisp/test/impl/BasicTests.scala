@@ -30,7 +30,7 @@ class BasicTests {
     val ref = AtomicReference[Any]()
 
     class HelloActor(in: ActorScheduler) extends AbstractActor(in) {
-      override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
+      override def apply(from: ActorLink): PartialFunction[Any, Unit] = {
         case a =>
           ref.set(a)
           cd.countDown()
@@ -53,7 +53,7 @@ class BasicTests {
     val ref = AtomicReference[Any]()
 
     class HelloActor(in: ActorScheduler) extends AbstractActor(in) {
-      override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
+      override def apply(from: ActorLink): PartialFunction[Any, Unit] = {
         case a => from << "Hello " + a
       }
     }
@@ -79,7 +79,7 @@ class BasicTests {
 
     val x = Sink[Int](i => l += i)
     val y = x.flatMap[List[Int]]{ (t, self) =>
-      for (i <- t) self.accept(i)
+      for (i <- t) self.apply(i)
     }
 
     y.consume(data)
@@ -117,7 +117,7 @@ class BasicTests {
 
     val s1 = Sink[String]{ i => r = Some(i) }
     val s2 = s1.map( (i:Int) => ""+i )
-    s2.accept(1)
+    s2.apply(1)
 
     Assertions.assertEquals("1", r.get)
   }
@@ -203,7 +203,7 @@ class BasicTests {
 
       val r = use(UdpRouter[Int, IdName](adr, 2024))
       r.register(1, ec.create(i => new AbstractActor(i) {
-        override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
+        override def apply(from: ActorLink): PartialFunction[Any, Unit] = {
           case x: Any =>
             res.add(x)
             cd.countDown()
@@ -238,7 +238,7 @@ class BasicTests {
       }
 
       val sink = new Sink[String] {
-        override def accept(t: String): Unit = {
+        override def apply(t: String): Unit = {
           Assertions.assertTrue(Thread.currentThread() == thread)
           l.add("d:" + t)
         }

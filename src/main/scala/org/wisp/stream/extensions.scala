@@ -65,7 +65,7 @@ object extensions {
       val s = new Sink[T] {
         private var value: E = start
 
-        override def accept(t: T): Unit = {
+        override def apply(t: T): Unit = {
           try {
             value = fold(value, t)
           } catch {
@@ -87,8 +87,8 @@ object extensions {
 
     /** @return [[Sink]] that will call all sinks in `iterable`  */
     def asSink: Sink[E] = new Sink[E] {
-      override def accept(t: E): Unit = {
-        for (i <- iterable) i.accept(t)
+      override def apply(t: E): Unit = {
+        for (i <- iterable) i.apply(t)
       }
 
       override def complete(): Unit = {

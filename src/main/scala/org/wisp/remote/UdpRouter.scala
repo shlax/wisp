@@ -82,8 +82,8 @@ class UdpRouter[K, M <: RemoteMessage[K] ](address: SocketAddress, capacity:Int)
       throw new IllegalStateException("not found: " + rm.path)
     }
 
-    ref.accept( Message( new ActorLink{
-        override def accept(t: Message): Unit = {
+    ref.apply( Message( new ActorLink{
+        override def apply(t: Message): Unit = {
           t.process(UdpRouter.this.getClass) {
             t.value match {
               case m: RemoteMessage[?] =>

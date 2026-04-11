@@ -8,7 +8,7 @@ import org.wisp.stream.iterator.message.*
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.control.NonFatal
 
-/** for each element of `stream` `sink.accept(...)` is called */
+/** for each element of `stream` `sink.apply(...)` is called */
 class StreamSink[T](stream :ActorLink, override val sink:Sink[T])(using ExecutionContext) extends StreamActorLink, SinkExecution[T]{
 
   protected val completed:Promise[Unit] = Promise()
@@ -22,7 +22,7 @@ class StreamSink[T](stream :ActorLink, override val sink:Sink[T])(using Executio
       started = true
     }
 
-    stream.call(HasNext).onComplete(accept)
+    stream.call(HasNext).onComplete(apply)
     completed.future
   }
 
@@ -32,13 +32,13 @@ class StreamSink[T](stream :ActorLink, override val sink:Sink[T])(using Executio
     sinkException = Some(t)
   }
 
-  override def accept(from: ActorLink): PartialFunction[Operation, Unit] = {
+  override def apply(from: ActorLink): PartialFunction[Operation, Unit] = {
 
     case Next(v) =>
       if(completed.isCompleted) throw new IllegalStateException("ended")
 
-      tryAccept(v.asInstanceOf[T])
-      stream.call(HasNext).onComplete(accept)
+      tryApply(v.asInstanceOf[T])
+      stream.call(HasNext).onComplete(apply)
 
     case End =>
       var err:Option[Throwable] = None

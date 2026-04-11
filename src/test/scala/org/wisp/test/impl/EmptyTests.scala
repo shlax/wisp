@@ -24,7 +24,7 @@ class EmptyTests {
 
     val x = Sink[Int](i => l += i)
     val y = x.flatMap[List[Int]]{ (t, self) =>
-      for (i <- t) self.accept(i)
+      for (i <- t) self.apply(i)
     }
 
     y.consume(data)
@@ -111,7 +111,7 @@ class EmptyTests {
       }
 
       val sink = new Sink[String] {
-        override def accept(t: String): Unit = {
+        override def apply(t: String): Unit = {
           Assertions.assertTrue(Thread.currentThread() == thread)
           l.add("d:" + t)
         }

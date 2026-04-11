@@ -32,7 +32,7 @@ class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends Str
     def requestNext():Unit = {
       if (!ended && !requested && value.isEmpty) {
         requested = true
-        link.call(HasNext).onComplete(accept)
+        link.call(HasNext).onComplete(apply)
       }
     }
 
@@ -90,7 +90,7 @@ class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends Str
     i.find(_.hasValue)
   }
 
-  override def accept(sender: ActorLink): PartialFunction[Operation, Unit] = {
+  override def apply(sender: ActorLink): PartialFunction[Operation, Unit] = {
     case HasNext =>
       select(state.values) match {
         case Some(n) =>

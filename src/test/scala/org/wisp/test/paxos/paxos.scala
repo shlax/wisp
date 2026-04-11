@@ -58,7 +58,7 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorLink], learner:
   var promiseCount:Int = 0
   var acceptedCount:Int = 0
 
-  override def accept(? : ActorLink): PartialFunction[Any, Unit] = {
+  override def apply(? : ActorLink): PartialFunction[Any, Unit] = {
     case TryRun(n) =>
       if(n.nonEmpty){
         if(n.get.nodeId != nodeId) throw new IllegalStateException("nodeId: "+n.get.nodeId+" != "+nodeId)
@@ -143,7 +143,7 @@ class Acceptor(nodeId:NodeId, link: NodeId => RemoteLink[PaxosMessage], schedule
   var promised:Option[GenerationNumber] = None
   var lastValue:Option[GenerationValue] = None
 
-  override def accept(? : ActorLink): PartialFunction[Any, Unit] = {
+  override def apply(? : ActorLink): PartialFunction[Any, Unit] = {
     case Prepare(from, n) =>
       println("Acceptor["+nodeId+"]<|"+from+":Prepare("+n+")|>"+promised+"|"+lastValue)
       Thread.sleep(Random.between(0, 100))

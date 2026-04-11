@@ -35,7 +35,7 @@ class SinkExceptionTests {
         }
 
         val sink = new Sink[String] {
-          override def accept(t: String): Unit = {
+          override def apply(t: String): Unit = {
             Assertions.assertTrue(Thread.currentThread() == thread)
             if (t == "w:s:4") throw new MyException("is 4")
             l.add(t)

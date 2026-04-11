@@ -12,7 +12,7 @@ class AskHelloWorld {
   def askHelloWorld(): Unit = {
 
     class HelloActor(inbox: ActorScheduler) extends AbstractActor(inbox) {
-      override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
+      override def apply(from: ActorLink): PartialFunction[Any, Unit] = {
         case a =>
           // send message back
           from << "Hello "+a

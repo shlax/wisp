@@ -8,7 +8,7 @@ import scala.concurrent.Future
 
 class RemoteLink[T](c: UdpClient[T], adr:SocketAddress) extends ActorLink{
 
-  override def accept(t: Message): Unit = {
+  override def apply(t: Message): Unit = {
     t.process(RemoteLink.this.getClass) {
       c.send(adr, t.value.asInstanceOf[T])
     }

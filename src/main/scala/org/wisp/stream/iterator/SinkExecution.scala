@@ -11,9 +11,9 @@ trait SinkExecution[T](using executionContext: ExecutionContext) {
 
   protected def onSinkException(e:Throwable):Unit
 
-  def tryAccept(t: T): Unit = {
+  def tryApply(t: T): Unit = {
     try{
-      sink.accept(t)
+      sink.apply(t)
     }catch {
       case NonFatal(e) =>
         onSinkException(e)

@@ -18,7 +18,7 @@ class RunnableSink[T](prev:ActorLink, override val sink:Sink[T])(using Execution
   protected var ended = false
 
   protected def next(): Unit = {
-    prev.call(HasNext).onComplete(accept)
+    prev.call(HasNext).onComplete(apply)
   }
 
   protected var sinkException: Option[Throwable] = None
@@ -40,7 +40,7 @@ class RunnableSink[T](prev:ActorLink, override val sink:Sink[T])(using Execution
 
       for (v <- value) {
         value = None
-        tryAccept(v)
+        tryApply(v)
         next()
       }
 
@@ -58,7 +58,7 @@ class RunnableSink[T](prev:ActorLink, override val sink:Sink[T])(using Execution
 
   }
 
-  override def accept(from: ActorLink): PartialFunction[Operation, Unit] = {
+  override def apply(from: ActorLink): PartialFunction[Operation, Unit] = {
     case Next(v) =>
       if (ended) throw new IllegalStateException("ended")
       if(value.isDefined) throw new IllegalStateException("dropped value: "+v)

@@ -35,7 +35,7 @@ class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => S
   protected var source: Option[Source[T]] = None
   protected var ended = false
 
-  override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
+  override def apply(from: ActorLink): PartialFunction[Any, Unit] = {
     case Next(v) =>
       if (ended) throw new IllegalStateException("ended")
       if (nodes.isEmpty) throw new IllegalStateException("no workers found for " + v)
@@ -72,7 +72,7 @@ class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => S
       if (hasNext) {
         source = Some(opt.get)
       } else if (!hasNext && !nodes.isEmpty) {
-        stream.call(HasNext).onComplete(accept)
+        stream.call(HasNext).onComplete(apply)
       }
 
     case HasNext =>
@@ -96,7 +96,7 @@ class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => S
           from << Next(v.get)
         } else {
           nodes.add(from)
-          stream.call(HasNext).onComplete(accept)
+          stream.call(HasNext).onComplete(apply)
         }
       }
 

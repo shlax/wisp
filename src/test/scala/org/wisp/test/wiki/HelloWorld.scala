@@ -10,7 +10,7 @@ class HelloWorld {
   def helloWorld():Unit = {
 
     class HelloActor(inbox:ActorScheduler) extends AbstractActor(inbox){
-      override def accept(from: ActorLink): PartialFunction[Any, Unit] = {
+      override def apply(from: ActorLink): PartialFunction[Any, Unit] = {
         case a => println(a)
       }
     }

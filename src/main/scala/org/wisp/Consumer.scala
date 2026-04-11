@@ -22,15 +22,15 @@ object Consumer {
 
 /** [[java.util.function.Consumer]] with added variance */
 @FunctionalInterface
-trait Consumer[-T] {
+trait Consumer[-T] extends ( T => Unit ) {
 
   /** [[java.util.function.Consumer#accept(java.lang.Object)]] */
-  def accept(t:T):Unit
+  def apply(t:T):Unit
 
   def map[R](fn: R => T): Consumer[R] = {
     val self = this
     (e: R) => {
-      self.accept(fn.apply(e))
+      self.apply(fn.apply(e))
     }
   }
 
@@ -44,14 +44,14 @@ trait Consumer[-T] {
   def filter[R <: T](fn: R => Boolean): Consumer[R] = {
     val self = this
     (e: R) => {
-      if (fn.apply(e)) self.accept(e)
+      if (fn.apply(e)) self.apply(e)
     }
   }
 
   def collect[R](fn: PartialFunction[R, T]): Consumer[R] = {
     val self = this
     (e: R) => {
-      if (fn.isDefinedAt(e)) self.accept(fn.apply(e))
+      if (fn.isDefinedAt(e)) self.apply(fn.apply(e))
     }
   }
 
@@ -59,13 +59,13 @@ trait Consumer[-T] {
   def andThen[S <: T](after: Consumer[S]): Consumer[S] = {
     val self = this
     (t: S) => {
-      self.accept(t)
-      after.accept(t)
+      self.apply(t)
+      after.apply(t)
     }
   }
 
   def consume(s: Source[T]): Unit = {
-    s.forEach(accept)
+    s.forEach(apply)
   }
   
 }

@@ -36,7 +36,7 @@ class SourceExceptionTests {
         }
 
         val sink = new Sink[String] {
-          override def accept(t: String): Unit = {
+          override def apply(t: String): Unit = {
             Assertions.assertTrue(Thread.currentThread() == thread)
             l.add(t)
           }

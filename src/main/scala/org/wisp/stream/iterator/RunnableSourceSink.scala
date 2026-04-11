@@ -27,7 +27,7 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
   protected var value: Option[T] = None
 
   protected def next(): Unit = {
-    prev.call(HasNext).onComplete(accept)
+    prev.call(HasNext).onComplete(apply)
   }
 
   protected var sourceException: Option[Throwable] = None
@@ -57,7 +57,7 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
 
       for (v <- value) {
         value = None
-        tryAccept(v)
+        tryApply(v)
         next()
       }
 
@@ -103,7 +103,7 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
 
   }
 
-  override def accept(sender: ActorLink): PartialFunction[Operation, Unit] = {
+  override def apply(sender: ActorLink): PartialFunction[Operation, Unit] = {
     case HasNext =>
       if(sourceException.isDefined){
         sender << End

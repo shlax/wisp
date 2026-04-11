@@ -24,12 +24,12 @@ class StreamBuffer(stream:ActorLink, size:Int)(using ExecutionContext) extends S
       val req = if(requested) 1 else 0
       if (queue.size() + req < size) {
         requested = true
-        stream.call(HasNext).onComplete(accept)
+        stream.call(HasNext).onComplete(apply)
       }
     }
   }
 
-  override def accept(sender: ActorLink): PartialFunction[Operation, Unit] = {
+  override def apply(sender: ActorLink): PartialFunction[Operation, Unit] = {
     case HasNext =>
       val e = queue.poll()
       if (e == null) {
