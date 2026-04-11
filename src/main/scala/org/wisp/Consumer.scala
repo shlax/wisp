@@ -25,7 +25,7 @@ object Consumer {
 trait Consumer[-T] extends ( T => Unit ) {
 
   /** [[java.util.function.Consumer#accept(java.lang.Object)]] */
-  def apply(t:T):Unit
+  override def apply(t:T):Unit
 
   def map[R](fn: R => T): Consumer[R] = {
     val self = this
@@ -56,7 +56,7 @@ trait Consumer[-T] extends ( T => Unit ) {
   }
 
   /** [[java.util.function.Consumer#andThen(java.util.function.Consumer)]] with added variance */
-  def andThen[S <: T](after: Consumer[S]): Consumer[S] = {
+  def andThen[S <: T](after: S => Unit): Consumer[S] = {
     val self = this
     (t: S) => {
       self.apply(t)
