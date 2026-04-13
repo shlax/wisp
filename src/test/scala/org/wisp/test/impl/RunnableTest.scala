@@ -16,10 +16,14 @@ class RunnableTest {
 
   @Test
   def runnable(): Unit = {
-    val data = Seq(0, 1, 2, 3, 4, 5).asSource
-    val l = Collections.synchronizedList(new util.ArrayList[Int]())
-
     val thread = Thread.currentThread()
+
+    val data = Seq(0, 1, 2, 3, 4, 5).asSource.map{ i =>
+      Assertions.assertTrue(Thread.currentThread() == thread)
+      i
+    }
+
+    val l = Collections.synchronizedList(new util.ArrayList[Int]())
 
     val cnt = new AtomicInteger()
     val sink = new Sink[Int] {
