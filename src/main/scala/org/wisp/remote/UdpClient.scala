@@ -56,12 +56,12 @@ class UdpClient[T](address: Option[SocketAddress] = None)(using ReadWrite[T]) ex
    *
    * The message is serialized with a CRC32C checksum and sent via UDP.
    *
-   * @param toAddress the destination socket address
+   * @param destination the destination socket address
    * @param message   the message to send
    */
-  def send(toAddress: SocketAddress, message: T): Unit = {
+  def send(destination: SocketAddress, message: T): Unit = {
     val buff = write(message)
-    val r = channel.send(ByteBuffer.wrap(buff), toAddress)
+    val r = channel.send(ByteBuffer.wrap(buff), destination)
     if (r != buff.length) {
       throw new RuntimeException("message to long " + r + " " + buff.length)
     }
