@@ -236,6 +236,7 @@ class BasicTests {
   @Test
   def forEachSink():Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
+    val acc = new AtomicInteger()
 
     ActorSystem() || { sys =>
 
@@ -251,6 +252,10 @@ class BasicTests {
           Assertions.assertTrue(Thread.currentThread() == thread)
           l.add("d:" + t)
         }
+        override def complete(): Unit = {
+          Assertions.assertTrue(Thread.currentThread() == thread)
+          acc.incrementAndGet()
+        }
       }
 
       val src = RunnableSourceSink(data, sink) { (ref: ActorLink) =>
@@ -264,12 +269,13 @@ class BasicTests {
     }
 
     Assertions.assertEquals(List("d:w:s:0", "d:w:s:1", "d:w:s:2", "d:w:s:3", "d:w:s:4", "d:w:s:5"), l.asScala)
-
+    Assertions.assertEquals(1, acc.get())
   }
 
   @Test
   def forEachSource():Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
+    val acc = new AtomicInteger()
 
     ActorSystem() || { sys =>
 
@@ -285,19 +291,30 @@ class BasicTests {
         "w:" + q
       ))
 
-      val p = StreamSink(w, l.add).start
+      val sink = new Sink[String] {
+        override def apply(t: String): Unit = {
+          l.add(t)
+        }
+
+        override def complete(): Unit = {
+          acc.incrementAndGet()
+        }
+      }
+
+      val p = StreamSink(w, sink).start
       src.run()
       Await.ready(p, 1.second)
 
     }
 
     Assertions.assertEquals(List("w:s:0", "w:s:1", "w:s:2", "w:s:3", "w:s:4", "w:s:5"), l.asScala)
-
+    Assertions.assertEquals(1, acc.get())
   }
 
   @Test
   def runnableSink():Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
+    val acc = new AtomicInteger()
 
     ActorSystem() || { sys =>
 
@@ -309,17 +326,27 @@ class BasicTests {
         "w:" + q
       ))
 
-      RunnableSink(w, l.add).run()
+      val sink = new Sink[String] {
+        override def apply(t: String): Unit = {
+          l.add(t)
+        }
+        override def complete(): Unit = {
+          acc.incrementAndGet()
+        }
+      }
+
+      RunnableSink(w, sink).run()
 
     }
 
     Assertions.assertEquals(List("w:0", "w:1", "w:2", "w:3", "w:4", "w:5"), l.asScala)
-
+    Assertions.assertEquals(1, acc.get())
   }
 
   @Test
   def streamBuffer():Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
+    val acc = new AtomicInteger()
 
     ActorSystem() || { sys =>
 
@@ -333,18 +360,30 @@ class BasicTests {
         "w:" + q
       ))
 
-      val p = StreamSink(w, l.add).start
+      val sink = new Sink[String] {
+        override def apply(t: String): Unit = {
+          l.add(t)
+        }
+
+        override def complete(): Unit = {
+          acc.incrementAndGet()
+        }
+      }
+
+      val p = StreamSink(w, sink).start
       Await.ready(p, 1.second)
     }
 
     Assertions.assertEquals(List("w:0", "w:1", "w:2", "w:3", "w:4", "w:5"), l.asScala)
+    Assertions.assertEquals(1, acc.get())
 
   }
 
   @Test
   def streamWorker(): Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
-    
+    val acc = new AtomicInteger()
+
     ActorSystem() || { sys =>
 
       val data = Seq(0, 1, 2, 3, 4, 5).asSource
@@ -354,19 +393,30 @@ class BasicTests {
         "w:" + q
       ))
 
-      val p = StreamSink(w, l.add).start
+      val sink = new Sink[String] {
+        override def apply(t: String): Unit = {
+          l.add(t)
+        }
+
+        override def complete(): Unit = {
+          acc.incrementAndGet()
+        }
+      }
+
+      val p = StreamSink(w, sink).start
       Await.ready(p, 1.second)
 
     }
 
     Assertions.assertEquals(List("w:0", "w:1", "w:2", "w:3", "w:4", "w:5"), l.asScala)
-    
+    Assertions.assertEquals(1, acc.get())
   }
 
   @Test
   def zipStream():Unit = {
     val l = Collections.synchronizedSet(new util.HashSet[String]())
-    
+    val acc = new AtomicInteger()
+
     ActorSystem() || { sys =>
 
       val data = Seq(0, 1, 2, 3, 4).asSource
@@ -382,13 +432,23 @@ class BasicTests {
 
       val r = ZipStream(w1, w2)
 
-      val p = StreamSink(r, l.add).start
+      val sink = new Sink[String] {
+        override def apply(t: String): Unit = {
+          l.add(t)
+        }
+
+        override def complete(): Unit = {
+          acc.incrementAndGet()
+        }
+      }
+
+      val p = StreamSink(r, sink).start
       Await.ready(p, 1.second)
 
     }
 
     Assertions.assertEquals(Set("w:0", "w:1", "w:2", "w:3", "w:4"), l.asScala)
-    
+    Assertions.assertEquals(1, acc.get())
   }
 
 
@@ -397,6 +457,9 @@ class BasicTests {
     val l1 = Collections.synchronizedList(new util.ArrayList[Int]())
     val l2 = Collections.synchronizedList(new util.ArrayList[Int]())
 
+    val acc1 = new AtomicInteger()
+    val acc2 = new AtomicInteger()
+
     ActorSystem() || { sys =>
 
       val data = Seq(0, 1, 2, 3, 4).asSource
@@ -404,9 +467,29 @@ class BasicTests {
 
       var sl:List[StreamSink[?]] = Nil
 
+      val sink1 = new Sink[Int] {
+        override def apply(t: Int): Unit = {
+          l1.add(t)
+        }
+
+        override def complete(): Unit = {
+          acc1.incrementAndGet()
+        }
+      }
+
+      val sink2 = new Sink[Int] {
+        override def apply(t: Int): Unit = {
+          l2.add(t)
+        }
+
+        override def complete(): Unit = {
+          acc2.incrementAndGet()
+        }
+      }
+
       val r = SplitStream(src){ b =>
-        sl = StreamSink( b.copy, l1.add ) :: sl
-        sl = StreamSink( b.copy, l2.add ) :: sl
+        sl = StreamSink( b.copy, sink1 ) :: sl
+        sl = StreamSink( b.copy, sink2 ) :: sl
       }
 
       val p = Future.sequence( sl.map(_.start))
@@ -416,7 +499,8 @@ class BasicTests {
 
     Assertions.assertEquals(List(0, 1, 2, 3, 4), l1.asScala.toList)
     Assertions.assertEquals(List(0, 1, 2, 3, 4), l2.asScala.toList)
-
+    Assertions.assertEquals(1, acc1.get())
+    Assertions.assertEquals(1, acc2.get())
   }
 
   @Test
