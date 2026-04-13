@@ -19,10 +19,16 @@ class RunnableTest {
     val data = Seq(0, 1, 2, 3, 4, 5).asSource
     val l = Collections.synchronizedList(new util.ArrayList[Int]())
 
+    val thread = Thread.currentThread()
+
     val cnt = new AtomicInteger()
     val sink = new Sink[Int] {
-      override def apply(t: Int): Unit = l.add(t)
+      override def apply(t: Int): Unit = {
+        Assertions.assertTrue(Thread.currentThread() == thread)
+        l.add(t)
+      }
       override def complete(): Unit = {
+        Assertions.assertTrue(Thread.currentThread() == thread)
         cnt.incrementAndGet()
       }
     }
