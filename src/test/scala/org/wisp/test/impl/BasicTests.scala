@@ -15,7 +15,7 @@ import java.net.InetSocketAddress
 import java.util
 import java.util.Collections
 import java.util.concurrent.{CountDownLatch, TimeUnit}
-import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{Await, Future, Promise}
 import scala.concurrent.duration.*
@@ -77,13 +77,22 @@ class BasicTests {
     val data = Seq(List(0,1,2),List(3,4,5)).asSource
     val l = ArrayBuffer[Int]()
 
-    val x = Sink[Int](i => l += i)
+    val cnt = new AtomicInteger()
+    val x = new Sink[Int]{
+      override def apply(i: Int): Unit = {
+        l += i
+      }
+      override def complete(): Unit = {
+        cnt.incrementAndGet()
+      }
+    }
     val y = x.flatMap[List[Int]]{ (t, self) =>
       for (i <- t) self.apply(i)
     }
 
     y.consume(data)
     Assertions.assertEquals(0 to 5, l)
+    Assertions.assertEquals(1, cnt.get())
   }
 
   @Test
