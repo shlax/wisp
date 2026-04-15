@@ -3,12 +3,25 @@ package org.wisp.utils
 import scala.annotation.targetName
 import scala.util.control.NonFatal
 
-/** A utility for management of [[AutoCloseable]] */
+/**
+ * A utility for management of [[AutoCloseable]]
+ */
 object closeable {
 
   extension [T <: AutoCloseable](ac: T) {
 
-    /** support for java try-with-resources construct */
+    /**
+     * support for java try-with-resources construct
+     *
+     * Example usage:
+     * {{{
+     * import org.wisp.closeable.*
+     *
+     * new FileInputStream(...) | { in =>
+     *   ...
+     * }
+     * }}}
+     */
     @targetName("autoClose")
     inline def | [R](inline f: T => R): R = {
       var e:Throwable = null
@@ -61,7 +74,7 @@ object closeable {
   }
 
   /**
-   * Example:
+   * Example usage:
    * {{{
    * import org.wisp.closeable.*
    *
