@@ -1,5 +1,8 @@
 package org.wisp
 
+/**
+ * Actor base trait
+ */
 trait Actor extends ActorLink{
 
   /** Function with the actor logic */
