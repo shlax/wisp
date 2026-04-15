@@ -13,7 +13,6 @@ object closeable {
     /**
      * support for java try-with-resources construct
      *
-     * Example usage:
      * {{{
      * import org.wisp.closeable.*
      *
@@ -74,7 +73,6 @@ object closeable {
   }
 
   /**
-   * Example usage:
    * {{{
    * import org.wisp.closeable.*
    *
