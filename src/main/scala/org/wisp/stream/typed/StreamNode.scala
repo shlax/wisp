@@ -60,10 +60,10 @@ class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
   }
 
   /**
-   * `Sink` wil be run inside [[org.wisp.stream.iterator.RunnableSourceSink#run]]
+   * `sink` wil be run inside [[org.wisp.stream.iterator.RunnableSourceSink#run]]
    */
-  def toRunnable[E >: T](c: Sink[E]): RunnableSink[E] = {
-    RunnableSink[E](link ,c)
+  def toRunnable[E >: T](sink: Sink[E]): RunnableSink[E] = {
+    RunnableSink[E](link ,sink)
   }
 
   /**
