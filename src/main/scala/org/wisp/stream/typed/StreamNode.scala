@@ -13,7 +13,7 @@ class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
   given ExecutionContext = graph.system
 
   /** 
-   * [[org.wisp.stream.iterator.StreamWorker#map]]
+   * builder for [[org.wisp.stream.iterator.StreamWorker#map]]
    */
   def map[V](fn: T => V): StreamNode[V] = {
     val r = graph.system.create( i => StreamWorker.map(link, i, fn) )
@@ -21,7 +21,7 @@ class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
   }
 
   /** 
-   * [[org.wisp.stream.iterator.StreamWorker#filter]]
+   * builder for [[org.wisp.stream.iterator.StreamWorker#filter]]
    */
   def filter(fn: T => Boolean): StreamNode[T] = {
     val r = graph.system.create(i => StreamWorker.filter(link, i, fn))
@@ -29,7 +29,7 @@ class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
   }
 
   /** 
-   * [[org.wisp.stream.iterator.StreamWorker#flatMap]]
+   * builder for [[org.wisp.stream.iterator.StreamWorker#flatMap]]
    */
   def flatMap[V](fn: T => Source[V]): StreamNode[V] = {
     val r = graph.system.create(i => StreamWorker.flatMap(link, i, fn) )
@@ -44,8 +44,7 @@ class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
   }
 
   /**
-   * Duplicate current stream
-   * [[org.wisp.stream.iterator.StreamWorker]]
+   * Duplicate current stream using [[org.wisp.stream.iterator.SplitStream]]
    */
   def split[E](fn: SplitNode => E): E = {
     var res: Option[E] = None
