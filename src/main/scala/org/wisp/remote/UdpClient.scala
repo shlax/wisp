@@ -11,7 +11,7 @@ import java.util.zip.CRC32C
 /**
  * A UDP client for sending messages of type T over a datagram channel.
  *
- * This client serializes messages using the provided [[ReadWrite]] instance, adds CRC32C checksums
+ * This client serializes messages using the provided [[org.wisp.serializer.ReadWrite]] instance, adds CRC32C checksums
  * for data integrity verification, and sends them to remote addresses via UDP.
  *
  * @param address optional socket address to bind the datagram channel to

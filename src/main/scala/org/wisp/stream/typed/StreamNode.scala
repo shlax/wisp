@@ -6,36 +6,47 @@ import org.wisp.stream.iterator.{RunnableSink, SplitStream, StreamBuffer, Stream
 
 import scala.concurrent.ExecutionContext
 
-/** Stream element */
+/** 
+ * Stream element 
+ */
 class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
   given ExecutionContext = graph.system
 
-  /** @see [[StreamWorker]] `map` */
+  /** 
+   * [[org.wisp.stream.iterator.StreamWorker#map]]
+   */
   def map[V](fn: T => V): StreamNode[V] = {
     val r = graph.system.create( i => StreamWorker.map(link, i, fn) )
     graph.node(r)
   }
 
-  /** @see [[StreamWorker]] `filter` */
+  /** 
+   * [[org.wisp.stream.iterator.StreamWorker#filter]]
+   */
   def filter(fn: T => Boolean): StreamNode[T] = {
     val r = graph.system.create(i => StreamWorker.filter(link, i, fn))
     graph.node(r)
   }
 
-  /** @see [[StreamWorker]] `flatMap` */
+  /** 
+   * [[org.wisp.stream.iterator.StreamWorker#flatMap]]
+   */
   def flatMap[V](fn: T => Source[V]): StreamNode[V] = {
     val r = graph.system.create(i => StreamWorker.flatMap(link, i, fn) )
     graph.node(r)
   }
 
   class SplitNode(from: SplitStream#Split) {
-    /** Create new copy */
+    /**
+     * Create new copy
+     */
     def copy: StreamNode[T] = StreamNode[T](graph, from.copy)
   }
 
-  /** Duplicate current stream
-   * @note elements are not duplicated
-   * @see [[SplitStream]] */
+  /**
+   * Duplicate current stream
+   * [[org.wisp.stream.iterator.StreamWorker]]
+   */
   def split[E](fn: SplitNode => E): E = {
     var res: Option[E] = None
     SplitStream(link){ s =>
@@ -48,12 +59,16 @@ class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
     StreamSink(link, c)
   }
 
-  /** `Sink` wil be run inside [[RunnableSink.run]] */
+  /**
+   * `Sink` wil be run inside [[org.wisp.stream.iterator.RunnableSourceSink#run]]
+   */
   def toRunnable[E >: T](c: Sink[E]): RunnableSink[E] = {
     RunnableSink[E](link ,c)
   }
 
-  /** @see [[StreamBuffer]] */
+  /**
+   * [[org.wisp.stream.iterator.RunnableSourceSink]]
+   */
   def buffer(size:Int) : StreamNode[T] = {
     val r = StreamBuffer(link, size)
     graph.node(r)

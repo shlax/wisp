@@ -125,7 +125,6 @@ class UdpRouter[K, M <: RemoteMessage[K]](address: SocketAddress, capacity: Int)
    *
    * @param adr  the socket address of the sender
    * @param data the raw message data
-   * @throws IllegalStateException if no actor is registered for the message path
    */
   protected def process(adr: SocketAddress, data: Array[Byte]): Unit = {
     val rm = read(data)

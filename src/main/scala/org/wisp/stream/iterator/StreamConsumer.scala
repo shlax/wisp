@@ -7,8 +7,8 @@ import scala.util.{Failure, Success, Try}
 trait StreamConsumer extends Consumer[Message]{
 
   /**
-   * Convert [[Try]] to stream [[Consumer.apply]].
-   * [[Failure]] will be mapped to [[End]] with `exception`
+   * Convert [[scala.util.Try]] to stream [[org.wisp.Consumer#apply]].
+   * [[scala.util.Failure]] will be thrown as `exception`
    *
    * Example: `[ActorLink].call(HasNext).onComplete(apply)`
    */

@@ -10,7 +10,9 @@ import scala.util.control.NonFatal
 
 object StreamWorker {
 
-  /** creates new `stream` applying `map` function */
+  /**
+   * creates new `stream` applying `map` function
+   */
   def map[F, T](stream:ActorLink, inbox:ActorScheduler, map: F => T)(using ExecutionContext) : StreamWorker[F, T] = {
     StreamWorker(stream, inbox, i => Source(map.apply(i)) )
   }
@@ -19,14 +21,18 @@ object StreamWorker {
     StreamWorker(stream, inbox, i => { if(filter.apply(i)) Source(i) else Source.empty } )
   }
 
-  /** creates new `stream` applying `flatMap` function */
+  /**
+   * creates new `stream` applying `flatMap` function
+   */
   def flatMap[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => Source[T])(using ExecutionContext): StreamWorker[F, T] = {
     StreamWorker(stream, inbox, flatMap)
   }
 
 }
 
-/** creates new `stream` applying `flatMap` function */
+/**
+ * creates new `stream` applying `flatMap` function
+ */
 class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => Source[T])(using ec : ExecutionContext) extends AbstractActor(inbox), StreamConsumer, SingleNodeFlow{
 
   protected override val nodes:util.Queue[ActorLink] = createNodes()

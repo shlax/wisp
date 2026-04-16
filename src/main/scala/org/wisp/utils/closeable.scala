@@ -4,7 +4,7 @@ import scala.annotation.targetName
 import scala.util.control.NonFatal
 
 /**
- * A utility for management of [[AutoCloseable]]
+ * A utility for management of [[java.lang.AutoCloseable]]
  */
 object closeable {
 
@@ -48,12 +48,17 @@ object closeable {
   class UsingManager(from: List[? <: AutoCloseable] = Nil) extends AutoCloseable{
     private var toClose:List[? <: AutoCloseable] = from.reverse
 
-    /** Register [[AutoCloseable]] with this manager */
+    /**
+     * Register [[java.lang.AutoCloseable]] with this manager
+     */
     def apply[T <: AutoCloseable](t:T):T = {
       toClose = t :: toClose
       t
     }
 
+    /**
+     * Close all registered [[java.lang.AutoCloseable]] in reverse order of registration
+     */
     override def close(): Unit = {
       var e:Throwable = null
       for (i <- toClose){
@@ -89,8 +94,11 @@ object closeable {
     }
   }
 
-  def using[R](e: AutoCloseable*)(f: UsingManager => R): R = {
-    UsingManager(e.toList) | { m =>
+  /**
+   * same as [[using]] but initialize [[UsingManager]] with `init` values
+   */
+  def using[R](init: AutoCloseable*)(f: UsingManager => R): R = {
+    UsingManager(init.toList) | { m =>
       f.apply(m)
     }
   }
