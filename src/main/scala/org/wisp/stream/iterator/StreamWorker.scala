@@ -17,6 +17,9 @@ object StreamWorker {
     StreamWorker(stream, inbox, i => Source(map.apply(i)) )
   }
 
+  /**
+   * creates new `stream` applying `filter` function
+   */
   def filter[F](stream: ActorLink, inbox: ActorScheduler, filter: F => Boolean)(using ExecutionContext): StreamWorker[F, F] = {
     StreamWorker(stream, inbox, i => { if(filter.apply(i)) Source(i) else Source.empty } )
   }
