@@ -9,6 +9,10 @@ trait SingleNodeFlow {
 
   protected def nodes:util.Queue[ActorLink]
 
+  protected def createNodes(): util.Queue[ActorLink] = {
+    util.LinkedList[ActorLink]()
+  }
+
   protected def sendEnd(): Unit = {
     var a = nodes.poll()
     while (a != null) {

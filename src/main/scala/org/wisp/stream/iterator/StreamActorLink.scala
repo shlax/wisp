@@ -1,12 +1,9 @@
 package org.wisp.stream.iterator
 
 import org.wisp.utils.lock.*
-import org.wisp.stream.Sink
 import org.wisp.stream.iterator.message.Operation
 import org.wisp.{ActorLink, Message}
-
 import java.util.concurrent.locks.ReentrantLock
-import org.wisp.Consumer
 
 abstract class StreamActorLink extends StreamConsumer{
 

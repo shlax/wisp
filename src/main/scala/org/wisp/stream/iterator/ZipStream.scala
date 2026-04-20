@@ -1,10 +1,9 @@
 package org.wisp.stream.iterator
 
-import org.wisp.stream.iterator.message.{End, HasNext, Operation, Next}
-import org.wisp.ActorLink
-
+import org.wisp.stream.iterator.message.{End, HasNext, Next, Operation}
+import org.wisp.{ActorLink, Message}
+import org.wisp.utils.lock.*
 import java.util
-import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 
 /** Combine multiple `streams` into one
@@ -13,9 +12,8 @@ class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends Str
   def this(l:ActorLink*)(using ExecutionContext) = this(l)
 
   protected override val nodes: util.Queue[ActorLink] = createNodes()
-  protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
 
-  protected class State(val link:ActorLink){
+  protected class State(val link:ActorLink) extends StreamConsumer {
     protected var value:Option[Any] = None
 
     protected var requested = false
@@ -32,7 +30,7 @@ class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends Str
     def requestNext():Unit = {
       if (!ended && !requested && value.isEmpty) {
         requested = true
-        link.call(HasNext).onComplete(apply)
+        link.call(HasNext).onComplete(State.this.apply)
       }
     }
 
@@ -41,6 +39,17 @@ class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends Str
       value = None
       ref << Next(v)
       requestNext()
+    }
+
+    override def apply(m: Message): Unit = lock.withLock {
+      m.process(ZipStream.this.getClass) {
+        m.value match {
+          case Next(v) =>
+            next(v)
+          case End =>
+            end()
+        }
+      }
     }
 
     def next(v:Any) :Unit = {
@@ -68,7 +77,7 @@ class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends Str
       requested = false
       ended = true
 
-      if(state.values.forall(_.isFinished)){
+      if(state.forall(_.isFinished)){
         sendEnd()
       }
 
@@ -80,37 +89,33 @@ class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends Str
     State(link)
   }
 
-  protected val state:Map[ActorLink, State] = {
-    val m = mutable.Map[ActorLink, State]()
-    for(p <- streams) m(p) = createState(p)
-    m.toMap
+  protected val state:List[State] = {
+    val b = List.newBuilder[State]
+    for(p <- streams) b += createState(p)
+    b.result()
   }
 
-  protected def select(i:Iterable[State]) : Option[State] = {
-    i.find(_.hasValue)
+  /**
+   * find the first upstream link with value
+   */
+  protected def select: Option[State] = {
+    state.find(_.hasValue)
   }
 
   override def apply(sender: ActorLink): PartialFunction[Operation, Unit] = {
     case HasNext =>
-      select(state.values) match {
+      select match {
         case Some(n) =>
           n.send(sender)
 
         case None =>
-          if (state.values.forall(_.isFinished)) {
+          if (state.forall(_.isFinished)) {
             sender << End
           } else {
             nodes.add(sender)
-            for (x <- state.values) x.requestNext()
+            for (x <- state) x.requestNext()
           }
       }
-
-    case Next(v) =>
-      state(sender).next(v)
-
-    case End =>
-      state(sender).end()
-
   }
 
 }

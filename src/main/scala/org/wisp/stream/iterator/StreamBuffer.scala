@@ -11,10 +11,12 @@ import scala.concurrent.ExecutionContext
 class StreamBuffer(stream:ActorLink, size:Int)(using ExecutionContext) extends StreamActorLink, ActorLink, SingleNodeFlow{
 
   protected val queue:util.Queue[Any] = createQueue()
-  protected def createQueue(): util.Queue[Any] = { util.LinkedList[Any]() }
+
+  protected def createQueue(): util.Queue[Any] = {
+    util.LinkedList[Any]()
+  }
 
   protected override val nodes: util.Queue[ActorLink] = createNodes()
-  protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
 
   protected var requested = false
   protected var ended = false
@@ -60,17 +62,13 @@ class StreamBuffer(stream:ActorLink, size:Int)(using ExecutionContext) extends S
       next()
 
     case End =>
-      val wasEnded = ended
+      if(ended) throw new IllegalStateException("ended")
 
       requested = false
       ended = true
 
       if (queue.isEmpty) {
         sendEnd()
-      }
-
-      if(wasEnded){
-        throw new IllegalStateException("ended")
       }
 
   }

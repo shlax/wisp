@@ -88,14 +88,10 @@ class RunnableSink[T](upstream:ActorLink, override val sink:Sink[T])(using Execu
       value = Some(v.asInstanceOf[T])
       condition.signal()
     case End =>
-      val wasEnded = ended
+      if(ended) throw new IllegalStateException("ended")
       
       ended = true
       condition.signal()
-      if(wasEnded){
-        throw new IllegalStateException("ended")
-      }
-      
   }
 
 }

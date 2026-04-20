@@ -124,12 +124,10 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
       condition.signal()
 
     case End =>
-      val wasEnded = dstEnded
+      if(dstEnded) throw new IllegalStateException("ended")
+
       dstEnded = true
       condition.signal()
-      if(wasEnded){
-        throw new IllegalStateException("ended")
-      }
 
   }
 

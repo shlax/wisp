@@ -39,8 +39,7 @@ object StreamWorker {
 class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => Source[T])(using ec : ExecutionContext) extends AbstractActor(inbox), StreamConsumer, SingleNodeFlow{
 
   protected override val nodes:util.Queue[ActorLink] = createNodes()
-  protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
-
+  
   protected var source: Option[Source[T]] = None
   protected var ended = false
 
