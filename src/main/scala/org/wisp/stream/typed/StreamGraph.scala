@@ -13,24 +13,24 @@ class StreamGraph(val system:ActorSystem){
   given ExecutionContext = system
 
   /**
-   * Convert [[org.wisp.ActorLink]] to [[org.wisp.stream.typed.StreamNode]]
+   * Create stream from `link`
    */
   def node[T](link: ActorLink): StreamNode[T] = {
     StreamNode(this, link)
   }
 
   /**
-   * Create stream [[org.wisp.stream.typed.SourceNode]] from [[org.wisp.stream.iterator.SourceActorLink]]
+   * Create stream from `link`
    */
   def from[T](link: SourceActorLink): SourceNode[T] = {
     SourceNode(this, link)
   }
 
   /**
-   * Create stream [[org.wisp.stream.typed.SourceNode]] from [[org.wisp.stream.Source]]
+   * Create stream from `source` ussing [[org.wisp.stream.iterator.StreamSource]]
    */
-  def from[T](s:Source[T]) : SourceNode[T] = {
-    from(StreamSource(s))
+  def from[T](source:Source[T]) : SourceNode[T] = {
+    from(StreamSource(source))
   }
 
   /**
