@@ -57,7 +57,7 @@ class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends Str
     def next(v:Any) :Unit = {
       if(ended) throw new IllegalStateException("ended: "+v)
       if(!requested) throw new IllegalStateException("not requested: "+v)
-      if(value.isDefined) throw new IllegalStateException("dropped: "+v)
+      if(value.isDefined) throw new IllegalStateException("dropped: "+value.get)
 
       requested = false
 
