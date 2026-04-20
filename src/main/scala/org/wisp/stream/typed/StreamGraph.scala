@@ -40,7 +40,7 @@ class StreamGraph(val system:ActorSystem){
    *   val graph = new StreamGraph(???)
    *   val source1 = graph.from( (0 to 5).asSource.map(i => i * 2) )
    *   val source2 = graph.from( (0 to 5).asSource.map(i => i * 2 + 1) )
-   *   graph.zip(source1, source2).to(println).start
+   *   graph.zip(source1, source2).to(println).start // prodeces (0 until 10) elements
    * }}}
    */
   def zip[T](streams: Iterable[StreamNode[? <: T]]): StreamNode[T] = {
