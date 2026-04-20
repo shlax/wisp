@@ -35,13 +35,6 @@ class StreamGraph(val system:ActorSystem){
 
   /**
    * Combine multiple `streams` into one using [[org.wisp.stream.iterator.ZipStream]]
-   *
-   * {{{
-   *   val graph = new StreamGraph(???)
-   *   val source1 = graph.from( (0 until 5).asSource.map(i => i * 2) )
-   *   val source2 = graph.from( (0 until 5).asSource.map(i => i * 2 + 1) )
-   *   graph.zip(source1, source2).to(println).start // println (0 until 10)
-   * }}}
    */
   def zip[T](streams: Iterable[StreamNode[? <: T]]): StreamNode[T] = {
     val r = ZipStream(streams.map(_.link))
@@ -50,6 +43,13 @@ class StreamGraph(val system:ActorSystem){
 
   /**
    * Combine multiple `streams` into one using [[org.wisp.stream.iterator.ZipStream]]
+   *
+   * {{{
+   *   val graph = new StreamGraph(???)
+   *   val source1 = graph.from( (0 until 5).asSource.map(i => i * 2) )
+   *   val source2 = graph.from( (0 until 5).asSource.map(i => i * 2 + 1) )
+   *   graph.zip(source1, source2).to(println).start // println (0 until 10)
+   * }}}
    */
   def zip[T](streams:StreamNode[? <: T]*): StreamNode[T] = {
     zip(streams)
