@@ -4,6 +4,7 @@ import org.wisp.ActorLink
 import org.wisp.stream.iterator.message.*
 
 import java.util
+import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.ExecutionContext
 
 /**
@@ -12,6 +13,8 @@ import scala.concurrent.ExecutionContext
  */
 class StreamBuffer(stream:ActorLink, size:Int)(using ExecutionContext) extends StreamActorLink, ActorLink, SingleNodeFlow{
 
+  protected override val lock:ReentrantLock = new ReentrantLock()
+  
   protected val queue:util.Queue[Any] = createQueue()
 
   protected def createQueue(): util.Queue[Any] = {

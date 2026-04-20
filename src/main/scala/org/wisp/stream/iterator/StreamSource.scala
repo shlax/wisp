@@ -5,11 +5,14 @@ import org.wisp.ActorLink
 import org.wisp.stream.iterator.message.*
 import org.wisp.utils.lock.*
 
+import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
 class StreamSource[T](src:Source[T])(using ec : ExecutionContext) extends StreamActorLink, SourceActorLink {
 
+  protected override val lock:ReentrantLock = new ReentrantLock()
+  
   protected var ended = false
 
   protected var sourceException:Option[Throwable] = None

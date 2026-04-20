@@ -22,7 +22,7 @@ class DocTests {
       val source1 = graph.from( (0 until 5).asSource.map(i => i * 2) )
       val source2 = graph.from( (0 until 5).asSource.map(i => i * 2 + 1) )
       val future:Future[Unit] = graph.zip(source1, source2).to(i => res.add(i)).start
-      Await.ready(future, 1.minute)
+      Await.ready(future, 1.second)
     }
     Assertions.assertEquals((0 until 10).toSet, res.asScala.toSet)
   }

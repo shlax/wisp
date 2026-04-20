@@ -2,7 +2,7 @@ package org.wisp.stream.iterator
 
 import org.wisp.{ActorLink, Message}
 import org.wisp.utils.lock.*
-import org.wisp.stream.iterator.message.{HasNext, Next, End}
+import org.wisp.stream.iterator.message.{End, HasNext, Next, Operation}
 
 import java.util
 import java.util.concurrent.locks.ReentrantLock
@@ -12,8 +12,10 @@ import scala.concurrent.ExecutionContext
  * Duplicate `original` stream into links created with `link.copy`
  * Data from `original` is pulled after every link created with `link.copy` is pulled.
  */
-class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using ExecutionContext) extends StreamConsumer {
+class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using ExecutionContext) extends StreamActorLink {
 
+  protected override val lock:ReentrantLock = new ReentrantLock()
+  
   trait Split {
     def copy: ActorLink
   }
@@ -33,7 +35,6 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
     util.LinkedList[ActorLink]()
   }
 
-  protected val lock = new ReentrantLock()
   protected var requested = true
 
   protected var ended = false
@@ -49,21 +50,19 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
     pullNext()
   }
 
-  override def apply(t:Message):Unit = lock.withLock {
-    if(!requested) throw new IllegalStateException("not requested")
-    requested = false
+  override def apply(from: ActorLink): PartialFunction[Operation, Unit] = {
+    case Next(v) =>
+      if(!requested) throw new IllegalStateException("not requested")
+      requested = false
 
-    t.process(SplitStream.this.getClass) {
-      t.value match {
-        case Next(v) =>
-          for (n <- nextTo) n.next(v)
-          pullNext()
-        case End =>
-          ended = true
+      for (n <- nextTo) n.next(v)
+      pullNext()
+    case End =>
+      if(!requested) throw new IllegalStateException("not requested")
+      requested = false
 
-          for (n <- nextTo) n.end()
-      }
-    }
+      ended = true
+      for (n <- nextTo) n.end()
   }
 
   protected def pullNext():Unit = {
@@ -73,7 +72,10 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
     }
   }
 
-  protected class SplitActorLink extends ActorLink{
+  protected class SplitActorLink extends ActorLink, StreamActorLink{
+
+    override protected def lock: ReentrantLock = SplitStream.this.lock
+
     val nodes: util.Queue[ActorLink] = createNodes()
 
     def next(v:Any): Unit = {
@@ -91,19 +93,17 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
       }
     }
 
-    override def apply(t: Message): Unit = lock.withLock {
-      t.process(SplitStream.this.getClass) {
-        t.value match {
-          case HasNext =>
-            if (ended) {
-              t.sender << End
-            } else {
-              nodes.add(t.sender)
-              pullNext()
-            }
+    
+    override def apply(from: ActorLink): PartialFunction[Operation, Unit] = {
+      case HasNext =>
+        if (ended) {
+          from << End
+        } else {
+          nodes.add(from)
+          pullNext()
         }
-      }
     }
+
   }
 
 }

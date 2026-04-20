@@ -5,7 +5,7 @@ import org.wisp.stream.iterator.message.{End, HasNext, Next, Operation}
 import org.wisp.utils.lock.*
 import org.wisp.stream.Sink
 
-import java.util.concurrent.locks.Condition
+import java.util.concurrent.locks.{Condition, ReentrantLock}
 import scala.concurrent.ExecutionContext
 
 /**
@@ -19,6 +19,8 @@ import scala.concurrent.ExecutionContext
  * @param sink             the underlying sink implementation that processes elements
  */
 class RunnableSink[T](upstream:ActorLink, override val sink:Sink[T])(using ExecutionContext) extends StreamActorLink, RunnableStream, SinkExecution[T]{
+
+  protected override val lock:ReentrantLock = new ReentrantLock()
 
   /** [[java.util.concurrent.locks.Condition]] used to coordinate synchronization between the processing thread and message handler */
   protected val condition: Condition = lock.newCondition()

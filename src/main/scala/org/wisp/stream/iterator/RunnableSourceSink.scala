@@ -6,12 +6,14 @@ import org.wisp.stream.iterator.message.{End, HasNext, Next, Operation}
 import org.wisp.utils.lock.*
 
 import java.util
-import java.util.concurrent.locks.Condition
+import java.util.concurrent.locks.{Condition, ReentrantLock}
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
 class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: RunnableSourceSink[F, T] => ActorLink)(using ec : ExecutionContext)
   extends StreamActorLink, SourceActorLink, RunnableStream, SinkExecution[T]{
+
+  protected override val lock:ReentrantLock = new ReentrantLock()
 
   protected val nodes: util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }

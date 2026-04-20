@@ -3,7 +3,9 @@ package org.wisp.stream.iterator
 import org.wisp.stream.iterator.message.{End, HasNext, Next, Operation}
 import org.wisp.{ActorLink, Message}
 import org.wisp.utils.lock.*
+
 import java.util
+import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.ExecutionContext
 
 /**
@@ -13,9 +15,14 @@ import scala.concurrent.ExecutionContext
 class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends StreamActorLink, ActorLink, SingleNodeFlow{
   def this(l:ActorLink*)(using ExecutionContext) = this(l)
 
+  protected override val lock:ReentrantLock = new ReentrantLock()
+
   protected override val nodes: util.Queue[ActorLink] = createNodes()
 
-  protected class State(val link:ActorLink) extends StreamConsumer {
+  protected class State(val link:ActorLink) extends StreamActorLink {
+
+    protected override def lock:ReentrantLock = ZipStream.this.lock
+
     protected var value:Option[Any] = None
 
     protected var requested = false
@@ -43,15 +50,11 @@ class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends Str
       requestNext()
     }
 
-    override def apply(m: Message): Unit = lock.withLock {
-      m.process(ZipStream.this.getClass) {
-        m.value match {
-          case Next(v) =>
-            next(v)
-          case End =>
-            end()
-        }
-      }
+    override def apply(from: ActorLink): PartialFunction[Operation, Unit] = {
+      case Next(v) =>
+        next(v)
+      case End =>
+        end()
     }
 
     def next(v:Any) :Unit = {

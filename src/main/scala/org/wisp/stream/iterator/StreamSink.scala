@@ -5,12 +5,15 @@ import org.wisp.ActorLink
 import org.wisp.utils.lock.*
 import org.wisp.stream.iterator.message.*
 
+import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.control.NonFatal
 
 /** for each element of `stream` `sink.apply(...)` is called */
 class StreamSink[T](stream :ActorLink, override val sink:Sink[T])(using ExecutionContext) extends StreamActorLink, SinkExecution[T]{
 
+  protected override val lock:ReentrantLock = new ReentrantLock()
+  
   protected val completed:Promise[Unit] = Promise()
   protected var started:Boolean = false
 

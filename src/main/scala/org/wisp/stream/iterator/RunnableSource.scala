@@ -7,12 +7,14 @@ import org.wisp.stream.iterator.message.*
 import java.util
 import org.wisp.utils.lock.*
 
-import java.util.concurrent.locks.Condition
+import java.util.concurrent.locks.{Condition, ReentrantLock}
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
 class RunnableSource[T](src:Source[T])(using ec : ExecutionContext) extends StreamActorLink, SourceActorLink, RunnableStream{
 
+  protected override val lock:ReentrantLock = new ReentrantLock()
+  
   protected val nodes:util.Queue[ActorLink] = createNodes()
   protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
 
