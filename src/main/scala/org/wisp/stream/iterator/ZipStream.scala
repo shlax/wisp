@@ -6,8 +6,10 @@ import org.wisp.utils.lock.*
 import java.util
 import scala.concurrent.ExecutionContext
 
-/** Combine multiple `streams` into one
- * @param streams streams to combine */
+/**
+ * Combine multiple `streams` into one
+ * @param streams streams to combine
+ */
 class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends StreamActorLink, ActorLink, SingleNodeFlow{
   def this(l:ActorLink*)(using ExecutionContext) = this(l)
 
