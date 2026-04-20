@@ -8,7 +8,7 @@ import org.wisp.utils.lock.*
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
-class StreamSource[T](src:Source[T])(using ec : ExecutionContext) extends SourceActorLink {
+class StreamSource[T](src:Source[T])(using ec : ExecutionContext) extends StreamActorLink, SourceActorLink {
 
   protected var ended = false
 
