@@ -13,7 +13,7 @@ class StreamGraph(val system:ActorSystem){
   given ExecutionContext = system
 
   /**
-   * Create stream from `link`
+   * Create node from `link`
    */
   def node[T](link: ActorLink): StreamNode[T] = {
     StreamNode(this, link)
