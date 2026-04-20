@@ -6,8 +6,10 @@ import org.wisp.stream.iterator.message.*
 import java.util
 import scala.concurrent.ExecutionContext
 
-/** Prefetch element from `stream`
- * @param size maximum no of elements to prefetch */
+/**
+ * Prefetch element from `stream`
+ * @param size maximum no of elements to prefetch
+ */
 class StreamBuffer(stream:ActorLink, size:Int)(using ExecutionContext) extends StreamActorLink, ActorLink, SingleNodeFlow{
 
   protected val queue:util.Queue[Any] = createQueue()
