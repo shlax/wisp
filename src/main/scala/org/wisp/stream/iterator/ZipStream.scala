@@ -12,7 +12,7 @@ import scala.concurrent.ExecutionContext
  * Combine multiple `streams` into one
  * @param streams streams to combine
  */
-class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends StreamActorLink, ActorLink, SingleNodeFlow{
+class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends StreamActorLink, SingleNodeFlow{
   def this(l:ActorLink*)(using ExecutionContext) = this(l)
 
   protected override val lock:ReentrantLock = new ReentrantLock()

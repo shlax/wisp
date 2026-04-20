@@ -11,12 +11,11 @@ import java.util.concurrent.locks.{Condition, ReentrantLock}
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
-class RunnableSource[T](src:Source[T])(using ec : ExecutionContext) extends StreamActorLink, SourceActorLink, RunnableStream{
+class RunnableSource[T](src:Source[T])(using ec : ExecutionContext) extends StreamActorLink, SourceActorLink, RunnableStream, SingleNodeFlow{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
-  
+
   protected val nodes:util.Queue[ActorLink] = createNodes()
-  protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
 
   protected val condition: Condition = lock.newCondition()
   

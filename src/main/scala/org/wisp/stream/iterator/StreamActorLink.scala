@@ -5,7 +5,7 @@ import org.wisp.stream.iterator.message.Operation
 import org.wisp.{ActorLink, Message}
 import java.util.concurrent.locks.ReentrantLock
 
-trait StreamActorLink extends StreamConsumer{
+trait StreamActorLink extends ActorLink, StreamConsumer {
 
   protected def lock: ReentrantLock
 
@@ -20,5 +20,5 @@ trait StreamActorLink extends StreamConsumer{
       f.apply(t.value.asInstanceOf[Operation])
     }
   }
-
+  
 }

@@ -11,12 +11,11 @@ import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
 class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: RunnableSourceSink[F, T] => ActorLink)(using ec : ExecutionContext)
-  extends StreamActorLink, SourceActorLink, RunnableStream, SinkExecution[T]{
+  extends StreamActorLink, SourceActorLink, RunnableStream, SinkExecution[T], SingleNodeFlow{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
   protected val nodes: util.Queue[ActorLink] = createNodes()
-  protected def createNodes(): util.Queue[ActorLink] = { util.LinkedList[ActorLink]() }
 
   protected val condition: Condition = lock.newCondition()
   protected val prev: ActorLink = link.apply(this)

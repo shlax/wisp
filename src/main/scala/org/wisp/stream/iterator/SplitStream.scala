@@ -15,7 +15,7 @@ import scala.concurrent.ExecutionContext
 class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using ExecutionContext) extends StreamActorLink {
 
   protected override val lock:ReentrantLock = new ReentrantLock()
-  
+
   trait Split {
     def copy: ActorLink
   }
@@ -72,7 +72,7 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
     }
   }
 
-  protected class SplitActorLink extends ActorLink, StreamActorLink{
+  protected class SplitActorLink extends StreamActorLink{
 
     override protected def lock: ReentrantLock = SplitStream.this.lock
 
@@ -93,7 +93,7 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
       }
     }
 
-    
+
     override def apply(from: ActorLink): PartialFunction[Operation, Unit] = {
       case HasNext =>
         if (ended) {

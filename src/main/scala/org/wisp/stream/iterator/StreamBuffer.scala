@@ -11,10 +11,10 @@ import scala.concurrent.ExecutionContext
  * Prefetch element from `stream`
  * @param size maximum no of elements to prefetch
  */
-class StreamBuffer(stream:ActorLink, size:Int)(using ExecutionContext) extends StreamActorLink, ActorLink, SingleNodeFlow{
+class StreamBuffer(stream:ActorLink, size:Int)(using ExecutionContext) extends StreamActorLink, SingleNodeFlow{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
-  
+
   protected val queue:util.Queue[Any] = createQueue()
 
   protected def createQueue(): util.Queue[Any] = {
