@@ -11,7 +11,7 @@ import scala.concurrent.ExecutionContext
 /**
  * [[ActorScheduler]] backed by [[java.util.LinkedList]] witch will block thread calling [[schedule]] when `inboxCapacity` is reached
  */
-class QueueScheduler[X, T <: Actor[X]](inboxCapacity:Int, fn: ActorScheduler => T)(using executor: ExecutionContext) extends ActorScheduler {
+class QueueScheduler[V, T <: Actor[V]](inboxCapacity:Int, fn: ActorScheduler => T)(using executor: ExecutionContext) extends ActorScheduler {
 
   val actor:T = fn.apply(this)
 
@@ -52,7 +52,7 @@ class QueueScheduler[X, T <: Actor[X]](inboxCapacity:Int, fn: ActorScheduler => 
                   override def <<(v: Any): Unit = apply(Message(actor, v))
 
                   override def apply(t: Message): Unit = n.sender.apply(t)
-                }).apply(n.value.asInstanceOf[X])
+                }).apply(n.value.asInstanceOf[V])
               } catch {
                 case NonFatal(e) =>
                   executor.reportFailure(ProcessingException(n, actor, e))
