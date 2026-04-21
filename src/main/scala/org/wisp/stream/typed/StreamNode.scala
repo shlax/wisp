@@ -48,7 +48,7 @@ class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
    *
    * {{{
    *   val source = new StreamGraph(as).from((0 until 5).asSource)
-   *   val future = source.split{ s =>
+   *   source.split{ s =>
    *     s.copy.map(i => i * 2).to(println).start // println (0 2 4 6 8)
    *     s.copy.map(i => i * 2 + 1).to(println).start // println (1 3 5 7 9)
    *   }
