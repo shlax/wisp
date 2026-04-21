@@ -58,10 +58,10 @@ class StreamGraph(val system:ActorSystem){
   /**
    * `source` wil be run inside [[org.wisp.stream.iterator.RunnableSource#run]]
    */
-  def fromRunnable[T, R](source:Source[T])(fn : SourceNode[T] => R ) : (source:RunnableSource[T], value:R) = {
+  def fromRunnable[T, R](source:Source[T])(fn : SourceNode[T] => Unit ) : RunnableSource[T] = {
     val f = RunnableSource(source)
-    val r = fn.apply(from(f))
-    (f, r)
+    fn.apply(from(f))
+    f
   }
 
   /**

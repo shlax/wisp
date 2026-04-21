@@ -41,7 +41,7 @@ trait ActorLink extends Consumer[Message]{
    *
    * {{{
    *   val link:ActorLink = ????
-   *   link.call(HasNext).onComplete(apply)`
+   *   link.call(HasNext).onComplete(apply)
    * }}}
    */
   def apply(t: Try[Message]): Unit = {

@@ -60,9 +60,11 @@ object extensions {
 
   extension [E](promise: Promise[E]) {
 
-    /** Converts [[scala.concurrent.Promise]] to [[org.wisp.stream.Sink]] where `promise` wil be completed with result of `fold` function. */
-    def asSink[T](start: E)(fold: (E, T) => E): (sink: Sink[T], future:Future[E]) = {
-      val s = new Sink[T] {
+    /**
+     * Converts [[scala.concurrent.Promise]] to [[org.wisp.stream.Sink]] where `promise` wil be completed with result of `fold` function.
+     */
+    def asSink[T](start: E)(fold: (E, T) => E): Sink[T] = {
+      new Sink[T] {
         private var value: E = start
 
         override def apply(t: T): Unit = {
@@ -78,14 +80,15 @@ object extensions {
           promise.success(value)
         }
       }
-      (s, promise.future)
     }
 
   }
 
   extension [E](iterable: Iterable[Sink[E]]) {
 
-    /** @return [[Sink]] that will call all sinks in `iterable`  */
+    /**
+     * @return [[Sink]] that will call all sinks in `iterable`
+     */
     def asSink: Sink[E] = new Sink[E] {
       override def apply(t: E): Unit = {
         for (i <- iterable) i.apply(t)

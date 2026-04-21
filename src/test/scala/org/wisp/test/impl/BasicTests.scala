@@ -98,8 +98,11 @@ class BasicTests {
   @Test
   def sinkFold(): Unit = {
     val data = Seq(1, 2, 3).asSource
-    
-    val (s, f) = Promise[Int]().asSink[Int](0){ (a, b) => a + b }
+
+    val p = Promise[Int]()
+    val s = p.asSink[Int](0){ (a, b) => a + b }
+    val f = p.future
+
     Assertions.assertFalse(f.isCompleted)
     s.consume(data)
 
@@ -109,13 +112,16 @@ class BasicTests {
   @Test
   def sinkFoldFilter(): Unit = {
     val data = Seq(1, 2, 3).asSource
-    
-    val (s, p) = Promise[Int]().asSink[Int](0){ (a, b) => a + b }
+
+    val p = Promise[Int]()
+    val s = p.asSink[Int](0){ (a, b) => a + b }
+    val pf = p.future
+
     val f = s.filter( _ % 2 == 1 )
     Assertions.assertFalse(p.isCompleted)
     f.consume(data)
 
-    Assertions.assertEquals(Some(Success(4)), p.value)
+    Assertions.assertEquals(Some(Success(4)), pf.value)
   }
 
   @Test

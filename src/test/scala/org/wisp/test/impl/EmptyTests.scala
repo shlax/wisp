@@ -34,8 +34,11 @@ class EmptyTests {
   @Test
   def sinkFold(): Unit = {
     val data = Seq[Int]().asSource
-    
-    val (s, f) = Promise[Int]().asSink[Int](0){ (a, b) => a + b }
+
+    val p = Promise[Int]()
+    val s = p.asSink[Int](0){ (a, b) => a + b }
+    val f = p.future
+
     Assertions.assertFalse(f.isCompleted)
     s.consume(data)
 
