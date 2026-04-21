@@ -37,6 +37,7 @@ trait ActorLink extends Consumer[Message]{
 
   /**
    * Convert [[scala.util.Try]] to stream [[org.wisp.Consumer#apply]].
+   *
    * [[scala.util.Failure]] will be thrown as `exception`
    *
    * {{{
