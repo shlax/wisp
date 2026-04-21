@@ -1,7 +1,7 @@
 package org.wisp.stream.iterator
 
 import org.wisp.stream.Source
-import org.wisp.{AbstractActor, ActorLink, ActorScheduler}
+import org.wisp.{ActorLink, ActorScheduler}
 import org.wisp.stream.iterator.message.*
 
 import java.util
@@ -36,14 +36,14 @@ object StreamWorker {
 /**
  * creates new `stream` applying `flatMap` function
  */
-class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => Source[T])(using ec : ExecutionContext) extends AbstractActor(inbox), StreamConsumer, SingleNodeFlow{
+class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => Source[T])(using ec : ExecutionContext) extends StreamActor(inbox), SingleNodeFlow{
 
   protected override val nodes:util.Queue[ActorLink] = createNodes()
 
   protected var source: Option[Source[T]] = None
   protected var ended = false
 
-  override def apply(from: ActorLink): PartialFunction[Any, Unit] = {
+  override def apply(from: ActorLink): PartialFunction[Operation, Unit] = {
     case Next(v) =>
       if (ended) throw new IllegalStateException("ended")
       if (nodes.isEmpty) throw new IllegalStateException("no workers found for " + v)
@@ -109,10 +109,11 @@ class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => S
       }
 
     case End =>
+      if(source.isDefined) throw new IllegalStateException("dropped value " + source.get)
+
       ended = true
       sendEnd()
 
-      if(source.isDefined) throw new IllegalStateException("dropped value " + source.get)
   }
 
 }

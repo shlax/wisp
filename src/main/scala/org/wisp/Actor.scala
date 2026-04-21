@@ -3,10 +3,10 @@ package org.wisp
 /**
  * Actor base trait
  */
-trait Actor extends ActorLink{
+trait Actor[T] extends ActorLink{
 
   /** Function with the actor logic */
-  def apply(from:ActorLink): PartialFunction[Any, Unit]
+  def apply(from:ActorLink): PartialFunction[T, Unit]
 
   /** Reference to execution runtime. */
   protected def scheduler: ActorScheduler

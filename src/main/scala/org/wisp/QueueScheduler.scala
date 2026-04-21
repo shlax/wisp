@@ -1,18 +1,17 @@
 package org.wisp
 
 import org.wisp.exceptions.ProcessingException
-import org.wisp.jfr.MessageProcessed
-
 import java.util
 import java.util.concurrent.locks.{Condition, ReentrantLock}
 import scala.annotation.targetName
 import scala.util.control.NonFatal
 import org.wisp.utils.lock.*
-
 import scala.concurrent.ExecutionContext
 
-/** [[ActorScheduler]] backed by [[java.util.LinkedList]] witch will block thread calling [[schedule]] when `inboxCapacity` is reached */
-class QueueScheduler[T <: Actor](inboxCapacity:Int, fn: ActorScheduler => T)(using executor: ExecutionContext) extends ActorScheduler {
+/**
+ * [[ActorScheduler]] backed by [[java.util.LinkedList]] witch will block thread calling [[schedule]] when `inboxCapacity` is reached
+ */
+class QueueScheduler[X, T <: Actor[X]](inboxCapacity:Int, fn: ActorScheduler => T)(using executor: ExecutionContext) extends ActorScheduler {
 
   val actor:T = fn.apply(this)
 
@@ -53,7 +52,7 @@ class QueueScheduler[T <: Actor](inboxCapacity:Int, fn: ActorScheduler => T)(usi
                   override def <<(v: Any): Unit = apply(Message(actor, v))
 
                   override def apply(t: Message): Unit = n.sender.apply(t)
-                }).apply(n.value)
+                }).apply(n.value.asInstanceOf[X])
               } catch {
                 case NonFatal(e) =>
                   executor.reportFailure(ProcessingException(n, actor, e))
