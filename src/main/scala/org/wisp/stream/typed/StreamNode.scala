@@ -45,6 +45,14 @@ class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
 
   /**
    * Duplicate current stream using [[org.wisp.stream.iterator.SplitStream]]
+   *
+   * {{{
+   *   val source = new StreamGraph(as).from((0 until 5).asSource)
+   *   val future = source.split{ s =>
+   *     s.copy.map(i => i * 2).to(println).start // println (0 2 4 6 8)
+   *     s.copy.map(i => i * 2 + 1).to(println).start // println (1 3 5 7 9)
+   *   }
+   * }}}
    */
   def split[E](fn: SplitNode => E): E = {
     var res: Option[E] = None
