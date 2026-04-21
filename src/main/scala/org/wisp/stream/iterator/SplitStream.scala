@@ -2,7 +2,6 @@ package org.wisp.stream.iterator
 
 import org.wisp.{ActorLink, Message}
 import org.wisp.utils.lock.*
-import org.wisp.stream.iterator.message.{End, HasNext, Next, Operation}
 
 import java.util
 import java.util.concurrent.locks.ReentrantLock

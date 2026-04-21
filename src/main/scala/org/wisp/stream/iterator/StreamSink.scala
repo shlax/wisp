@@ -3,8 +3,6 @@ package org.wisp.stream.iterator
 import org.wisp.stream.Sink
 import org.wisp.ActorLink
 import org.wisp.utils.lock.*
-import org.wisp.stream.iterator.message.*
-
 import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.control.NonFatal

@@ -2,8 +2,6 @@ package org.wisp.stream.iterator
 
 import org.wisp.stream.Source
 import org.wisp.{ActorLink, ActorScheduler}
-import org.wisp.stream.iterator.message.*
-
 import java.util
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal

@@ -1,8 +1,6 @@
 package org.wisp.stream.iterator
 
 import org.wisp.ActorLink
-import org.wisp.stream.iterator.message.*
-
 import java.util
 import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.ExecutionContext
