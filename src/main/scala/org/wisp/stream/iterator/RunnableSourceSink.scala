@@ -11,7 +11,7 @@ import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
 class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: RunnableSourceSink[F, T] => ActorLink[Operation[T]])(using ec : ExecutionContext)
-  extends SourceActorLink[F], RunnableStream[F], SingleNodeFlow[F], SinkExecution[T], StreamConsumer[T] {
+  extends SourceActorLink[F], RunnableStream[F], SingleNodeFlow[F], SinkExecution[T], StreamResponse[T] {
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
@@ -104,7 +104,7 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
 
   }
 
-  override def accept: PartialFunction[Operation[T], Unit] = {
+  override def accept: PartialFunction[Response[T], Unit] = {
     case Next(v) =>
       if(dstEnded) throw new IllegalStateException("ended")
       if(value.isDefined) throw new IllegalStateException("dropped value: "+v)

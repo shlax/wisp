@@ -39,7 +39,7 @@ object StreamWorker {
  * creates new `stream` applying `flatMap` function
  */
 class StreamWorker[F, T](stream:ActorLink[Operation[F]], flatMap: F => Source[T])(using ec : ExecutionContext)
-  extends StreamActorLink[T], StreamConsumer[T], SingleNodeFlow[T]{
+  extends StreamActorLink[T], StreamResponse[T], SingleNodeFlow[T]{
 
   override protected val lock: ReentrantLock = ReentrantLock()
 
@@ -48,7 +48,7 @@ class StreamWorker[F, T](stream:ActorLink[Operation[F]], flatMap: F => Source[T]
   protected var source: Option[Source[T]] = None
   protected var ended = false
 
-  override def accept: PartialFunction[Operation[T], Unit] = {
+  override def accept: PartialFunction[Response[T], Unit] = {
     case Next(v) =>
       if (ended) throw new IllegalStateException("ended")
       if (nodes.isEmpty) throw new IllegalStateException("no workers found for " + v)
