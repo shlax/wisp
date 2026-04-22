@@ -5,7 +5,9 @@ import scala.annotation.targetName
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
-/** Reference to [[Actor]] */
+/**
+ * Reference to [[Actor]]
+ */
 @FunctionalInterface
 trait ActorLink[-T] extends Consumer[Message[T]]{
 
