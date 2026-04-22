@@ -5,7 +5,7 @@ import org.wisp.{Link, ActorSystem}
 import org.wisp.stream.Sink
 import org.wisp.stream.extensions.*
 import org.wisp.stream.iterator.{RunnableSourceSink, RunnableSource, RunnableSink, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
-import org.wisp.stream.typed.StreamGraph
+import org.wisp.stream.graph.StreamGraph
 import tests.*
 
 import java.util.Collections

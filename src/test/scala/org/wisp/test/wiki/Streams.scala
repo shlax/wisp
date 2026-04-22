@@ -2,7 +2,7 @@ package org.wisp.test.wiki
 
 import org.junit.jupiter.api.Test
 import org.wisp.ActorSystem
-import org.wisp.stream.typed.StreamGraph
+import org.wisp.stream.graph.StreamGraph
 import org.wisp.stream.extensions.*
 import org.wisp.utils.closeable.*
 

@@ -3,7 +3,7 @@ package org.wisp
 /**
  * Actor base trait
  */
-trait Actor[T, R] extends Link[T, R]{
+trait Actor[-T, +R] extends Link[T, R]{
 
   /**
    * Function with the actor logic

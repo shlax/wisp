@@ -1,4 +1,4 @@
-package org.wisp.stream.typed
+package org.wisp.stream.graph
 
 import org.wisp.stream.iterator.SourceLink
 

@@ -5,7 +5,7 @@ import org.wisp.remote.{RemoteLink, UdpClient, UdpRouter}
 import org.wisp.stream.Sink
 import org.wisp.stream.extensions.*
 import org.wisp.stream.iterator.{RunnableSink, RunnableSource, RunnableSourceSink, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
-import org.wisp.stream.typed.StreamGraph
+import org.wisp.stream.graph.StreamGraph
 import tests.*
 import org.wisp.utils.closeable.*
 import org.wisp.test.impl.serializer.IdName

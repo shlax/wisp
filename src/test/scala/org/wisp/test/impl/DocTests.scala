@@ -3,7 +3,7 @@ package org.wisp.test.impl
 import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.ActorSystem
 import org.wisp.stream.extensions.*
-import org.wisp.stream.typed.StreamGraph
+import org.wisp.stream.graph.StreamGraph
 import org.wisp.utils.closeable.*
 
 import java.util
