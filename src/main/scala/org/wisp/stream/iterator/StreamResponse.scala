@@ -8,6 +8,9 @@ import scala.util.{Failure, Success, Try}
 
 abstract class StreamResponse[T](override val lock:ReentrantLock) extends StreamLock, (Try[Message[Response[T]]] => Unit) {
 
+  /**
+   * method is running with lock
+   */
   protected def accept: PartialFunction[Response[T], Unit]
 
   override def apply(t: Try[Message[Response[T]]]): Unit = lock.withLock {
