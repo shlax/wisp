@@ -3,7 +3,7 @@ package org.wisp.stream.iterator
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Failure
 
-trait SourceActorLink[T](using ExecutionContext) extends StreamActorLink[T]{
+trait SourceLink[T](using ExecutionContext) extends StreamLink[T]{
 
   def failOn(e: Throwable):this.type
 

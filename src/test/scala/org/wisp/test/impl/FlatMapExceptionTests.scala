@@ -1,7 +1,7 @@
 package org.wisp.test.impl
 
 import org.junit.jupiter.api.{Assertions, Test}
-import org.wisp.{ActorLink, ActorSystem}
+import org.wisp.{Link, ActorSystem}
 import org.wisp.stream.Sink
 import tests.*
 import org.wisp.stream.extensions.*

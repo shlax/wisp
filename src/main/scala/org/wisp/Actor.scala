@@ -3,22 +3,22 @@ package org.wisp
 /**
  * Actor base trait
  */
-trait Actor[T] extends ActorLink[T]{
+trait Actor[T, R] extends Link[T, R]{
 
   /**
    * Function with the actor logic
    */
-  def apply(from:ActorLink[Any]): PartialFunction[T, Unit]
+  def apply(from:Link[R, T]) : T => Unit
 
   /**
    * Reference to execution runtime.
    */
-  protected def scheduler: ActorScheduler[T]
+  protected def scheduler: ActorScheduler[T, R]
 
   /**
    * Redirect message to [[scheduler]]
    */
-  override def apply(m: Message[T]): Unit = {
+  override def apply(m: LinkCallback[T, R]): Unit = {
     scheduler.schedule(m)
   }
 

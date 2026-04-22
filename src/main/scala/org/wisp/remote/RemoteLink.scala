@@ -1,20 +1,20 @@
 package org.wisp.remote
 
 import org.wisp.remote.exceptions.RemoteAskException
-import org.wisp.{ActorLink, Message}
+import org.wisp.{Link, LinkCallback}
 
 import java.net.SocketAddress
 import scala.concurrent.Future
 
-class RemoteLink[T](c: UdpClient[T], adr:SocketAddress) extends ActorLink[T]{
+class RemoteLink[T, R](c: UdpClient[T], adr:SocketAddress) extends Link[T, R]{
 
-  override def apply(t: Message[T]): Unit = {
+  override def apply(t: LinkCallback[T, R]): Unit = {
     t.process(RemoteLink.this.getClass) {
       c.send(adr, t.value)
     }
   }
 
-  override def call[R](v:T) : Future[Message[R]] = {
+  override def call(v:T) : Future[LinkCallback[R, T]] = {
     throw RemoteAskException(v)
   }
   

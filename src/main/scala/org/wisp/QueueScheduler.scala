@@ -11,19 +11,19 @@ import scala.concurrent.ExecutionContext
 /**
  * [[ActorScheduler]] backed by [[java.util.LinkedList]] witch will block thread calling [[schedule]] when `inboxCapacity` is reached
  */
-class QueueScheduler[V, T <: Actor[V]](inboxCapacity:Int, fn: ActorScheduler[V] => T)(using executor: ExecutionContext) extends ActorScheduler[V] {
+class QueueScheduler[V, R, T <: Actor[V, R]](inboxCapacity:Int, fn: ActorScheduler[V, R] => T)(using executor: ExecutionContext) extends ActorScheduler[V, R] {
 
   val actor:T = fn.apply(this)
 
-  protected val queue: util.Queue[Message[V]] = createQueue(inboxCapacity)
-  protected def createQueue(capacity:Int): util.Queue[Message[V]] = util.LinkedList[Message[V]]()
+  protected val queue: util.Queue[LinkCallback[V, R]] = createQueue(inboxCapacity)
+  protected def createQueue(capacity:Int): util.Queue[LinkCallback[V, R]] = util.LinkedList[LinkCallback[V, R]]()
 
   protected val lock:ReentrantLock = ReentrantLock()
   protected val cnd: Condition = lock.newCondition()
 
   protected var running = false
 
-  protected def pull(): Option[Message[V]] = lock.withLock {
+  protected def pull(): Option[LinkCallback[V, R]] = lock.withLock {
     val n = Option(queue.poll())
     if (n.isEmpty){
       running = false
@@ -33,7 +33,7 @@ class QueueScheduler[V, T <: Actor[V]](inboxCapacity:Int, fn: ActorScheduler[V] 
     n
   }
 
-  override def schedule(message: Message[V]): Unit = lock.withLock {
+  override def schedule(message: LinkCallback[V, R]): Unit = lock.withLock {
     while (queue.size() >= inboxCapacity){
       cnd.await()
     }
@@ -47,12 +47,12 @@ class QueueScheduler[V, T <: Actor[V]](inboxCapacity:Int, fn: ActorScheduler[V] 
             val n = next.get
             n.process(actor.getClass) {
               try {
-                actor.apply(new ActorLink {
+                actor.apply(new Link[R, V] {
                   @targetName("send")
-                  override def <<(v: Any): Unit = apply(Message(actor, v))
+                  override def <<(v: R): Unit = apply(LinkCallback(actor, v))
 
-                  override def apply(t: Message[?]): Unit = {
-                    n.sender.asInstanceOf[ActorLink[Any]].apply(t)
+                  override def apply(t: LinkCallback[R, V]): Unit = {
+                    n.sender.apply(t)
                   }
                 }).apply(n.value)
               } catch {

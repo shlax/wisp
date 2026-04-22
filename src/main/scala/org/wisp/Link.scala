@@ -9,24 +9,24 @@ import scala.util.{Failure, Success, Try}
  * Reference to [[Actor]]
  */
 @FunctionalInterface
-trait ActorLink[-T] extends Consumer[Message[T]]{
+trait Link[T, R] extends Consumer[LinkCallback[T, R]]{
 
   /**
    * Sends a one-way asynchronous message
    */
   @targetName("send")
   def <<(v:T) : Unit = {
-    val msg = Message( t => { throw UndeliveredException(t) }, v)
+    val msg = LinkCallback[T, R](t => { throw UndeliveredException(t) }, v)
     apply(msg)
   }
 
   /**
-   * Sends an asynchronous message and reply [[Message]] can be obtained through returned future
+   * Sends an asynchronous message and reply [[LinkCallback]] can be obtained through returned future
    */
-  def call[R](v:T) : Future[Message[R]] = {
-    val cf = Promise[Message[R]]()
-    val msg = Message( t => {
-        if (!cf.trySuccess(t.asInstanceOf[Message[R]]) ) throw UndeliveredException(t)
+  def call(v:T) : Future[LinkCallback[R, T]] = {
+    val cf = Promise[LinkCallback[R, T]]()
+    val msg = LinkCallback[T, R](t => {
+        if (!cf.trySuccess(t) ) throw UndeliveredException(t)
       } , v)
     apply(msg)
     cf.future
@@ -35,7 +35,7 @@ trait ActorLink[-T] extends Consumer[Message[T]]{
   /**
    * Sends an asynchronous message and reply value can be obtained through returned future
    */
-  def ask[R](v:T)(using ExecutionContext) : Future[R] = {
+  def ask(v:T)(using ExecutionContext) : Future[R] = {
     call(v).map(_.value)
   }
 
@@ -49,10 +49,10 @@ trait ActorLink[-T] extends Consumer[Message[T]]{
    *   link.call(HasNext).onComplete(apply)
    * }}}
    */
-  def apply(t: Try[Message[T]]): Unit = {
+  def apply(t: Try[LinkCallback[T, R]]): Unit = {
     t match {
       case Success(message) =>
-        message.process(ActorLink.this.getClass) {
+        message.process(Link.this.getClass) {
           apply(message)
         }
       case Failure(exception) =>

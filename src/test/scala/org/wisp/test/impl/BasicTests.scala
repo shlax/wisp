@@ -9,7 +9,7 @@ import org.wisp.stream.typed.StreamGraph
 import tests.*
 import org.wisp.utils.closeable.*
 import org.wisp.test.impl.serializer.IdName
-import org.wisp.{AbstractActor, ActorLink, ActorScheduler, ActorSystem}
+import org.wisp.{AbstractActor, Link, ActorScheduler, ActorSystem}
 
 import java.net.InetSocketAddress
 import java.util
@@ -29,11 +29,10 @@ class BasicTests {
     val cd = new CountDownLatch(1)
     val ref = AtomicReference[Any]()
 
-    class HelloActor(in: ActorScheduler[Any]) extends AbstractActor(in) {
-      override def apply(from: ActorLink[Any]): PartialFunction[Any, Unit] = {
-        case a =>
-          ref.set(a)
-          cd.countDown()
+    class HelloActor(in: ActorScheduler[Any, Any]) extends AbstractActor(in) {
+      override def apply(from: Link[Any, Any]): Any => Unit = { a =>
+        ref.set(a)
+        cd.countDown()
       }
     }
 
@@ -52,8 +51,8 @@ class BasicTests {
     val cd = new CountDownLatch(1)
     val ref = AtomicReference[Any]()
 
-    class HelloActor(in: ActorScheduler[Any]) extends AbstractActor(in) {
-      override def apply(from: ActorLink[Any]): PartialFunction[Any, Unit] = {
+    class HelloActor(in: ActorScheduler[Any, Any]) extends AbstractActor(in) {
+      override def apply(from: Link[Any, Any]): PartialFunction[Any, Unit] = {
         case a => from << "Hello " + a
       }
     }
@@ -216,12 +215,11 @@ class BasicTests {
       given ec : ActorSystem = use(ActorSystem())
       import IdName.given
 
-      val r = use(UdpRouter[Int, IdName](adr, 2024))
-      r.register(1, ec.create(i => new AbstractActor(i) {
-        override def apply(from: ActorLink[Any]): PartialFunction[Any, Unit] = {
-          case x: Any =>
-            res.add(x)
-            cd.countDown()
+      val r = use(UdpRouter[Int, IdName, IdName](adr, 2024))
+      r.register(1, ec.create( (i:ActorScheduler[IdName, IdName]) => new AbstractActor[IdName, IdName](i) {
+        override def apply(from: Link[IdName, IdName]): IdName => Unit = { x =>
+          res.add(x)
+          cd.countDown()
         }
       }))
       ec.execute(r)

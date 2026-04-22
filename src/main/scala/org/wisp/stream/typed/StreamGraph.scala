@@ -1,8 +1,8 @@
 package org.wisp.stream.typed
 
-import org.wisp.ActorLink
+import org.wisp.Link
 import org.wisp.stream.{Sink, Source}
-import org.wisp.stream.iterator.{RunnableSourceSink, RunnableSource, SourceActorLink, StreamSource, ZipStream}
+import org.wisp.stream.iterator.{RunnableSourceSink, RunnableSource, SourceLink, StreamSource, ZipStream}
 import org.wisp.stream.iterator.Operation
 import scala.concurrent.ExecutionContext
 
@@ -15,14 +15,14 @@ class StreamGraph(val system:ExecutionContext){
   /**
    * Create node from `link`
    */
-  def node[T](link: ActorLink[Operation[T]]): StreamNode[T] = {
+  def node[T](link: Link[Operation[T], Operation[T]]): StreamNode[T] = {
     StreamNode(this, link)
   }
 
   /**
    * Create stream from `link`
    */
-  def from[T](link: SourceActorLink[T]): SourceNode[T] = {
+  def from[T](link: SourceLink[T]): SourceNode[T] = {
     SourceNode(this, link)
   }
 

@@ -1,7 +1,7 @@
 package org.wisp.stream.iterator
 
 import org.wisp.stream.Source
-import org.wisp.ActorLink
+import org.wisp.Link
 import java.util
 import org.wisp.utils.lock.*
 
@@ -9,11 +9,11 @@ import java.util.concurrent.locks.{Condition, ReentrantLock}
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
-class RunnableSource[T](src:Source[T])(using ec : ExecutionContext) extends SourceActorLink[T], RunnableStream[T], SingleNodeFlow[T]{
+class RunnableSource[T](src:Source[T])(using ec : ExecutionContext) extends SourceLink[T], RunnableStream[T], SingleNodeFlow[T]{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
-  protected val nodes:util.Queue[ActorLink[Operation[T]]] = createNodes()
+  protected val nodes:util.Queue[Link[Operation[T], Operation[T]]] = createNodes()
 
   protected val condition: Condition = lock.newCondition()
   
@@ -69,7 +69,7 @@ class RunnableSource[T](src:Source[T])(using ec : ExecutionContext) extends Sour
     
   }
 
-  override def apply(sender: ActorLink[Operation[T]]): PartialFunction[Operation[T], Unit] = {
+  override def apply(sender: Link[Operation[T], Operation[T]]): PartialFunction[Operation[T], Unit] = {
     case HasNext =>
       if (ended) {
         sender << End

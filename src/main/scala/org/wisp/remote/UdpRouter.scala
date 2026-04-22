@@ -1,7 +1,7 @@
 package org.wisp.remote
 
 import org.wisp.remote.exceptions.RemoteAskException
-import org.wisp.{ActorLink, Message}
+import org.wisp.{Link, LinkCallback}
 import org.wisp.serializer.*
 import org.wisp.utils.bytesToUnsignedInt
 
@@ -27,13 +27,14 @@ import scala.concurrent.{ExecutionContext, Future}
  * @param executor the execution context for asynchronous operations
  * @param readWrite the ReadWrite serializer for message serialization/deserialization
  */
-class UdpRouter[K, M <: RemoteMessage[K]](address: SocketAddress, capacity: Int)(using executor: ExecutionContext, readWrite: ReadWrite[M]) extends UdpClient(Some(address)), Runnable {
+class UdpRouter[K, M <: RemoteMessage[K], R](address: SocketAddress, capacity: Int)(using executor: ExecutionContext, read: ReadWrite[M], write: ReadWrite[R])
+  extends UdpClient[R](Some(address)), Runnable {
 
   /**  Map that associates path keys with actor references for message routing. */
-  protected val bindMap: ConcurrentMap[K, ActorLink[M]] = createBindMap()
+  protected val bindMap: ConcurrentMap[K, Link[M, R]] = createBindMap()
 
-  protected def createBindMap(): ConcurrentMap[K, ActorLink[M]] = {
-    ConcurrentHashMap[K, ActorLink[M]]()
+  protected def createBindMap(): ConcurrentMap[K, Link[M, R]] = {
+    ConcurrentHashMap[K, Link[M, R]]()
   }
 
   /**
@@ -43,7 +44,7 @@ class UdpRouter[K, M <: RemoteMessage[K]](address: SocketAddress, capacity: Int)
    * @param link  the actor reference to associate with the path
    * @return Some(previousActorLink) if a mapping already existed, None otherwise
    */
-  def register(path: K, link: ActorLink[M]): Option[ActorLink[M]] = {
+  def register(path: K, link: Link[M, R]): Option[Link[M, R]] = {
     Option(bindMap.put(path, link))
   }
 
@@ -53,7 +54,7 @@ class UdpRouter[K, M <: RemoteMessage[K]](address: SocketAddress, capacity: Int)
    * @param path the path to remove
    * @return Some(removedActorLink) if a mapping existed, None otherwise
    */
-  def remove(path: K): Option[ActorLink[M]] = {
+  def remove(path: K): Option[Link[M, R]] = {
     Option(bindMap.remove(path))
   }
 
@@ -134,17 +135,14 @@ class UdpRouter[K, M <: RemoteMessage[K]](address: SocketAddress, capacity: Int)
       throw new IllegalStateException("not found: " + rm.path)
     }
 
-    ref.apply( Message( new ActorLink[M]{
-        override def apply(t: Message[M]): Unit = {
+    ref.apply( LinkCallback[M, R]( new Link[R, M]{
+        override def apply(t: LinkCallback[R, M]): Unit = {
           t.process(UdpRouter.this.getClass) {
-            t.value match {
-              case m: RemoteMessage[?] =>
-                send(adr, m)
-            }
+            send(adr, t.value)
           }
         }
 
-        override def call[R](v:M) : Future[Message[R]] = {
+        override def call(v:R) : Future[LinkCallback[M, R]] = {
           throw RemoteAskException(v)
         }
       }, rm) )

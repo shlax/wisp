@@ -1,6 +1,6 @@
 package org.wisp.stream.iterator
 
-import org.wisp.ActorLink
+import org.wisp.Link
 import org.wisp.utils.lock.*
 import org.wisp.stream.Sink
 
@@ -8,7 +8,7 @@ import java.util.concurrent.locks.{Condition, ReentrantLock}
 import scala.concurrent.ExecutionContext
 
 /**
- * This class implements a stream sink that can be executed on a thread to consume elements from an upstream actor.
+ * This class implements a stream sink that can be executed on a thread to consume elements from an upstream link.
  *
  * Execution context for async operations is provided by the `ExecutionContext` parameter.
  *
@@ -17,7 +17,7 @@ import scala.concurrent.ExecutionContext
  * @param upstream         the upstream link providing elements
  * @param sink             the underlying sink implementation that processes elements
  */
-class RunnableSink[T](upstream:ActorLink[Operation[T]], override val sink:Sink[T])(using ExecutionContext) extends StreamActorLink[T], RunnableStream[T], SinkExecution[T]{
+class RunnableSink[T](upstream:Link[Operation[T], Operation[T]], override val sink:Sink[T])(using ExecutionContext) extends StreamLink[T], RunnableStream[T], SinkExecution[T]{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
@@ -32,7 +32,7 @@ class RunnableSink[T](upstream:ActorLink[Operation[T]], override val sink:Sink[T
   protected var ended = false
 
   /**
-   * Requests the next element from the upstream actor.
+   * Requests the next element from the upstream link.
    */
   protected def next(): Unit = {
     upstream.call(HasNext).onComplete(apply)
@@ -83,9 +83,9 @@ class RunnableSink[T](upstream:ActorLink[Operation[T]], override val sink:Sink[T
   }
 
   /**
-   * Handles messages from the upstream actor.
+   * Handles messages from the upstream link.
    */
-  override def apply(from: ActorLink[Operation[T]]): PartialFunction[Operation[T], Unit] = {
+  override def apply(from: Link[Operation[T], Operation[T]]): PartialFunction[Operation[T], Unit] = {
     case Next(v) =>
       if(ended) throw new IllegalStateException("ended")
       if(value.isDefined) throw new IllegalStateException("dropped value: "+v)

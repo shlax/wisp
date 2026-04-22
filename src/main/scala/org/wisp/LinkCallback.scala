@@ -9,7 +9,7 @@ import java.util.UUID
  * @param sender the actor link of the message sender
  * @param value  the payload of the message
  */
-case class Message[+T](sender:ActorLink[?], value:T) {
+case class LinkCallback[T, R](sender:Link[R, T], value:T) {
 
   val jfrId:Option[UUID] = {
     val event = MessageCreated()
@@ -25,7 +25,7 @@ case class Message[+T](sender:ActorLink[?], value:T) {
   }
 
   /** capture JFR data related to processing this message */
-  def process[R](consumerClass: => Class[?])(fn: => R) : R = {
+  def process[V](consumerClass: => Class[?])(fn: => V) : V = {
     val event = MessageProcessed()
     event.begin()
     try{

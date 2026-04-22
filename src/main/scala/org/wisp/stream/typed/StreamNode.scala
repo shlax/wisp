@@ -1,6 +1,6 @@
 package org.wisp.stream.typed
 
-import org.wisp.ActorLink
+import org.wisp.Link
 import org.wisp.stream.{Sink, Source}
 import org.wisp.stream.iterator.{Operation, RunnableSink, SplitStream, StreamBuffer, StreamSink, StreamWorker}
 
@@ -9,7 +9,7 @@ import scala.concurrent.ExecutionContext
 /** 
  * Stream element 
  */
-class StreamNode[T](graph: StreamGraph, val link: ActorLink[Operation[T]]) {
+class StreamNode[T](graph: StreamGraph, val link: Link[Operation[T], Operation[T]]) {
   given ExecutionContext = graph.system
 
   /** 

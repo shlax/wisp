@@ -1,6 +1,6 @@
 package org.wisp.stream.iterator
 
-import org.wisp.ActorLink
+import org.wisp.Link
 import java.util
 import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.ExecutionContext
@@ -9,7 +9,7 @@ import scala.concurrent.ExecutionContext
  * Prefetch element from `stream`
  * @param size maximum no of elements to prefetch
  */
-class StreamBuffer[T](stream:ActorLink[Operation[T]], size:Int)(using ExecutionContext) extends StreamActorLink[T], SingleNodeFlow[T]{
+class StreamBuffer[T](stream:Link[Operation[T], Operation[T]], size:Int)(using ExecutionContext) extends StreamLink[T], SingleNodeFlow[T]{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
@@ -19,7 +19,7 @@ class StreamBuffer[T](stream:ActorLink[Operation[T]], size:Int)(using ExecutionC
     util.LinkedList[T]()
   }
 
-  protected override val nodes: util.Queue[ActorLink[Operation[T]]] = createNodes()
+  protected override val nodes: util.Queue[Link[Operation[T], Operation[T]]] = createNodes()
 
   protected var requested = false
   protected var ended = false
@@ -34,7 +34,7 @@ class StreamBuffer[T](stream:ActorLink[Operation[T]], size:Int)(using ExecutionC
     }
   }
 
-  override def apply(sender: ActorLink[Operation[T]]): PartialFunction[Operation[T], Unit] = {
+  override def apply(sender: Link[Operation[T], Operation[T]]): PartialFunction[Operation[T], Unit] = {
     case HasNext =>
       val e = queue.poll()
       if (e == null) {

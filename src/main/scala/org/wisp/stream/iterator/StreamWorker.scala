@@ -1,7 +1,7 @@
 package org.wisp.stream.iterator
 
 import org.wisp.stream.Source
-import org.wisp.ActorLink
+import org.wisp.Link
 import java.util
 import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.ExecutionContext
@@ -12,21 +12,21 @@ object StreamWorker {
   /**
    * creates new `stream` applying `map` function
    */
-  def map[F, T](stream:ActorLink[Operation[F]], map: F => T)(using ExecutionContext) : StreamWorker[F, T] = {
+  def map[F, T](stream:Link[Operation[F], Operation[F]], map: F => T)(using ExecutionContext) : StreamWorker[F, T] = {
     StreamWorker(stream, i => Source(map.apply(i)) )
   }
 
   /**
    * creates new `stream` applying `filter` function
    */
-  def filter[F](stream: ActorLink[Operation[F]], filter: F => Boolean)(using ExecutionContext): StreamWorker[F, F] = {
+  def filter[F](stream: Link[Operation[F], Operation[F]], filter: F => Boolean)(using ExecutionContext): StreamWorker[F, F] = {
     StreamWorker(stream, i => { if(filter.apply(i)) Source(i) else Source.empty } )
   }
 
   /**
    * creates new `stream` applying `flatMap` function
    */
-  def flatMap[F, T](stream:ActorLink[Operation[F]], flatMap: F => Source[T])(using ExecutionContext): StreamWorker[F, T] = {
+  def flatMap[F, T](stream:Link[Operation[F], Operation[F]], flatMap: F => Source[T])(using ExecutionContext): StreamWorker[F, T] = {
     StreamWorker(stream, flatMap)
   }
 
@@ -35,11 +35,11 @@ object StreamWorker {
 /**
  * creates new `stream` applying `flatMap` function
  */
-class StreamWorker[F, T](stream:ActorLink[Operation[F]], flatMap: F => Source[T])(using ec : ExecutionContext) extends StreamActorLink[T], SingleNodeFlow[T]{
+class StreamWorker[F, T](stream:Link[Operation[F], Operation[F]], flatMap: F => Source[T])(using ec : ExecutionContext) extends StreamLink[T], SingleNodeFlow[T]{
 
   override protected val lock: ReentrantLock = ReentrantLock()
 
-  protected override val nodes:util.Queue[ActorLink[Operation[T]]] = createNodes()
+  protected override val nodes:util.Queue[Link[Operation[T], Operation[T]]] = createNodes()
 
   protected var source: Option[Source[T]] = None
   protected var ended = false
@@ -92,7 +92,7 @@ class StreamWorker[F, T](stream:ActorLink[Operation[F]], flatMap: F => Source[T]
 
   }
 
-  override def apply(from: ActorLink[Operation[T]]): PartialFunction[Operation[T], Unit] = {
+  override def apply(from: Link[Operation[T], Operation[T]]): PartialFunction[Operation[T], Unit] = {
 
     case HasNext =>
       if (ended) {

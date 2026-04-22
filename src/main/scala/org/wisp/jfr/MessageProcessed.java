@@ -24,7 +24,7 @@ public class MessageProcessed extends Event {
     public String uuid;
 
     /**
-     * message value {@link org.wisp.Message#value}
+     * message value {@link org.wisp.LinkCallback#value}
      */
     @Label("Value")
     public String value;

@@ -2,7 +2,7 @@ package org.wisp.test.paxos
 
 import org.wisp.remote.{RemoteLink, RemoteMessage}
 import org.wisp.serializer.{ReadWrite, given}
-import org.wisp.{AbstractActor, ActorLink, ActorScheduler}
+import org.wisp.{AbstractActor, Link, ActorScheduler}
 
 import java.util.concurrent.CompletableFuture
 import scala.concurrent.ExecutionContext
@@ -42,9 +42,11 @@ case class Ignore(n: GenerationNumber) extends PaxosMessage derives ReadWrite {
   override def path: String = "proposer"
 }
 
-case class TryRun(n: Option[GenerationNumber])
+case class TryRun(n: Option[GenerationNumber]) extends PaxosMessage {
+  override def path: String = throw new IllegalStateException("local message")
+}
 
-class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorLink[PaxosMessage]], learner: CompletableFuture[String], scheduler: ActorScheduler[Any])(using ExecutionContext) extends AbstractActor(scheduler) {
+class Proposer(nodeId: NodeId, value:Value, acceptors: List[Link[PaxosMessage, PaxosMessage]], learner: CompletableFuture[String], scheduler: ActorScheduler[PaxosMessage, PaxosMessage])(using ExecutionContext) extends AbstractActor(scheduler) {
   val quorum: Int = {
     val s = acceptors.size
     val n2 = if (s % 2 == 0) s / 2 else (s - 1) / 2
@@ -58,7 +60,7 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorLink[PaxosMessa
   var promiseCount:Int = 0
   var acceptedCount:Int = 0
 
-  override def apply(? : ActorLink[Any]): PartialFunction[Any, Unit] = {
+  override def apply(? : Link[PaxosMessage, PaxosMessage]): PartialFunction[PaxosMessage, Unit] = {
     case TryRun(n) =>
       if(n.nonEmpty){
         if(n.get.nodeId != nodeId) throw new IllegalStateException("nodeId: "+n.get.nodeId+" != "+nodeId)
@@ -138,12 +140,12 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorLink[PaxosMessa
 
 }
 
-class Acceptor(nodeId:NodeId, link: NodeId => RemoteLink[PaxosMessage], scheduler: ActorScheduler[Any]) extends AbstractActor(scheduler) {
+class Acceptor(nodeId:NodeId, link: NodeId => RemoteLink[PaxosMessage, PaxosMessage], scheduler: ActorScheduler[PaxosMessage, PaxosMessage]) extends AbstractActor(scheduler) {
 
   var promised:Option[GenerationNumber] = None
   var lastValue:Option[GenerationValue] = None
 
-  override def apply(? : ActorLink[Any]): PartialFunction[Any, Unit] = {
+  override def apply(? : Link[PaxosMessage, PaxosMessage]): PartialFunction[PaxosMessage, Unit] = {
     case Prepare(from, n) =>
       println("Acceptor["+nodeId+"]<|"+from+":Prepare("+n+")|>"+promised+"|"+lastValue)
       Thread.sleep(Random.between(0, 100))

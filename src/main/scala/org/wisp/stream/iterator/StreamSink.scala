@@ -1,7 +1,7 @@
 package org.wisp.stream.iterator
 
 import org.wisp.stream.Sink
-import org.wisp.ActorLink
+import org.wisp.Link
 import org.wisp.utils.lock.*
 import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -10,7 +10,7 @@ import scala.util.control.NonFatal
 /**
  * for each element of `stream` `sink.apply(...)` is called
  */
-class StreamSink[T](stream :ActorLink[Operation[T]], override val sink:Sink[T])(using ExecutionContext) extends StreamActorLink[T], SinkExecution[T]{
+class StreamSink[T](stream :Link[Operation[T], Operation[T]], override val sink:Sink[T])(using ExecutionContext) extends StreamLink[T], SinkExecution[T]{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
   
@@ -37,7 +37,7 @@ class StreamSink[T](stream :ActorLink[Operation[T]], override val sink:Sink[T])(
     sinkException = Some(t)
   }
 
-  override def apply(from: ActorLink[Operation[T]]): PartialFunction[Operation[T], Unit] = {
+  override def apply(from: Link[Operation[T], Operation[T]]): PartialFunction[Operation[T], Unit] = {
 
     case Next(v) =>
       if(completed.isCompleted) throw new IllegalStateException("ended")

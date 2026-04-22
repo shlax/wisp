@@ -1,14 +1,14 @@
 package org.wisp.stream.iterator
 
 import org.wisp.stream.Source
-import org.wisp.ActorLink
+import org.wisp.Link
 import org.wisp.utils.lock.*
 
 import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
-class StreamSource[T](src:Source[T])(using ec : ExecutionContext) extends SourceActorLink[T] {
+class StreamSource[T](src:Source[T])(using ec : ExecutionContext) extends SourceLink[T] {
 
   protected override val lock:ReentrantLock = new ReentrantLock()
   
@@ -21,7 +21,7 @@ class StreamSource[T](src:Source[T])(using ec : ExecutionContext) extends Source
     this
   }
 
-  override def apply(sender: ActorLink[Operation[T]]): PartialFunction[Operation[T], Unit] = {
+  override def apply(sender: Link[Operation[T], Operation[T]]): PartialFunction[Operation[T], Unit] = {
     case HasNext =>
       if(sourceException.isDefined){
         sender << End

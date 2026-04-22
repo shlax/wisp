@@ -1,6 +1,6 @@
 package org.wisp.stream
 
-import org.wisp.ActorLink
+import org.wisp.Link
 
 import java.{lang, util}
 import scala.concurrent.Promise
@@ -52,7 +52,7 @@ object extensions {
     }
   }
 
-  extension [E](i: ActorLink[E]) {
+  extension [E, T](i: Link[E, T]) {
     def asSink: Sink[E] = (t: E) => {
       i << t
     }

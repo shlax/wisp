@@ -11,8 +11,8 @@ object Consumer {
     }
   }
 
-  /** Creates [[Consumer]] that sends messages to [[ActorLink]] */
-  def apply[T](ref:ActorLink[T]):Consumer[T] = {
+  /** Creates [[Consumer]] that sends messages to [[Link]] */
+  def apply[T](ref:Link[T, ?]):Consumer[T] = {
     (t: T) => {
       ref << t
     }
