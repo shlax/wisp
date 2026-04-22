@@ -16,7 +16,7 @@ trait Link[-T, +R] extends Consumer[Message[T, R]]{
    */
   @targetName("send")
   def <<(v:T) : Unit = {
-    val msg = Message[T, R](t => { throw UndeliveredException(t) }, v)
+    val msg = Message[T, R]( t => { throw UndeliveredException(t) }, v)
     apply(msg)
   }
 
@@ -25,7 +25,7 @@ trait Link[-T, +R] extends Consumer[Message[T, R]]{
    */
   def call(v:T) : Future[Message[R, T]] = {
     val cf = Promise[Message[R, T]]()
-    val msg = Message[T, R](t => {
+    val msg = Message[T, R]( t => {
         if (!cf.trySuccess(t) ) throw UndeliveredException(t)
       } , v)
     apply(msg)
