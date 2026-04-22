@@ -53,7 +53,7 @@ class UdpRouter[K, M <: RemoteMessage[K]](address: SocketAddress, capacity: Int)
    * @param path the path to remove
    * @return Some(removedActorLink) if a mapping existed, None otherwise
    */
-  def remove(path: String): Option[ActorLink] = {
+  def remove(path: K): Option[ActorLink] = {
     Option(bindMap.remove(path))
   }
 
