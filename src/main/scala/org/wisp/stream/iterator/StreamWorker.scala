@@ -35,8 +35,7 @@ object StreamWorker {
 /**
  * creates new `stream` applying `flatMap` function
  */
-class StreamWorker[F, T](stream:ActorLink[Operation[F]], flatMap: F => Source[T])(using ec : ExecutionContext)
-  extends StreamActorLink[T], SingleNodeFlow[T]{
+class StreamWorker[F, T](stream:ActorLink[Operation[F]], flatMap: F => Source[T])(using ec : ExecutionContext) extends StreamActorLink[T], SingleNodeFlow[T]{
 
   override protected val lock: ReentrantLock = ReentrantLock()
 

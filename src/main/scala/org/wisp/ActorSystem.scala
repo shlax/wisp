@@ -6,7 +6,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.{Executors, RejectedExecutionException}
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
-import scala.util.control.NonFatal
 
 /**
  * Hold [[scala.concurrent.ExecutionContext]] for actors

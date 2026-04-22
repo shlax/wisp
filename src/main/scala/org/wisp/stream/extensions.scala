@@ -3,7 +3,7 @@ package org.wisp.stream
 import org.wisp.ActorLink
 
 import java.{lang, util}
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.Promise
 import scala.util.control.NonFatal
 
 object extensions {

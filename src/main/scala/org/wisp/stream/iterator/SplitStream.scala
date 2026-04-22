@@ -1,6 +1,6 @@
 package org.wisp.stream.iterator
 
-import org.wisp.{ActorLink, Message}
+import org.wisp.ActorLink
 import org.wisp.utils.lock.*
 
 import java.util
