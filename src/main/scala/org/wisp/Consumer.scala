@@ -12,7 +12,7 @@ object Consumer {
   }
 
   /** Creates [[Consumer]] that sends messages to [[ActorLink]] */
-  def apply[T](ref:ActorLink):Consumer[T] = {
+  def apply[T](ref:ActorLink[T]):Consumer[T] = {
     (t: T) => {
       ref << t
     }

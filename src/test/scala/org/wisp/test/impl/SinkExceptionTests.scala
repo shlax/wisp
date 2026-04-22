@@ -42,10 +42,10 @@ class SinkExceptionTests {
           }
         }
 
-        val src = RunnableSourceSink(data, sink) { (ref: ActorLink) =>
-          sys.create(i => StreamWorker.map(ref, i, (q: String) =>
+        val src = RunnableSourceSink(data, sink) { ref =>
+          StreamWorker.map(ref, (q: String) =>
             "w:" + q
-          ))
+          )
         }
 
         src.run()
@@ -69,15 +69,11 @@ class SinkExceptionTests {
 
     ActorSystem() || { sys =>
 
-      val data = Seq(0, 1, 2, 3, 4, 5).asSource.map { i =>
-        "s:" + i
-      }
+      val data = Seq(0, 1, 2, 3, 4, 5).asSource.map { i => "s:" + i }
 
       val src = RunnableSource(data)
 
-      val w = sys.create(i => StreamWorker.map(src, i, q =>
-        "w:" + q
-      ))
+      val w = StreamWorker.map(src, q => "w:" + q )
 
       val f = StreamSink(w, (q:String) => {
         if (q == "w:s:4") throw new MyException("is 4")
@@ -116,9 +112,7 @@ class SinkExceptionTests {
 
         val src = StreamSource(data)
 
-        val w = sys.create(i => StreamWorker.map(src, i, q =>
-          "w:" + q
-        ))
+        val w = StreamWorker.map(src, q => "w:" + q )
 
         RunnableSink(w, (q:String) => {
           if (q == "w:s:4") throw new MyException("is 4")
@@ -150,9 +144,7 @@ class SinkExceptionTests {
 
       val src = StreamSource(data)
 
-      val w = sys.create(i => StreamWorker.map(src, i, q =>
-        "w:" + q
-      ))
+      val w = StreamWorker.map(src, q => "w:" + q )
 
       val f = StreamSink(w, (q:String) =>{
         if (q == "w:s:4") throw new MyException("is 4")

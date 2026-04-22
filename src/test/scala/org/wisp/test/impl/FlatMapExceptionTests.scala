@@ -39,8 +39,8 @@ class FlatMapExceptionTests {
         }
       }
 
-      val src = RunnableSourceSink(data, sink) { (ref: ActorLink) =>
-        sys.create(i => StreamWorker.flatMap(ref, i, (q: String) =>
+      val src = RunnableSourceSink(data, sink) { ref =>
+        StreamWorker.flatMap(ref, (q: String) =>
           if (q == "s:3"){
             List("w:x:3", "w:x:4").asSource.map{ q =>
               if(q == "w:x:4") {
@@ -49,7 +49,7 @@ class FlatMapExceptionTests {
               q
             }
           }else List("w:" + q).asSource
-        ))
+        )
       }
 
       src.run()
@@ -72,7 +72,7 @@ class FlatMapExceptionTests {
 
       val src = RunnableSource(data)
 
-      val w = sys.create(i => StreamWorker.flatMap(src, i, (q: String) =>
+      val w = StreamWorker.flatMap(src, (q: String) =>
         if (q == "s:4"){
           List("w:s:4").asSource.map{ q =>
             if(q == "w:s:4") {
@@ -81,7 +81,7 @@ class FlatMapExceptionTests {
             q
           }
         }else List("w:" + q).asSource
-      ))
+      )
 
       val f = StreamSink(w, l.add).start
 
@@ -109,7 +109,7 @@ class FlatMapExceptionTests {
 
       val src = StreamSource(data)
 
-      val w = sys.create(i => StreamWorker.flatMap(src, i, (q: String) =>
+      val w = StreamWorker.flatMap(src, (q: String) =>
         if (q == "s:4"){
           List("w:s:4").asSource.map{ q =>
             if(q == "w:s:4") {
@@ -118,7 +118,7 @@ class FlatMapExceptionTests {
             q
           }
         }else List("w:" + q).asSource
-      ))
+      )
 
       RunnableSink(w, l.add).run()
 
@@ -140,7 +140,7 @@ class FlatMapExceptionTests {
 
       val src = StreamSource(data)
 
-      val w = sys.create(i => StreamWorker.flatMap(src, i, (q: String) =>
+      val w = StreamWorker.flatMap(src, (q: String) =>
         if (q == "s:3"){
           List("w:x:3", "w:x:4").asSource.map{ q =>
             if(q == "w:x:4") {
@@ -149,7 +149,7 @@ class FlatMapExceptionTests {
             q
           }
         }else List("w:" + q).asSource
-      ))
+      )
 
       val f = StreamSink(w, l.add).start
 

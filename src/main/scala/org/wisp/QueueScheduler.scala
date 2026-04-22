@@ -11,19 +11,19 @@ import scala.concurrent.ExecutionContext
 /**
  * [[ActorScheduler]] backed by [[java.util.LinkedList]] witch will block thread calling [[schedule]] when `inboxCapacity` is reached
  */
-class QueueScheduler[V, T <: Actor[V]](inboxCapacity:Int, fn: ActorScheduler => T)(using executor: ExecutionContext) extends ActorScheduler {
+class QueueScheduler[V, T <: Actor[V]](inboxCapacity:Int, fn: ActorScheduler[V] => T)(using executor: ExecutionContext) extends ActorScheduler[V] {
 
   val actor:T = fn.apply(this)
 
-  protected val queue: util.Queue[Message] = createQueue(inboxCapacity)
-  protected def createQueue(capacity:Int): util.Queue[Message] = { util.LinkedList[Message]() }
+  protected val queue: util.Queue[Message[V]] = createQueue(inboxCapacity)
+  protected def createQueue(capacity:Int): util.Queue[Message[V]] = util.LinkedList[Message[V]]()
 
   protected val lock:ReentrantLock = ReentrantLock()
   protected val cnd: Condition = lock.newCondition()
 
   protected var running = false
 
-  protected def pull(): Option[Message] = lock.withLock {
+  protected def pull(): Option[Message[V]] = lock.withLock {
     val n = Option(queue.poll())
     if (n.isEmpty){
       running = false
@@ -33,7 +33,7 @@ class QueueScheduler[V, T <: Actor[V]](inboxCapacity:Int, fn: ActorScheduler => 
     n
   }
 
-  override def schedule(message: Message): Unit = lock.withLock {
+  override def schedule(message: Message[V]): Unit = lock.withLock {
     while (queue.size() >= inboxCapacity){
       cnd.await()
     }
@@ -51,8 +51,10 @@ class QueueScheduler[V, T <: Actor[V]](inboxCapacity:Int, fn: ActorScheduler => 
                   @targetName("send")
                   override def <<(v: Any): Unit = apply(Message(actor, v))
 
-                  override def apply(t: Message): Unit = n.sender.apply(t)
-                }).apply(n.value.asInstanceOf[V])
+                  override def apply(t: Message[?]): Unit = {
+                    n.sender.asInstanceOf[ActorLink[Any]].apply(t)
+                  }
+                }).apply(n.value)
               } catch {
                 case NonFatal(e) =>
                   executor.reportFailure(ProcessingException(n, actor, e))

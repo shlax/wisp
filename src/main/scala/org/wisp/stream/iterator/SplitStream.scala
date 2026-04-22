@@ -11,12 +11,12 @@ import scala.concurrent.ExecutionContext
  * Duplicate `original` stream into links created with `link.copy`
  * Data from `original` is pulled after every link created with `link.copy` is pulled.
  */
-class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using ExecutionContext) extends StreamActorLink {
+class SplitStream[T](original:ActorLink[Operation[T]])(link: SplitStream[T]#Split => Unit)(using ExecutionContext) extends StreamActorLink[T] {
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
   trait Split {
-    def copy: ActorLink
+    def copy: ActorLink[Operation[T]]
   }
 
   protected class SplitBuilder extends Split {
@@ -30,8 +30,8 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
 
   }
 
-  protected def createNodes(): util.Queue[ActorLink] = {
-    util.LinkedList[ActorLink]()
+  protected def createNodes(): util.Queue[ActorLink[Operation[T]]] = {
+    util.LinkedList[ActorLink[Operation[T]]]()
   }
 
   protected var requested = true
@@ -49,7 +49,7 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
     pullNext()
   }
 
-  override def apply(from: ActorLink): PartialFunction[Operation, Unit] = {
+  override def apply(from: ActorLink[Operation[T]]): PartialFunction[Operation[T], Unit] = {
     case Next(v) =>
       if(!requested) throw new IllegalStateException("not requested")
       requested = false
@@ -71,13 +71,13 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
     }
   }
 
-  protected class SplitActorLink extends StreamActorLink{
+  protected class SplitActorLink extends StreamActorLink[T]{
 
     override protected def lock: ReentrantLock = SplitStream.this.lock
 
-    val nodes: util.Queue[ActorLink] = createNodes()
+    val nodes: util.Queue[ActorLink[Operation[T]]] = createNodes()
 
-    def next(v:Any): Unit = {
+    def next(v:T): Unit = {
       val n = nodes.poll()
       if(n == null) throw new IllegalStateException("nodes are empty")
       n << Next(v)
@@ -93,7 +93,7 @@ class SplitStream(original:ActorLink)(link: SplitStream#Split => Unit)(using Exe
     }
 
 
-    override def apply(from: ActorLink): PartialFunction[Operation, Unit] = {
+    override def apply(from: ActorLink[Operation[T]]): PartialFunction[Operation[T], Unit] = {
       case HasNext =>
         if (ended) {
           from << End

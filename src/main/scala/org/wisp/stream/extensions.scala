@@ -52,8 +52,8 @@ object extensions {
     }
   }
 
-  extension (i: ActorLink) {
-    def asSink[E]: Sink[E] = (t: E) => {
+  extension [E](i: ActorLink[E]) {
+    def asSink: Sink[E] = (t: E) => {
       i << t
     }
   }

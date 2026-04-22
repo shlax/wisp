@@ -2,21 +2,21 @@ package org.wisp.stream.typed
 
 import org.wisp.ActorLink
 import org.wisp.stream.{Sink, Source}
-import org.wisp.stream.iterator.{RunnableSink, SplitStream, StreamBuffer, StreamSink, StreamWorker}
+import org.wisp.stream.iterator.{Operation, RunnableSink, SplitStream, StreamBuffer, StreamSink, StreamWorker}
 
 import scala.concurrent.ExecutionContext
 
 /** 
  * Stream element 
  */
-class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
+class StreamNode[T](graph: StreamGraph, val link: ActorLink[Operation[T]]) {
   given ExecutionContext = graph.system
 
   /** 
    * builder for [[org.wisp.stream.iterator.StreamWorker#map]]
    */
   def map[V](fn: T => V): StreamNode[V] = {
-    val r = graph.system.create( i => StreamWorker.map(link, i, fn) )
+    val r = StreamWorker.map[T, V](link, fn)
     graph.node(r)
   }
 
@@ -24,7 +24,7 @@ class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
    * builder for [[org.wisp.stream.iterator.StreamWorker#filter]]
    */
   def filter(fn: T => Boolean): StreamNode[T] = {
-    val r = graph.system.create(i => StreamWorker.filter(link, i, fn))
+    val r = StreamWorker.filter[T](link, fn)
     graph.node(r)
   }
 
@@ -32,11 +32,11 @@ class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
    * builder for [[org.wisp.stream.iterator.StreamWorker#flatMap]]
    */
   def flatMap[V](fn: T => Source[V]): StreamNode[V] = {
-    val r = graph.system.create(i => StreamWorker.flatMap(link, i, fn) )
+    val r = StreamWorker.flatMap[T, V](link, fn)
     graph.node(r)
   }
 
-  class SplitNode(from: SplitStream#Split) {
+  class SplitNode(from: SplitStream[T]#Split) {
     /**
      * Create new copy
      */
@@ -62,15 +62,15 @@ class StreamNode[T](graph: StreamGraph, val link: ActorLink) {
     res.get
   }
 
-  def to[E >: T](c: Sink[E]): StreamSink[E] = {
+  def to(c: Sink[T]): StreamSink[T] = {
     StreamSink(link, c)
   }
 
   /**
    * `sink` wil be run inside [[org.wisp.stream.iterator.RunnableSourceSink#run]]
    */
-  def toRunnable[E >: T](sink: Sink[E]): RunnableSink[E] = {
-    RunnableSink[E](link ,sink)
+  def toRunnable(sink: Sink[T]): RunnableSink[T] = {
+    RunnableSink(link ,sink)
   }
 
   /**

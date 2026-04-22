@@ -36,11 +36,11 @@ class MapExceptionTests {
         }
       }
 
-      val src = RunnableSourceSink(data, sink) { (ref: ActorLink) =>
-        sys.create(i => StreamWorker.map(ref, i, (q: String) =>
+      val src = RunnableSourceSink(data, sink) { ref =>
+        StreamWorker.map(ref, (q: String) =>
           if (q == "s:4") throw new MyException("is 4")
           "w:" + q
-        ))
+        )
       }
 
       src.run()
@@ -63,10 +63,10 @@ class MapExceptionTests {
 
       val src = RunnableSource(data)
 
-      val w = sys.create(i => StreamWorker.map(src, i, q =>
+      val w = StreamWorker.map(src, q =>
         if (q == "s:4") throw new MyException("is 4")
         "w:" + q
-      ))
+      )
 
       val f = StreamSink(w, l.add).start
       
@@ -93,10 +93,10 @@ class MapExceptionTests {
 
       val src = StreamSource(data)
 
-      val w = sys.create(i => StreamWorker.map(src, i, q =>
+      val w = StreamWorker.map(src, q =>
         if (q == "s:4") throw new MyException("is 4")
         "w:" + q
-      ))
+      )
 
       RunnableSink(w, l.add).run()
 
@@ -117,10 +117,10 @@ class MapExceptionTests {
 
       val src = StreamSource(data)
 
-      val w = sys.create(i => StreamWorker.map(src, i, q =>
+      val w = StreamWorker.map(src, q =>
         if (q == "s:4") throw new MyException("is 4")
         "w:" + q
-      ))
+      )
 
       val f = StreamSink(w, l.add).start
 
@@ -147,10 +147,10 @@ class MapExceptionTests {
 
       val b = StreamBuffer(src, 3)
 
-      val w = sys.create(i => StreamWorker.map(b, i, q =>
+      val w = StreamWorker.map(b, q =>
         if (q == "s:4") throw new MyException("is 4")
         "w:" + q
-      ))
+      )
 
       val f = StreamSink(w, l.add).start
 
@@ -174,15 +174,15 @@ class MapExceptionTests {
 
       val src = StreamSource(data)
 
-      val w1 = sys.create(i => StreamWorker.map(src, i, q => {
+      val w1 = StreamWorker.map(src, q => {
         if (q == "s:4") throw new MyException("is 4")
         "w:" + q
-      }))
+      })
 
-      val w2 = sys.create(i => StreamWorker.map(src, i, q => {
+      val w2 = StreamWorker.map(src, q => {
         if (q == "s:4") throw new MyException("is 4")
         "w:" + q
-      }))
+      })
 
       val r = ZipStream(w1, w2)
 

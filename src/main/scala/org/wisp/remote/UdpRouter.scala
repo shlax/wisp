@@ -30,10 +30,10 @@ import scala.concurrent.{ExecutionContext, Future}
 class UdpRouter[K, M <: RemoteMessage[K]](address: SocketAddress, capacity: Int)(using executor: ExecutionContext, readWrite: ReadWrite[M]) extends UdpClient(Some(address)), Runnable {
 
   /**  Map that associates path keys with actor references for message routing. */
-  protected val bindMap: ConcurrentMap[K, ActorLink] = createBindMap()
+  protected val bindMap: ConcurrentMap[K, ActorLink[M]] = createBindMap()
 
-  protected def createBindMap(): ConcurrentMap[K, ActorLink] = {
-    ConcurrentHashMap[K, ActorLink]()
+  protected def createBindMap(): ConcurrentMap[K, ActorLink[M]] = {
+    ConcurrentHashMap[K, ActorLink[M]]()
   }
 
   /**
@@ -43,7 +43,7 @@ class UdpRouter[K, M <: RemoteMessage[K]](address: SocketAddress, capacity: Int)
    * @param link  the actor reference to associate with the path
    * @return Some(previousActorLink) if a mapping already existed, None otherwise
    */
-  def register(path: K, link: ActorLink): Option[ActorLink] = {
+  def register(path: K, link: ActorLink[M]): Option[ActorLink[M]] = {
     Option(bindMap.put(path, link))
   }
 
@@ -53,7 +53,7 @@ class UdpRouter[K, M <: RemoteMessage[K]](address: SocketAddress, capacity: Int)
    * @param path the path to remove
    * @return Some(removedActorLink) if a mapping existed, None otherwise
    */
-  def remove(path: K): Option[ActorLink] = {
+  def remove(path: K): Option[ActorLink[M]] = {
     Option(bindMap.remove(path))
   }
 
@@ -134,17 +134,17 @@ class UdpRouter[K, M <: RemoteMessage[K]](address: SocketAddress, capacity: Int)
       throw new IllegalStateException("not found: " + rm.path)
     }
 
-    ref.apply( Message( new ActorLink{
-        override def apply(t: Message): Unit = {
+    ref.apply( Message( new ActorLink[M]{
+        override def apply(t: Message[M]): Unit = {
           t.process(UdpRouter.this.getClass) {
             t.value match {
               case m: RemoteMessage[?] =>
-                send(adr, m.asInstanceOf[M])
+                send(adr, m)
             }
           }
         }
 
-        override def call(v: Any): Future[Message] = {
+        override def call[R](v:M) : Future[Message[R]] = {
           throw RemoteAskException(v)
         }
       }, rm) )

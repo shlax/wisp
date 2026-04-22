@@ -44,7 +44,7 @@ case class Ignore(n: GenerationNumber) extends PaxosMessage derives ReadWrite {
 
 case class TryRun(n: Option[GenerationNumber])
 
-class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorLink], learner: CompletableFuture[String], scheduler: ActorScheduler)(using ExecutionContext) extends AbstractActor(scheduler) {
+class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorLink[PaxosMessage]], learner: CompletableFuture[String], scheduler: ActorScheduler[Any])(using ExecutionContext) extends AbstractActor(scheduler) {
   val quorum: Int = {
     val s = acceptors.size
     val n2 = if (s % 2 == 0) s / 2 else (s - 1) / 2
@@ -58,7 +58,7 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorLink], learner:
   var promiseCount:Int = 0
   var acceptedCount:Int = 0
 
-  override def apply(? : ActorLink): PartialFunction[Any, Unit] = {
+  override def apply(? : ActorLink[Any]): PartialFunction[Any, Unit] = {
     case TryRun(n) =>
       if(n.nonEmpty){
         if(n.get.nodeId != nodeId) throw new IllegalStateException("nodeId: "+n.get.nodeId+" != "+nodeId)
@@ -138,12 +138,12 @@ class Proposer(nodeId: NodeId, value:Value, acceptors: List[ActorLink], learner:
 
 }
 
-class Acceptor(nodeId:NodeId, link: NodeId => RemoteLink[PaxosMessage], scheduler: ActorScheduler) extends AbstractActor(scheduler) {
+class Acceptor(nodeId:NodeId, link: NodeId => RemoteLink[PaxosMessage], scheduler: ActorScheduler[Any]) extends AbstractActor(scheduler) {
 
   var promised:Option[GenerationNumber] = None
   var lastValue:Option[GenerationValue] = None
 
-  override def apply(? : ActorLink): PartialFunction[Any, Unit] = {
+  override def apply(? : ActorLink[Any]): PartialFunction[Any, Unit] = {
     case Prepare(from, n) =>
       println("Acceptor["+nodeId+"]<|"+from+":Prepare("+n+")|>"+promised+"|"+lastValue)
       Thread.sleep(Random.between(0, 100))

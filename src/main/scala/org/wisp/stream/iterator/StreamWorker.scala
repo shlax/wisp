@@ -1,9 +1,13 @@
 package org.wisp.stream.iterator
 
 import org.wisp.stream.Source
-import org.wisp.{ActorLink, ActorScheduler}
+import org.wisp.utils.lock.withLock
+import org.wisp.{AbstractActor, ActorLink, ActorScheduler, Message}
+
 import java.util
+import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.ExecutionContext
+import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
 object StreamWorker {
@@ -11,22 +15,22 @@ object StreamWorker {
   /**
    * creates new `stream` applying `map` function
    */
-  def map[F, T](stream:ActorLink, inbox:ActorScheduler, map: F => T)(using ExecutionContext) : StreamWorker[F, T] = {
-    StreamWorker(stream, inbox, i => Source(map.apply(i)) )
+  def map[F, T](stream:ActorLink[Operation[F]], map: F => T)(using ExecutionContext) : StreamWorker[F, T] = {
+    StreamWorker(stream, i => Source(map.apply(i)) )
   }
 
   /**
    * creates new `stream` applying `filter` function
    */
-  def filter[F](stream: ActorLink, inbox: ActorScheduler, filter: F => Boolean)(using ExecutionContext): StreamWorker[F, F] = {
-    StreamWorker(stream, inbox, i => { if(filter.apply(i)) Source(i) else Source.empty } )
+  def filter[F](stream: ActorLink[Operation[F]], filter: F => Boolean)(using ExecutionContext): StreamWorker[F, F] = {
+    StreamWorker(stream, i => { if(filter.apply(i)) Source(i) else Source.empty } )
   }
 
   /**
    * creates new `stream` applying `flatMap` function
    */
-  def flatMap[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => Source[T])(using ExecutionContext): StreamWorker[F, T] = {
-    StreamWorker(stream, inbox, flatMap)
+  def flatMap[F, T](stream:ActorLink[Operation[F]], flatMap: F => Source[T])(using ExecutionContext): StreamWorker[F, T] = {
+    StreamWorker(stream, flatMap)
   }
 
 }
@@ -34,14 +38,17 @@ object StreamWorker {
 /**
  * creates new `stream` applying `flatMap` function
  */
-class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => Source[T])(using ec : ExecutionContext) extends StreamActor(inbox), SingleNodeFlow{
+class StreamWorker[F, T](stream:ActorLink[Operation[F]], flatMap: F => Source[T])(using ec : ExecutionContext)
+  extends StreamActorLink[T], StreamConsumer[T], SingleNodeFlow[T]{
 
-  protected override val nodes:util.Queue[ActorLink] = createNodes()
+  override protected val lock: ReentrantLock = ReentrantLock()
+
+  protected override val nodes:util.Queue[ActorLink[Operation[T]]] = createNodes()
 
   protected var source: Option[Source[T]] = None
   protected var ended = false
 
-  override def apply(from: ActorLink): PartialFunction[Operation, Unit] = {
+  override def accept: PartialFunction[Operation[T], Unit] = {
     case Next(v) =>
       if (ended) throw new IllegalStateException("ended")
       if (nodes.isEmpty) throw new IllegalStateException("no workers found for " + v)
@@ -78,8 +85,18 @@ class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => S
       if (hasNext) {
         source = Some(opt.get)
       } else if (!hasNext && !nodes.isEmpty) {
-        stream.call(HasNext).onComplete(apply)
+        stream.call(HasNext).onComplete(accept)
       }
+
+    case End =>
+      if(source.isDefined) throw new IllegalStateException("dropped value " + source.get)
+
+      ended = true
+      sendEnd()
+
+  }
+
+  override def apply(from: ActorLink[Operation[T]]): PartialFunction[Operation[T], Unit] = {
 
     case HasNext =>
       if (ended) {
@@ -102,15 +119,9 @@ class StreamWorker[F, T](stream:ActorLink, inbox:ActorScheduler, flatMap: F => S
           from << Next(v.get)
         } else {
           nodes.add(from)
-          stream.call(HasNext).onComplete(apply)
+          stream.call(HasNext).onComplete(accept)
         }
       }
-
-    case End =>
-      if(source.isDefined) throw new IllegalStateException("dropped value " + source.get)
-
-      ended = true
-      sendEnd()
 
   }
 

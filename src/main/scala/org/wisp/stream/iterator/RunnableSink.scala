@@ -17,7 +17,7 @@ import scala.concurrent.ExecutionContext
  * @param upstream         the upstream link providing elements
  * @param sink             the underlying sink implementation that processes elements
  */
-class RunnableSink[T](upstream:ActorLink, override val sink:Sink[T])(using ExecutionContext) extends StreamActorLink, RunnableStream, SinkExecution[T]{
+class RunnableSink[T](upstream:ActorLink[Operation[T]], override val sink:Sink[T])(using ExecutionContext) extends StreamActorLink[T], RunnableStream[T], SinkExecution[T]{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
@@ -81,12 +81,12 @@ class RunnableSink[T](upstream:ActorLink, override val sink:Sink[T])(using Execu
   /**
    * Handles messages from the upstream actor.
    */
-  override def apply(from: ActorLink): PartialFunction[Operation, Unit] = {
+  override def apply(from: ActorLink[Operation[T]]): PartialFunction[Operation[T], Unit] = {
     case Next(v) =>
       if(ended) throw new IllegalStateException("ended")
       if(value.isDefined) throw new IllegalStateException("dropped value: "+v)
 
-      value = Some(v.asInstanceOf[T])
+      value = Some(v)
       condition.signal()
     case End =>
       if(ended) throw new IllegalStateException("ended")

@@ -11,8 +11,8 @@ class AskHelloWorld {
   @Test
   def askHelloWorld(): Unit = {
 
-    class HelloActor(inbox: ActorScheduler) extends AbstractActor(inbox) {
-      override def apply(from: ActorLink): PartialFunction[Any, Unit] = {
+    class HelloActor(inbox: ActorScheduler[Any]) extends AbstractActor(inbox) {
+      override def apply(from: ActorLink[Any]): PartialFunction[Any, Unit] = {
         case a =>
           // send message back
           from << "Hello "+a

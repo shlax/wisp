@@ -29,8 +29,8 @@ class BasicTests {
     val cd = new CountDownLatch(1)
     val ref = AtomicReference[Any]()
 
-    class HelloActor(in: ActorScheduler) extends AbstractActor(in) {
-      override def apply(from: ActorLink): PartialFunction[Any, Unit] = {
+    class HelloActor(in: ActorScheduler[Any]) extends AbstractActor(in) {
+      override def apply(from: ActorLink[Any]): PartialFunction[Any, Unit] = {
         case a =>
           ref.set(a)
           cd.countDown()
@@ -52,8 +52,8 @@ class BasicTests {
     val cd = new CountDownLatch(1)
     val ref = AtomicReference[Any]()
 
-    class HelloActor(in: ActorScheduler) extends AbstractActor(in) {
-      override def apply(from: ActorLink): PartialFunction[Any, Unit] = {
+    class HelloActor(in: ActorScheduler[Any]) extends AbstractActor(in) {
+      override def apply(from: ActorLink[Any]): PartialFunction[Any, Unit] = {
         case a => from << "Hello " + a
       }
     }
@@ -218,7 +218,7 @@ class BasicTests {
 
       val r = use(UdpRouter[Int, IdName](adr, 2024))
       r.register(1, ec.create(i => new AbstractActor(i) {
-        override def apply(from: ActorLink): PartialFunction[Any, Unit] = {
+        override def apply(from: ActorLink[Any]): PartialFunction[Any, Unit] = {
           case x: Any =>
             res.add(x)
             cd.countDown()
@@ -264,10 +264,10 @@ class BasicTests {
         }
       }
 
-      val src = RunnableSourceSink(data, sink) { (ref: ActorLink) =>
-        sys.create(i => StreamWorker.map(ref, i, (q: String) =>
+      val src = RunnableSourceSink(data, sink) { ref =>
+        StreamWorker.map(ref, (q: String) =>
           "w:" + q
-        ))
+        )
       }
 
       src.run()
@@ -293,9 +293,9 @@ class BasicTests {
       }
       val src = RunnableSource(data)
 
-      val w = sys.create(i => StreamWorker.map(src, i, q =>
+      val w = StreamWorker.map(src, q =>
         "w:" + q
-      ))
+      )
 
       val sink = new Sink[String] {
         override def apply(t: String): Unit = {
@@ -328,9 +328,9 @@ class BasicTests {
 
       val src = StreamSource(data)
 
-      val w = sys.create(i => StreamWorker.map(src, i, q =>
+      val w = StreamWorker.map(src, q =>
         "w:" + q
-      ))
+      )
 
       val sink = new Sink[String] {
         override def apply(t: String): Unit = {
@@ -362,9 +362,9 @@ class BasicTests {
 
       val b = StreamBuffer(src, 3)
 
-      val w = sys.create(i => StreamWorker.map(b, i, q =>
+      val w = StreamWorker.map(b, q =>
         "w:" + q
-      ))
+      )
 
       val sink = new Sink[String] {
         override def apply(t: String): Unit = {
@@ -395,9 +395,9 @@ class BasicTests {
       val data = Seq(0, 1, 2, 3, 4, 5).asSource
       val src = StreamSource(data)
 
-      val w = sys.create(i => StreamWorker.map(src, i, q =>
+      val w = StreamWorker.map(src, q =>
         "w:" + q
-      ))
+      )
 
       val sink = new Sink[String] {
         override def apply(t: String): Unit = {
@@ -428,13 +428,13 @@ class BasicTests {
       val data = Seq(0, 1, 2, 3, 4).asSource
       val src = StreamSource(data)
 
-      val w1 = sys.create(i => StreamWorker.map(src, i, q => {
+      val w1 = StreamWorker.map(src, q => {
         "w:" + q
-      }))
+      })
 
-      val w2 = sys.create(i => StreamWorker.map(src, i, q => {
+      val w2 = StreamWorker.map(src, q => {
         "w:" + q
-      }))
+      })
 
       val r = ZipStream(w1, w2)
 

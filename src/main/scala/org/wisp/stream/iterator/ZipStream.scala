@@ -11,18 +11,18 @@ import scala.concurrent.ExecutionContext
  * Combine multiple `streams` into one
  * @param streams streams to combine
  */
-class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends StreamActorLink, SingleNodeFlow{
-  def this(l:ActorLink*)(using ExecutionContext) = this(l)
+class ZipStream[T](streams:Iterable[ActorLink[Operation[T]]])(using ExecutionContext) extends StreamActorLink[T], SingleNodeFlow[T]{
+  def this(l:ActorLink[Operation[T]]*)(using ExecutionContext) = this(l)
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
-  protected override val nodes: util.Queue[ActorLink] = createNodes()
+  protected override val nodes: util.Queue[ActorLink[Operation[T]]] = createNodes()
 
-  protected class State(val link:ActorLink) extends StreamActorLink {
+  protected class State(val link:ActorLink[Operation[T]]) extends StreamActorLink[T] {
 
     protected override def lock:ReentrantLock = ZipStream.this.lock
 
-    protected var value:Option[Any] = None
+    protected var value:Option[T] = None
 
     protected var requested = false
     protected var ended = false
@@ -42,21 +42,21 @@ class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends Str
       }
     }
 
-    def send(ref: ActorLink):Unit = {
+    def send(ref: ActorLink[Operation[T]]):Unit = {
       val v = value.get
       value = None
       ref << Next(v)
       requestNext()
     }
 
-    override def apply(from: ActorLink): PartialFunction[Operation, Unit] = {
+    override def apply(from: ActorLink[Operation[T]]): PartialFunction[Operation[T], Unit] = {
       case Next(v) =>
         next(v)
       case End =>
         end()
     }
 
-    def next(v:Any) :Unit = {
+    def next(v:T) :Unit = {
       if(ended) throw new IllegalStateException("ended: "+v)
       if(!requested) throw new IllegalStateException("not requested: "+v)
       if(value.isDefined) throw new IllegalStateException("dropped: "+value.get)
@@ -89,7 +89,7 @@ class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends Str
 
   }
 
-  protected def createState(link:ActorLink): State = {
+  protected def createState(link:ActorLink[Operation[T]]): State = {
     State(link)
   }
 
@@ -106,7 +106,7 @@ class ZipStream(streams:Iterable[ActorLink])(using ExecutionContext) extends Str
     state.find(_.hasValue)
   }
 
-  override def apply(sender: ActorLink): PartialFunction[Operation, Unit] = {
+  override def apply(sender: ActorLink[Operation[T]]): PartialFunction[Operation[T], Unit] = {
     case HasNext =>
       select match {
         case Some(n) =>

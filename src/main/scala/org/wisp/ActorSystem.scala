@@ -73,12 +73,12 @@ class ActorSystem(inboxCapacity:Int = 3, executionContext:Option[ExecutionContex
   }
 
   /** Create new [[Actor]] with [[inboxCapacity]] queue size */
-  def create[V, T <: Actor[V]](fn: ActorScheduler => T):T = {
+  def create[V, T <: Actor[V]](fn: ActorScheduler[V] => T):T = {
     create(inboxCapacity, fn)
   }
 
   /** Create new [[Actor]] with `inboxSize` queue size */
-  def create[V, T <: Actor[V]](inboxSize:Int, fn: ActorScheduler => T):T = {
+  def create[V, T <: Actor[V]](inboxSize:Int, fn: ActorScheduler[V] => T):T = {
     given ExecutionContext = this
     QueueScheduler[V, T](inboxSize, fn).actor
   }

@@ -120,10 +120,10 @@ class EmptyTests {
         }
       }
 
-      val src = RunnableSourceSink(data, sink) { (ref: ActorLink) =>
-        sys.create(i => StreamWorker.map(ref, i, (q: String) =>
+      val src = RunnableSourceSink(data, sink) { ref =>
+        StreamWorker.map(ref, (q: String) =>
           "w:" + q
-        ))
+        )
       }
 
       src.run()
@@ -148,9 +148,9 @@ class EmptyTests {
       }
       val src = RunnableSource(data)
 
-      val w = sys.create(i => StreamWorker.map(src, i, q =>
+      val w = StreamWorker.map(src, q =>
         "w:" + q
-      ))
+      )
 
       val p = StreamSink(w, l.add).start
       src.failOn(p).run()
@@ -172,9 +172,9 @@ class EmptyTests {
 
       val src = StreamSource(data)
 
-      val w = sys.create(i => StreamWorker.map(src, i, q =>
+      val w = StreamWorker.map(src, q =>
         "w:" + q
-      ))
+      )
 
       RunnableSink(w, l.add).run()
 
@@ -196,9 +196,9 @@ class EmptyTests {
 
       val b = StreamBuffer(src, 3)
 
-      val w = sys.create(i => StreamWorker.map(b, i, q =>
+      val w = StreamWorker.map(b, q =>
         "w:" + q
-      ))
+      )
 
       val p = StreamSink(w, l.add).start
       Await.ready(p, 1.second)
@@ -217,9 +217,9 @@ class EmptyTests {
       val data = Seq[Int]().asSource
       val src = StreamSource(data)
 
-      val w = sys.create(i => StreamWorker.map(src, i, q =>
+      val w = StreamWorker.map(src, q =>
         "w:" + q
-      ))
+      )
 
       val p = StreamSink(w, l.add).start
       Await.ready(p, 1.second)
@@ -239,13 +239,13 @@ class EmptyTests {
       val data = Seq[Int]().asSource
       val src = StreamSource(data)
 
-      val w1 = sys.create(i => StreamWorker.map(src, i, q => {
+      val w1 = StreamWorker.map(src, q => {
         "w:" + q
-      }))
+      })
 
-      val w2 = sys.create(i => StreamWorker.map(src, i, q => {
+      val w2 = StreamWorker.map(src, q => {
         "w:" + q
-      }))
+      })
 
       val r = ZipStream(w1, w2)
 

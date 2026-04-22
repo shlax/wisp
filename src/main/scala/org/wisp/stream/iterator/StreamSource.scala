@@ -8,7 +8,7 @@ import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
-class StreamSource[T](src:Source[T])(using ec : ExecutionContext) extends StreamActorLink, SourceActorLink {
+class StreamSource[T](src:Source[T])(using ec : ExecutionContext) extends StreamActorLink[T], SourceActorLink[T] {
 
   protected override val lock:ReentrantLock = new ReentrantLock()
   
@@ -21,7 +21,7 @@ class StreamSource[T](src:Source[T])(using ec : ExecutionContext) extends Stream
     this
   }
 
-  override def apply(sender: ActorLink): PartialFunction[Operation, Unit] = {
+  override def apply(sender: ActorLink[Operation[T]]): PartialFunction[Operation[T], Unit] = {
     case HasNext =>
       if(sourceException.isDefined){
         sender << End

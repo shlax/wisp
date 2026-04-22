@@ -5,7 +5,7 @@ import org.wisp.ActorLink
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Failure
 
-trait SourceActorLink(using ExecutionContext) extends ActorLink{
+trait SourceActorLink[T](using ExecutionContext) extends ActorLink[Operation[T]]{
 
   def failOn(e: Throwable):this.type
 

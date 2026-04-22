@@ -9,17 +9,17 @@ import scala.concurrent.ExecutionContext
  * Prefetch element from `stream`
  * @param size maximum no of elements to prefetch
  */
-class StreamBuffer(stream:ActorLink, size:Int)(using ExecutionContext) extends StreamActorLink, SingleNodeFlow{
+class StreamBuffer[T](stream:ActorLink[Operation[T]], size:Int)(using ExecutionContext) extends StreamActorLink[T], SingleNodeFlow[T]{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
-  protected val queue:util.Queue[Any] = createQueue()
+  protected val queue:util.Queue[T] = createQueue()
 
-  protected def createQueue(): util.Queue[Any] = {
-    util.LinkedList[Any]()
+  protected def createQueue(): util.Queue[T] = {
+    util.LinkedList[T]()
   }
 
-  protected override val nodes: util.Queue[ActorLink] = createNodes()
+  protected override val nodes: util.Queue[ActorLink[Operation[T]]] = createNodes()
 
   protected var requested = false
   protected var ended = false
@@ -34,7 +34,7 @@ class StreamBuffer(stream:ActorLink, size:Int)(using ExecutionContext) extends S
     }
   }
 
-  override def apply(sender: ActorLink): PartialFunction[Operation, Unit] = {
+  override def apply(sender: ActorLink[Operation[T]]): PartialFunction[Operation[T], Unit] = {
     case HasNext =>
       val e = queue.poll()
       if (e == null) {

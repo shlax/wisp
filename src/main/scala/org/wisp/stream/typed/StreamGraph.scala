@@ -1,28 +1,28 @@
 package org.wisp.stream.typed
 
-import org.wisp.{ActorLink, ActorSystem}
+import org.wisp.ActorLink
 import org.wisp.stream.{Sink, Source}
 import org.wisp.stream.iterator.{RunnableSourceSink, RunnableSource, SourceActorLink, StreamSource, ZipStream}
-
+import org.wisp.stream.iterator.Operation
 import scala.concurrent.ExecutionContext
 
 /**
  * Api for creating stream graphs.
  */
-class StreamGraph(val system:ActorSystem){
+class StreamGraph(val system:ExecutionContext){
   given ExecutionContext = system
 
   /**
    * Create node from `link`
    */
-  def node[T](link: ActorLink): StreamNode[T] = {
+  def node[T](link: ActorLink[Operation[T]]): StreamNode[T] = {
     StreamNode(this, link)
   }
 
   /**
    * Create stream from `link`
    */
-  def from[T](link: SourceActorLink): SourceNode[T] = {
+  def from[T](link: SourceActorLink[T]): SourceNode[T] = {
     SourceNode(this, link)
   }
 
@@ -36,8 +36,8 @@ class StreamGraph(val system:ActorSystem){
   /**
    * Combine multiple `streams` into one using [[org.wisp.stream.iterator.ZipStream]]
    */
-  def zip[T](streams: Iterable[StreamNode[? <: T]]): StreamNode[T] = {
-    val r = ZipStream(streams.map(_.link))
+  def zip[T](streams: Iterable[StreamNode[T]]): StreamNode[T] = {
+    val r = ZipStream[T]( streams.map(_.link) )
     node(r)
   }
 
@@ -51,7 +51,7 @@ class StreamGraph(val system:ActorSystem){
    *   graph.zip(source1, source2).to(println).start // println (0 until 10)
    * }}}
    */
-  def zip[T](streams:StreamNode[? <: T]*): StreamNode[T] = {
+  def zip[T](streams:StreamNode[T]*): StreamNode[T] = {
     zip(streams)
   }
 

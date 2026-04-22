@@ -9,11 +9,11 @@ import java.util.concurrent.locks.{Condition, ReentrantLock}
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
-class RunnableSource[T](src:Source[T])(using ec : ExecutionContext) extends StreamActorLink, SourceActorLink, RunnableStream, SingleNodeFlow{
+class RunnableSource[T](src:Source[T])(using ec : ExecutionContext) extends StreamActorLink[T], SourceActorLink[T], RunnableStream[T], SingleNodeFlow[T]{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
-  protected val nodes:util.Queue[ActorLink] = createNodes()
+  protected val nodes:util.Queue[ActorLink[Operation[T]]] = createNodes()
 
   protected val condition: Condition = lock.newCondition()
   
@@ -69,7 +69,7 @@ class RunnableSource[T](src:Source[T])(using ec : ExecutionContext) extends Stre
     
   }
 
-  override def apply(sender: ActorLink): PartialFunction[Operation, Unit] = {
+  override def apply(sender: ActorLink[Operation[T]]): PartialFunction[Operation[T], Unit] = {
     case HasNext =>
       if (ended) {
         sender << End

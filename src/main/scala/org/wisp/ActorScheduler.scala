@@ -1,9 +1,9 @@
 package org.wisp
 
 /** Represents execution runtime for actor. */
-trait ActorScheduler {
+trait ActorScheduler[T] {
 
   /** Schedule `message` for execution. */
-  def schedule(message: Message):Unit
+  def schedule(message: Message[T]):Unit
 
 }

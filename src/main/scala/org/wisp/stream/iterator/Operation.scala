@@ -3,24 +3,24 @@ package org.wisp.stream.iterator
 /**
  * Stream operation
  */
-sealed trait Operation
+sealed trait Operation[+T]
 
 /**
  * Request next element
  */
-case object HasNext extends Operation
+case object HasNext extends Operation[Nothing]
 
 /**
  * Stream response
  */
-sealed trait Response extends Operation
+sealed trait Response[+T] extends Operation[T]
 
 /**
  * Next element
  */
-final case class Next(value: Any) extends Response
+final case class Next[T](value: T) extends Response[T]
 
 /**
  * End of stream
  */
-case object End extends Response
+case object End extends Response[Nothing]
