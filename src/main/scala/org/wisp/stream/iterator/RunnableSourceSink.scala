@@ -11,7 +11,7 @@ import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
 class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: RunnableSourceSink[F, T] => ActorLink[Operation[T]])(using ec : ExecutionContext)
-  extends SourceActorLink[F], RunnableStream[F], SingleNodeFlow[F], SinkExecution[T], StreamResponse[T] {
+  extends SourceActorLink[F], RunnableStream[F], SingleNodeFlow[F], SinkExecution[T] {
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
@@ -28,7 +28,7 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
   protected var value: Option[T] = None
 
   protected def next(): Unit = {
-    prev.call(HasNext).onComplete(accept)
+    prev.call(HasNext).onComplete(responseHandler)
   }
 
   protected var sourceException: Option[Throwable] = None
@@ -104,19 +104,21 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
 
   }
 
-  override def accept: PartialFunction[Response[T], Unit] = {
-    case Next(v) =>
-      if(dstEnded) throw new IllegalStateException("ended")
-      if(value.isDefined) throw new IllegalStateException("dropped value: "+v)
+  protected val responseHandler: StreamResponse[T] = new StreamResponse[T](lock) {
+    override def accept: PartialFunction[Response[T], Unit] = {
+      case Next(v) =>
+        if (dstEnded) throw new IllegalStateException("ended")
+        if (value.isDefined) throw new IllegalStateException("dropped value: " + v)
 
-      value = Some(v)
-      condition.signal()
+        value = Some(v)
+        condition.signal()
 
-    case End =>
-      if(dstEnded) throw new IllegalStateException("ended")
+      case End =>
+        if (dstEnded) throw new IllegalStateException("ended")
 
-      dstEnded = true
-      condition.signal()
+        dstEnded = true
+        condition.signal()
+    }
   }
 
   override def apply(sender: ActorLink[Operation[F]]): PartialFunction[Operation[F], Unit] = {

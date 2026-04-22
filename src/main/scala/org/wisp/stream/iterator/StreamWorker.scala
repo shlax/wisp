@@ -39,7 +39,7 @@ object StreamWorker {
  * creates new `stream` applying `flatMap` function
  */
 class StreamWorker[F, T](stream:ActorLink[Operation[F]], flatMap: F => Source[T])(using ec : ExecutionContext)
-  extends StreamActorLink[T], StreamResponse[F], SingleNodeFlow[T]{
+  extends StreamActorLink[T], SingleNodeFlow[T]{
 
   override protected val lock: ReentrantLock = ReentrantLock()
 
@@ -48,52 +48,54 @@ class StreamWorker[F, T](stream:ActorLink[Operation[F]], flatMap: F => Source[T]
   protected var source: Option[Source[T]] = None
   protected var ended = false
 
-  override def accept: PartialFunction[Response[F], Unit] = {
-    case Next(v) =>
-      if (ended) throw new IllegalStateException("ended")
-      if (nodes.isEmpty) throw new IllegalStateException("no workers found for " + v)
-      if (source.isDefined) throw new IllegalStateException("dropped value " + v)
+  protected val responseHandler:StreamResponse[F] = new StreamResponse[F](lock) {
+    override def accept: PartialFunction[Response[F], Unit] = {
+      case Next(v) =>
+        if (ended) throw new IllegalStateException("ended")
+        if (nodes.isEmpty) throw new IllegalStateException("no workers found for " + v)
+        if (source.isDefined) throw new IllegalStateException("dropped value " + v)
 
-      var opt:Option[Source[T]] = None
-      try{
-        val r = flatMap.apply(v)
-        opt = Some(r)
-      }catch{
-        case NonFatal(ex) =>
-          ec.reportFailure(ex)
-      }
-
-      var hasNext = true
-      while (hasNext && !nodes.isEmpty) {
-        var optVal:Option[T] = None
-        try{
-          optVal = opt.get.next()
-        }catch{
+        var opt: Option[Source[T]] = None
+        try {
+          val r = flatMap.apply(v)
+          opt = Some(r)
+        } catch {
           case NonFatal(ex) =>
             ec.reportFailure(ex)
         }
 
-        optVal match {
-          case Some(v) =>
-            val n = nodes.poll()
-            n << Next(v)
-          case None =>
-            hasNext = false
+        var hasNext = true
+        while (hasNext && !nodes.isEmpty) {
+          var optVal: Option[T] = None
+          try {
+            optVal = opt.get.next()
+          } catch {
+            case NonFatal(ex) =>
+              ec.reportFailure(ex)
+          }
+
+          optVal match {
+            case Some(v) =>
+              val n = nodes.poll()
+              n << Next(v)
+            case None =>
+              hasNext = false
+          }
         }
-      }
 
-      if (hasNext) {
-        source = Some(opt.get)
-      } else if (!hasNext && !nodes.isEmpty) {
-        stream.call(HasNext).onComplete(accept)
-      }
+        if (hasNext) {
+          source = Some(opt.get)
+        } else if (!hasNext && !nodes.isEmpty) {
+          stream.call(HasNext).onComplete(responseHandler)
+        }
 
-    case End =>
-      if(source.isDefined) throw new IllegalStateException("dropped value " + source.get)
+      case End =>
+        if (source.isDefined) throw new IllegalStateException("dropped value " + source.get)
 
-      ended = true
-      sendEnd()
+        ended = true
+        sendEnd()
 
+    }
   }
 
   override def apply(from: ActorLink[Operation[T]]): PartialFunction[Operation[T], Unit] = {
@@ -119,7 +121,7 @@ class StreamWorker[F, T](stream:ActorLink[Operation[F]], flatMap: F => Source[T]
           from << Next(v.get)
         } else {
           nodes.add(from)
-          stream.call(HasNext).onComplete(accept)
+          stream.call(HasNext).onComplete(responseHandler)
         }
       }
 
