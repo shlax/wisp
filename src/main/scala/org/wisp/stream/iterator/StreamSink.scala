@@ -7,7 +7,9 @@ import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.control.NonFatal
 
-/** for each element of `stream` `sink.apply(...)` is called */
+/**
+ * for each element of `stream` `sink.apply(...)` is called
+ */
 class StreamSink[T](stream :ActorLink[Operation[T]], override val sink:Sink[T])(using ExecutionContext) extends StreamActorLink[T], SinkExecution[T]{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
@@ -15,7 +17,9 @@ class StreamSink[T](stream :ActorLink[Operation[T]], override val sink:Sink[T])(
   protected val completed:Promise[Unit] = Promise()
   protected var started:Boolean = false
 
-  /** start precessing data */
+  /**
+   * start precessing data
+   */
   def start: Future[Unit] = lock.withLock{
     if(started){
       throw new IllegalStateException("started")

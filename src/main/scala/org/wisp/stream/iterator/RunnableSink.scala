@@ -21,7 +21,9 @@ class RunnableSink[T](upstream:ActorLink[Operation[T]], override val sink:Sink[T
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
-  /** [[java.util.concurrent.locks.Condition]] used to coordinate synchronization between the processing thread and message handler */
+  /**
+   * [[java.util.concurrent.locks.Condition]] used to coordinate synchronization between the processing thread and message handler
+   */
   protected val condition: Condition = lock.newCondition()
 
   protected var value: Option[T] = None
@@ -36,7 +38,9 @@ class RunnableSink[T](upstream:ActorLink[Operation[T]], override val sink:Sink[T
     upstream.call(HasNext).onComplete(apply)
   }
 
-  /** Stores any exception thrown by the sink during element processing */
+  /**
+   * Stores any exception thrown by the sink during element processing
+   */
   protected var sinkException: Option[Throwable] = None
 
   protected override def onSinkException(t: Throwable): Unit = {
