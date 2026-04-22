@@ -11,13 +11,13 @@ abstract class StreamResponse[T](override val lock:ReentrantLock) extends Stream
   /**
    * method is running with lock
    */
-  protected def accept: PartialFunction[Response[T], Unit]
+  protected def apply: PartialFunction[Response[T], Unit]
 
   override def apply(t: Try[Message[Response[T]]]): Unit = lock.withLock {
     t match {
       case Success(message) =>
         message.process(StreamResponse.this.getClass) {
-          accept.apply(message.value)
+          apply.apply(message.value)
         }
       case Failure(exception) =>
         throw exception

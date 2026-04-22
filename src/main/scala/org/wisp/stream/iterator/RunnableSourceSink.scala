@@ -105,7 +105,7 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
   }
 
   protected val responseHandler: StreamResponse[T] = new StreamResponse[T](lock) {
-    override def accept: PartialFunction[Response[T], Unit] = {
+    override def apply: PartialFunction[Response[T], Unit] = {
       case Next(v) =>
         if (dstEnded) throw new IllegalStateException("ended")
         if (value.isDefined) throw new IllegalStateException("dropped value: " + v)

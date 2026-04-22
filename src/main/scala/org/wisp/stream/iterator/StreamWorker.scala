@@ -49,7 +49,7 @@ class StreamWorker[F, T](stream:ActorLink[Operation[F]], flatMap: F => Source[T]
   protected var ended = false
 
   protected val responseHandler:StreamResponse[F] = new StreamResponse[F](lock) {
-    override def accept: PartialFunction[Response[F], Unit] = {
+    override def apply: PartialFunction[Response[F], Unit] = {
       case Next(v) =>
         if (ended) throw new IllegalStateException("ended")
         if (nodes.isEmpty) throw new IllegalStateException("no workers found for " + v)
