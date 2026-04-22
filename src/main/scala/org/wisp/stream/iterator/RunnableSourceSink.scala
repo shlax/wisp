@@ -1,13 +1,11 @@
 package org.wisp.stream.iterator
 
-import org.wisp.{ActorLink, Message}
+import org.wisp.ActorLink
 import org.wisp.stream.{Sink, Source}
 import org.wisp.utils.lock.*
-
 import java.util
 import java.util.concurrent.locks.{Condition, ReentrantLock}
 import scala.concurrent.ExecutionContext
-import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
 class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: RunnableSourceSink[F, T] => ActorLink[Operation[T]])(using ec : ExecutionContext)
@@ -28,7 +26,7 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
   protected var value: Option[T] = None
 
   protected def next(): Unit = {
-    prev.call(HasNext).onComplete(responseHandler)
+    prev.call(HasNext).onComplete(response)
   }
 
   protected var sourceException: Option[Throwable] = None
@@ -104,21 +102,19 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
 
   }
 
-  protected val responseHandler: StreamResponse[T] = new StreamResponse[T](lock) {
-    override def apply: PartialFunction[Response[T], Unit] = {
-      case Next(v) =>
-        if (dstEnded) throw new IllegalStateException("ended")
-        if (value.isDefined) throw new IllegalStateException("dropped value: " + v)
+  protected val response: StreamResponse[T] = StreamResponse(lock) {
+    case Next(v) =>
+      if (dstEnded) throw new IllegalStateException("ended")
+      if (value.isDefined) throw new IllegalStateException("dropped value: " + v)
 
-        value = Some(v)
-        condition.signal()
+      value = Some(v)
+      condition.signal()
 
-      case End =>
-        if (dstEnded) throw new IllegalStateException("ended")
+    case End =>
+      if (dstEnded) throw new IllegalStateException("ended")
 
-        dstEnded = true
-        condition.signal()
-    }
+      dstEnded = true
+      condition.signal()
   }
 
   override def apply(sender: ActorLink[Operation[F]]): PartialFunction[Operation[F], Unit] = {
