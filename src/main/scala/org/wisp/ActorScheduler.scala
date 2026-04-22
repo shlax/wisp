@@ -4,6 +4,6 @@ package org.wisp
 trait ActorScheduler[T, R] {
 
   /** Schedule `message` for execution. */
-  def schedule(message: LinkCallback[T, R]):Unit
+  def schedule(message: Message[T, R]):Unit
 
 }

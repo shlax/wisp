@@ -15,15 +15,15 @@ class QueueScheduler[V, R, T <: Actor[V, R]](inboxCapacity:Int, fn: ActorSchedul
 
   val actor:T = fn.apply(this)
 
-  protected val queue: util.Queue[LinkCallback[V, R]] = createQueue(inboxCapacity)
-  protected def createQueue(capacity:Int): util.Queue[LinkCallback[V, R]] = util.LinkedList[LinkCallback[V, R]]()
+  protected val queue: util.Queue[Message[V, R]] = createQueue(inboxCapacity)
+  protected def createQueue(capacity:Int): util.Queue[Message[V, R]] = util.LinkedList[Message[V, R]]()
 
   protected val lock:ReentrantLock = ReentrantLock()
   protected val cnd: Condition = lock.newCondition()
 
   protected var running = false
 
-  protected def pull(): Option[LinkCallback[V, R]] = lock.withLock {
+  protected def pull(): Option[Message[V, R]] = lock.withLock {
     val n = Option(queue.poll())
     if (n.isEmpty){
       running = false
@@ -33,7 +33,7 @@ class QueueScheduler[V, R, T <: Actor[V, R]](inboxCapacity:Int, fn: ActorSchedul
     n
   }
 
-  override def schedule(message: LinkCallback[V, R]): Unit = lock.withLock {
+  override def schedule(message: Message[V, R]): Unit = lock.withLock {
     while (queue.size() >= inboxCapacity){
       cnd.await()
     }
@@ -49,9 +49,9 @@ class QueueScheduler[V, R, T <: Actor[V, R]](inboxCapacity:Int, fn: ActorSchedul
               try {
                 actor.apply(new Link[R, V] {
                   @targetName("send")
-                  override def <<(v: R): Unit = apply(LinkCallback(actor, v))
+                  override def <<(v: R): Unit = apply(Message(actor, v))
 
-                  override def apply(t: LinkCallback[R, V]): Unit = {
+                  override def apply(t: Message[R, V]): Unit = {
                     n.sender.apply(t)
                   }
                 }).apply(n.value)

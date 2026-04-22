@@ -18,7 +18,7 @@ trait Actor[T, R] extends Link[T, R]{
   /**
    * Redirect message to [[scheduler]]
    */
-  override def apply(m: LinkCallback[T, R]): Unit = {
+  override def apply(m: Message[T, R]): Unit = {
     scheduler.schedule(m)
   }
 

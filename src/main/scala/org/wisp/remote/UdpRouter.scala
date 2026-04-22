@@ -1,7 +1,7 @@
 package org.wisp.remote
 
 import org.wisp.remote.exceptions.RemoteAskException
-import org.wisp.{Link, LinkCallback}
+import org.wisp.{Link, Message}
 import org.wisp.serializer.*
 import org.wisp.utils.bytesToUnsignedInt
 
@@ -135,14 +135,14 @@ class UdpRouter[K, M <: RemoteMessage[K], R](address: SocketAddress, capacity: I
       throw new IllegalStateException("not found: " + rm.path)
     }
 
-    ref.apply( LinkCallback[M, R]( new Link[R, M]{
-        override def apply(t: LinkCallback[R, M]): Unit = {
+    ref.apply( Message[M, R]( new Link[R, M]{
+        override def apply(t: Message[R, M]): Unit = {
           t.process(UdpRouter.this.getClass) {
             send(adr, t.value)
           }
         }
 
-        override def call(v:R) : Future[LinkCallback[M, R]] = {
+        override def call(v:R) : Future[Message[M, R]] = {
           throw RemoteAskException(v)
         }
       }, rm) )

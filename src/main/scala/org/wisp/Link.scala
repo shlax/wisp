@@ -9,23 +9,23 @@ import scala.util.{Failure, Success, Try}
  * Reference to [[Actor]]
  */
 @FunctionalInterface
-trait Link[T, R] extends Consumer[LinkCallback[T, R]]{
+trait Link[T, R] extends Consumer[Message[T, R]]{
 
   /**
    * Sends a one-way asynchronous message
    */
   @targetName("send")
   def <<(v:T) : Unit = {
-    val msg = LinkCallback[T, R](t => { throw UndeliveredException(t) }, v)
+    val msg = Message[T, R](t => { throw UndeliveredException(t) }, v)
     apply(msg)
   }
 
   /**
-   * Sends an asynchronous message and reply [[LinkCallback]] can be obtained through returned future
+   * Sends an asynchronous message and reply [[Message]] can be obtained through returned future
    */
-  def call(v:T) : Future[LinkCallback[R, T]] = {
-    val cf = Promise[LinkCallback[R, T]]()
-    val msg = LinkCallback[T, R](t => {
+  def call(v:T) : Future[Message[R, T]] = {
+    val cf = Promise[Message[R, T]]()
+    val msg = Message[T, R](t => {
         if (!cf.trySuccess(t) ) throw UndeliveredException(t)
       } , v)
     apply(msg)
@@ -49,7 +49,7 @@ trait Link[T, R] extends Consumer[LinkCallback[T, R]]{
    *   link.call(HasNext).onComplete(apply)
    * }}}
    */
-  def apply(t: Try[LinkCallback[T, R]]): Unit = {
+  def apply(t: Try[Message[T, R]]): Unit = {
     t match {
       case Success(message) =>
         message.process(Link.this.getClass) {

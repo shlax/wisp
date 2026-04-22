@@ -18,7 +18,7 @@ public class MessageCreated extends Event {
     public String uuid;
 
     /**
-     * message value {@link org.wisp.LinkCallback#value}
+     * message value {@link org.wisp.Message#value}
      */
     @Label("Value")
     public String value;
