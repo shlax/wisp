@@ -1,11 +1,9 @@
 package org.wisp.stream.iterator
 
-import org.wisp.ActorLink
-
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Failure
 
-trait SourceActorLink[T](using ExecutionContext) extends ActorLink[Operation[T]]{
+trait SourceActorLink[T](using ExecutionContext) extends StreamActorLink[T]{
 
   def failOn(e: Throwable):this.type
 

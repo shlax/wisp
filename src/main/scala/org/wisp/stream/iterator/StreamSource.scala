@@ -8,7 +8,7 @@ import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
-class StreamSource[T](src:Source[T])(using ec : ExecutionContext) extends StreamActorLink[T], SourceActorLink[T] {
+class StreamSource[T](src:Source[T])(using ec : ExecutionContext) extends SourceActorLink[T] {
 
   protected override val lock:ReentrantLock = new ReentrantLock()
   
