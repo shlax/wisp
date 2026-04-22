@@ -1,6 +1,5 @@
 package org.wisp.stream.iterator
 
-import org.wisp.Link
 import org.wisp.utils.lock.*
 
 import java.util
@@ -11,12 +10,12 @@ import scala.concurrent.ExecutionContext
  * Duplicate `original` stream into links created with `link.copy`
  * Data from `original` is pulled after every link created with `link.copy` is pulled.
  */
-class SplitStream[T](original:Link[Operation[T], Operation[T]])(link: SplitStream[T]#Split => Unit)(using ExecutionContext) extends StreamLink[T] {
+class SplitStream[T](original:OperationLink[T])(link: SplitStream[T]#Split => Unit)(using ExecutionContext) extends StreamLink[T] {
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
   trait Split {
-    def copy: Link[Operation[T], Operation[T]]
+    def copy: OperationLink[T]
   }
 
   protected class SplitBuilder extends Split {
@@ -30,8 +29,8 @@ class SplitStream[T](original:Link[Operation[T], Operation[T]])(link: SplitStrea
 
   }
 
-  protected def createNodes(): util.Queue[Link[Operation[T], Operation[T]]] = {
-    util.LinkedList[Link[Operation[T], Operation[T]]]()
+  protected def createNodes(): util.Queue[OperationLink[T]] = {
+    util.LinkedList[OperationLink[T]]()
   }
 
   protected var requested = true
@@ -49,7 +48,7 @@ class SplitStream[T](original:Link[Operation[T], Operation[T]])(link: SplitStrea
     pullNext()
   }
 
-  override def apply(from: Link[Operation[T], Operation[T]]): PartialFunction[Operation[T], Unit] = {
+  override def apply(from: OperationLink[T]): PartialFunction[Operation[T], Unit] = {
     case Next(v) =>
       if(!requested) throw new IllegalStateException("not requested")
       requested = false
@@ -75,7 +74,7 @@ class SplitStream[T](original:Link[Operation[T], Operation[T]])(link: SplitStrea
 
     override protected def lock: ReentrantLock = SplitStream.this.lock
 
-    val nodes: util.Queue[Link[Operation[T], Operation[T]]] = createNodes()
+    val nodes: util.Queue[OperationLink[T]] = createNodes()
 
     def next(v:T): Unit = {
       val n = nodes.poll()
@@ -93,7 +92,7 @@ class SplitStream[T](original:Link[Operation[T], Operation[T]])(link: SplitStrea
     }
 
 
-    override def apply(from: Link[Operation[T], Operation[T]]): PartialFunction[Operation[T], Unit] = {
+    override def apply(from: OperationLink[T]): PartialFunction[Operation[T], Unit] = {
       case HasNext =>
         if (ended) {
           from << End

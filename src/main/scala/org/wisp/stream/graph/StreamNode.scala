@@ -1,15 +1,14 @@
 package org.wisp.stream.graph
 
-import org.wisp.Link
 import org.wisp.stream.{Sink, Source}
-import org.wisp.stream.iterator.{Operation, RunnableSink, SplitStream, StreamBuffer, StreamSink, StreamWorker}
+import org.wisp.stream.iterator.{OperationLink, RunnableSink, SplitStream, StreamBuffer, StreamSink, StreamWorker}
 
 import scala.concurrent.ExecutionContext
 
 /** 
  * Stream element 
  */
-class StreamNode[T](graph: StreamGraph, val link: Link[Operation[T], Operation[T]]) {
+class StreamNode[T](graph: StreamGraph, val link: OperationLink[T]) {
   given ExecutionContext = graph.system
 
   /** 

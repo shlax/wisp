@@ -1,6 +1,5 @@
 package org.wisp.stream.iterator
 
-import org.wisp.Link
 import org.wisp.stream.{Sink, Source}
 import org.wisp.utils.lock.*
 import java.util
@@ -8,15 +7,15 @@ import java.util.concurrent.locks.{Condition, ReentrantLock}
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
-class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: RunnableSourceSink[F, T] => Link[Operation[T], Operation[T]])(using ec : ExecutionContext)
+class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: RunnableSourceSink[F, T] => OperationLink[T])(using ec : ExecutionContext)
   extends SourceLink[F], RunnableStream[F], SingleNodeFlow[F], SinkExecution[T] {
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
-  protected val nodes: util.Queue[Link[Operation[F], Operation[F]]] = createNodes()
+  protected val nodes: util.Queue[OperationLink[F]] = createNodes()
 
   protected val condition: Condition = lock.newCondition()
-  protected val prev: Link[Operation[T], Operation[T]] = link.apply(this)
+  protected val prev: OperationLink[T] = link.apply(this)
 
   protected var started: Boolean = false
 
@@ -117,7 +116,7 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
       condition.signal()
   }
 
-  override def apply(sender: Link[Operation[F], Operation[F]]): PartialFunction[Operation[F], Unit] = {
+  override def apply(sender: OperationLink[F]): PartialFunction[Operation[F], Unit] = {
     case HasNext =>
       if(sourceException.isDefined){
         sender << End

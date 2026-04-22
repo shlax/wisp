@@ -1,7 +1,6 @@
 package org.wisp.stream.iterator
 
 import org.wisp.stream.Source
-import org.wisp.Link
 import org.wisp.utils.lock.*
 
 import java.util.concurrent.locks.ReentrantLock
@@ -21,7 +20,7 @@ class StreamSource[T](src:Source[T])(using ec : ExecutionContext) extends Source
     this
   }
 
-  override def apply(sender: Link[Operation[T], Operation[T]]): PartialFunction[Operation[T], Unit] = {
+  override def apply(sender: OperationLink[T]): PartialFunction[Operation[T], Unit] = {
     case HasNext =>
       if(sourceException.isDefined){
         sender << End

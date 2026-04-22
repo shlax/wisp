@@ -1,6 +1,5 @@
 package org.wisp.stream.iterator
 
-import org.wisp.Link
 import org.wisp.utils.lock.*
 import org.wisp.stream.Sink
 
@@ -17,7 +16,7 @@ import scala.concurrent.ExecutionContext
  * @param upstream         the upstream link providing elements
  * @param sink             the underlying sink implementation that processes elements
  */
-class RunnableSink[T](upstream:Link[Operation[T], Operation[T]], override val sink:Sink[T])(using ExecutionContext) extends StreamLink[T], RunnableStream[T], SinkExecution[T]{
+class RunnableSink[T](upstream:OperationLink[T], override val sink:Sink[T])(using ExecutionContext) extends StreamLink[T], RunnableStream[T], SinkExecution[T]{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
@@ -85,7 +84,7 @@ class RunnableSink[T](upstream:Link[Operation[T], Operation[T]], override val si
   /**
    * Handles messages from the upstream link.
    */
-  override def apply(from: Link[Operation[T], Operation[T]]): PartialFunction[Operation[T], Unit] = {
+  override def apply(from: OperationLink[T]): PartialFunction[Operation[T], Unit] = {
     case Next(v) =>
       if(ended) throw new IllegalStateException("ended")
       if(value.isDefined) throw new IllegalStateException("dropped value: "+v)

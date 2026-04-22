@@ -1,15 +1,13 @@
 package org.wisp.stream.iterator
 
-import org.wisp.Link
-
 import java.util
 
 trait SingleNodeFlow[T] {
 
-  protected def nodes:util.Queue[Link[Operation[T], Operation[T]]]
+  protected def nodes:util.Queue[OperationLink[T]]
 
-  protected def createNodes(): util.Queue[Link[Operation[T], Operation[T]]] = {
-    util.LinkedList[Link[Operation[T], Operation[T]]]()
+  protected def createNodes(): util.Queue[OperationLink[T]] = {
+    util.LinkedList[OperationLink[T]]()
   }
 
   protected def sendEnd(): Unit = {

@@ -1,6 +1,5 @@
 package org.wisp.stream.iterator
 
-import org.wisp.Link
 import java.util
 import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.ExecutionContext
@@ -9,7 +8,7 @@ import scala.concurrent.ExecutionContext
  * Prefetch element from `stream`
  * @param size maximum no of elements to prefetch
  */
-class StreamBuffer[T](stream:Link[Operation[T], Operation[T]], size:Int)(using ExecutionContext) extends StreamLink[T], SingleNodeFlow[T]{
+class StreamBuffer[T](stream:OperationLink[T], size:Int)(using ExecutionContext) extends StreamLink[T], SingleNodeFlow[T]{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
@@ -19,7 +18,7 @@ class StreamBuffer[T](stream:Link[Operation[T], Operation[T]], size:Int)(using E
     util.LinkedList[T]()
   }
 
-  protected override val nodes: util.Queue[Link[Operation[T], Operation[T]]] = createNodes()
+  protected override val nodes: util.Queue[OperationLink[T]] = createNodes()
 
   protected var requested = false
   protected var ended = false
@@ -34,7 +33,7 @@ class StreamBuffer[T](stream:Link[Operation[T], Operation[T]], size:Int)(using E
     }
   }
 
-  override def apply(sender: Link[Operation[T], Operation[T]]): PartialFunction[Operation[T], Unit] = {
+  override def apply(sender: OperationLink[T]): PartialFunction[Operation[T], Unit] = {
     case HasNext =>
       val e = queue.poll()
       if (e == null) {
