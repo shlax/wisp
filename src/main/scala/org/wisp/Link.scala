@@ -9,7 +9,7 @@ import scala.util.{Failure, Success, Try}
  * Reference to [[Actor]]
  */
 @FunctionalInterface
-trait Link[T, R] extends Consumer[Message[T, R]]{
+trait Link[-T, +R] extends Consumer[Message[T, R]]{
 
   /**
    * Sends a one-way asynchronous message

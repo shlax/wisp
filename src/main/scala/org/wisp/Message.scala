@@ -9,7 +9,7 @@ import java.util.UUID
  * @param sender the actor link of the message sender
  * @param value  the payload of the message
  */
-case class Message[T, R](sender:Link[R, T], value:T) {
+case class Message[+T, -R](sender:Link[R, T], value:T) {
 
   val jfrId:Option[UUID] = {
     val event = MessageCreated()
