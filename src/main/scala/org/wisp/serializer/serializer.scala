@@ -22,7 +22,6 @@ package object serializer {
     readWrite.read(dataInput)
   }
 
-
   /**
    * Deserializes a value of type T from a byte array with optional compression support.
    *

@@ -47,4 +47,12 @@ class Message[+T, -R](val value:T, val sender:Link[R, T]) {
     }
   }
 
+  override def toString: String = {
+    if(jfrId.isDefined) {
+      s"Message[${jfrId.get}]($value)"
+    }else {
+      s"Message($value)"
+    }
+  }
+
 }
