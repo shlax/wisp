@@ -4,7 +4,9 @@ import org.wisp.Consumer
 
 object Sink {
 
-  /** Creates [[Sink]] from function */
+  /**
+   * Creates [[Sink]] from function
+   */
   def apply[T](fn: T => Unit): Sink[T] = {
     (t: T) => {
       fn.apply(t)
@@ -13,11 +15,15 @@ object Sink {
 
 }
 
-/** Extends [[Consumer]] with `complete` method */
+/**
+ * Extends [[Consumer]] with `complete` method
+ */
 @FunctionalInterface
 trait Sink[-T] extends Consumer[T]{
 
-  /** Indicates end of stream */
+  /**
+   * Indicates end of stream
+   */
   def complete(): Unit = {}
 
   override def map[R](fn: R => T): Sink[R] = {
@@ -69,7 +75,9 @@ trait Sink[-T] extends Consumer[T]{
     }
   }
 
-  /** Returns a composed `Sink` that performs, in sequence, this operation followed by the `after` operation. */
+  /**
+   * Returns a composed `Sink` that performs, in sequence, this operation followed by the `after` operation.
+   */
   def thenTo[S <: T](after: Sink[S]): Sink[S] = {
     val self = this
     new Sink[S]{

@@ -4,10 +4,10 @@ import org.wisp.jfr.{MessageCreated, MessageProcessed}
 import java.util.UUID
 
 /**
- * Represents a message passed between actors
+ * Represents a message passed between [[Link]]s
  *
- * @param sender the actor link of the message sender
- * @param value  the payload of the message
+ * @param value the payload of the message
+ * @param sender sender of the message
  */
 case class Message[+T, -R](value:T, sender:Link[R, T]) {
 
@@ -24,7 +24,9 @@ case class Message[+T, -R](value:T, sender:Link[R, T]) {
     }else None
   }
 
-  /** capture JFR data related to processing this message */
+  /**
+   * capture JFR data related to processing this message
+   */
   def process[V](consumerClass: => Class[?])(fn: => V) : V = {
     val event = MessageProcessed()
     event.begin()

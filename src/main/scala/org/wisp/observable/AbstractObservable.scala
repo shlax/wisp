@@ -27,7 +27,9 @@ abstract class AbstractObservable[T] extends Observable[T]{
     }
   }
 
-  /** @return synchronized view over this [[Observable]] */
+  /**
+   * @return synchronized view over this [[Observable]]
+   */
   def withSynchronization(): Observable[T] = {
     val self = this
     new Observable[T]{

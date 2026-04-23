@@ -139,6 +139,17 @@ package object serializer {
     }
   }
 
+  /**
+   * Given instance for serializing and deserializing Operation[T] values.
+   *
+   * The Operation type represents stream iterator operations and is encoded as follows:
+   * - Byte value 1: HasNext operation
+   * - Byte value 2: Next operation (followed by serialized value of type T)
+   * - Byte value 3: End operation
+   *
+   * @tparam T the type of value carried by Next operations
+   * @throws IllegalArgumentException if an unknown operation byte value is encountered during deserialization
+   */
   given [T: ReadWrite as rw] => ReadWrite[Operation[T]] = new ReadWrite[Operation[T]] {
     override def read(in: DataInput): Operation[T] = {
       val b = in.readByte()

@@ -4,14 +4,18 @@ import org.wisp.stream.Source
 
 object Consumer {
 
-  /** Creates [[Consumer]] from function */
+  /**
+   * Creates [[Consumer]] from function
+   */
   def apply[T](fn: T => Unit): Consumer[T] = {
     (t: T) => {
       fn.apply(t)
     }
   }
 
-  /** Creates [[Consumer]] that sends messages to [[Link]] */
+  /**
+   * Creates [[Consumer]] that sends messages to [[Link]]
+   */
   def apply[T](ref:Link[T, ?]):Consumer[T] = {
     (t: T) => {
       ref << t
@@ -20,11 +24,15 @@ object Consumer {
   
 }
 
-/** [[java.util.function.Consumer]] with added variance */
+/**
+ * [[java.util.function.Consumer]] with added variance
+ */
 @FunctionalInterface
 trait Consumer[-T] extends ( T => Unit ) {
 
-  /** [[java.util.function.Consumer#accept(java.lang.Object)]] */
+  /**
+   * [[java.util.function.Consumer#accept(java.lang.Object)]]
+   */
   override def apply(t:T):Unit
 
   def map[R](fn: R => T): Consumer[R] = {
@@ -55,7 +63,9 @@ trait Consumer[-T] extends ( T => Unit ) {
     }
   }
 
-  /** [[java.util.function.Consumer#andThen(java.util.function.Consumer)]] with added variance */
+  /**
+   * [[java.util.function.Consumer#andThen(java.util.function.Consumer)]] with added variance
+   */
   def andThen[S <: T](after: S => Unit): Consumer[S] = {
     val self = this
     (t: S) => {

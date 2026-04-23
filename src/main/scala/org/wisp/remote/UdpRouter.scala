@@ -31,7 +31,9 @@ import scala.concurrent.{ExecutionContext, Future}
 class UdpRouter[K, M <: RemoteMessage[K], R](address: SocketAddress, capacity: Int)(using executor: ExecutionContext, read: ReadWrite[M], write: ReadWrite[R])
   extends UdpClient[R](Some(address)), Runnable {
 
-  /**  Map that associates path keys with actor references for message routing. */
+  /**
+   * Map that associates path keys with actor references for message routing.
+   */
   protected val bindMap: ConcurrentMap[K, Link[M, R]] = createBindMap()
 
   protected def createBindMap(): ConcurrentMap[K, Link[M, R]] = {

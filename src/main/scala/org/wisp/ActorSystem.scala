@@ -17,7 +17,9 @@ class ActorSystem(inboxCapacity:Int = 3, executionContext:Option[ExecutionContex
 
   protected val executor: ExecutionContextExecutorService = createExecutor()
 
-  /** creates virtual thread executor */
+  /**
+   *  creates virtual thread executor
+   */
   protected def createExecutor() : ExecutionContextExecutorService = {
     executionContext  match {
       case Some(e) => e
@@ -71,12 +73,16 @@ class ActorSystem(inboxCapacity:Int = 3, executionContext:Option[ExecutionContex
     }
   }
 
-  /** Create new [[Actor]] with [[inboxCapacity]] queue size */
+  /**
+   * Create new [[Actor]] with [[inboxCapacity]] queue size
+   */
   def create[V, R, T <: Actor[V, R]](fn: ActorScheduler[V, R] => T):T = {
     create(inboxCapacity, fn)
   }
 
-  /** Create new [[Actor]] with `inboxSize` queue size */
+  /**
+   * Create new [[Actor]] with `inboxSize` queue size
+   */
   def create[V, R, T <: Actor[V, R]](inboxSize:Int, fn: ActorScheduler[V, R] => T):T = {
     given ExecutionContext = this
     QueueScheduler[V, R, T](inboxSize, fn).actor

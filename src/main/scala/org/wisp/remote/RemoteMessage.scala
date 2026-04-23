@@ -1,7 +1,13 @@
 package org.wisp.remote
 
-trait RemoteMessage[K]{
+/**
+ * Base trait for remote messages that carry routing information.
+ */
+trait RemoteMessage[K] {
 
+  /**
+   * Returns the routing path for this message.
+   */
   def path : K
 
 }

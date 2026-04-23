@@ -6,7 +6,7 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
 /**
- * Reference to [[Actor]]
+ * Adds callback functionality to [[Consumer]]
  */
 @FunctionalInterface
 trait Link[-T, +R] extends Consumer[Message[T, R]]{

@@ -2,10 +2,14 @@ package org.wisp.stream
 
 object Source{
 
-  /** empty Source */
+  /**
+   * empty Source
+   */
   val empty: Source[Nothing] = () => None
 
-  /** Source containing only the specified object */
+  /**
+   * Source containing only the specified object
+   */
   def apply[T](value:T) : Source[T] = {
     new Source[T] {
       private var ended = false
@@ -20,11 +24,15 @@ object Source{
 
 }
 
-/** `Iterator` more suitable for messaging */
+/**
+ * `Iterator` more suitable for messaging
+ */
 @FunctionalInterface
 trait Source[+T]{
 
-  /** {{{if(hasNext) Some(next()) else None}}} */
+  /**
+   * {{{if(hasNext) Some(next()) else None}}}
+   */
   def next():Option[T]
 
   def map[R](f: T => R): Source[R] = {
