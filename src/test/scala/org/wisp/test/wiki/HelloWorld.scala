@@ -9,16 +9,14 @@ class HelloWorld {
   @Test
   def helloWorld():Unit = {
 
-    class HelloActor(inbox:ActorScheduler[Any, Any]) extends AbstractActor(inbox){
-      override def apply(from: Link[Any, Any]): PartialFunction[Any, Unit] = {
-        case a => println(a)
-      }
+    class HelloActor(inbox:ActorScheduler[String, Nothing]) extends AbstractActor(inbox){
+      override def apply(from: Link[Nothing, String]): String => Unit = println
     }
 
     // create ActorSystem and close it
     ActorSystem() | { system =>
       //  create hello actor
-      val link = system.create(HelloActor(_))
+      val link : Link[String, Nothing] = system.create(HelloActor(_))
       //  send message
       link << "Hello world"
     }

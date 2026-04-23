@@ -1,21 +1,21 @@
 package org.wisp.test.wiki
 
 import org.junit.jupiter.api.Test
-import org.wisp.{AbstractActor, Link, ActorSystem, ActorScheduler}
+import org.wisp.{AbstractActor, ActorScheduler, ActorSystem, Link}
 import org.wisp.utils.closeable.*
 
 import scala.concurrent.ExecutionContext
+import scala.util.Try
 
 class AskHelloWorld {
 
   @Test
   def askHelloWorld(): Unit = {
 
-    class HelloActor(inbox: ActorScheduler[Any, Any]) extends AbstractActor(inbox) {
-      override def apply(from: Link[Any, Any]): PartialFunction[Any, Unit] = {
-        case a =>
+    class SquaredActor(inbox: ActorScheduler[Int, String]) extends AbstractActor(inbox) {
+      override def apply(from: Link[String, Int]): Int => Unit = { i =>
           // send message back
-          from << "Hello "+a
+          from << s"$i squared is ${i * i}"
       }
     }
 
@@ -24,10 +24,10 @@ class AskHelloWorld {
       given ExecutionContext = system
 
       //  create hello actor
-      val link = system.create(HelloActor(_))
+      val link : Link[Int, String] = system.create(SquaredActor(_))
 
       //  send message
-      link.ask("world").onComplete{ v =>
+      link.ask(2).onComplete{ (v : Try[String]) =>
         // precess response
         println(v.get)
       }
