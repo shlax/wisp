@@ -2,9 +2,7 @@ package org.wisp.test.wiki
 
 import org.junit.jupiter.api.Test
 import org.wisp.{AbstractActor, ActorScheduler, ActorSystem, Link}
-import org.wisp.utils.closeable.*
-
-import scala.concurrent.ExecutionContext
+import org.wisp.utils.extensions.||
 import scala.util.Try
 
 class AskHelloWorld {
@@ -20,8 +18,8 @@ class AskHelloWorld {
     }
 
     // create ActorSystem and close it
-    ActorSystem() | { system =>
-      given ExecutionContext = system
+    ActorSystem() || { system =>
+      // given ExecutionContext = system
 
       //  create hello actor
       val link : Link[Int, String] = system.create(SquaredActor(_))
