@@ -1,6 +1,5 @@
 package org.wisp
 
-import org.wisp.stream.iterator.{End, HasNext, Next, Operation}
 import org.wisp.utils.closeable.*
 
 import java.io.{ByteArrayInputStream, DataInput, DataInputStream, DataOutput}
