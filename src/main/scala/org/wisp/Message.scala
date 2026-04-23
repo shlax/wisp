@@ -4,12 +4,12 @@ import org.wisp.jfr.{MessageCreated, MessageProcessed}
 import java.util.UUID
 
 /**
- * Represents a message passed between [[Link]]s
+ * Represents value and callback passed between [[Link]]s
  *
  * @param value the payload of the message
  * @param sender sender of the message
  */
-case class Message[+T, -R](value:T, sender:Link[R, T]) {
+class Message[+T, -R](val value:T, val sender:Link[R, T]) {
 
   val jfrId:Option[UUID] = {
     val event = MessageCreated()
