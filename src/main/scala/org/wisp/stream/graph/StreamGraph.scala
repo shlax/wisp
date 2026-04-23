@@ -8,8 +8,7 @@ import scala.concurrent.ExecutionContext
 /**
  * Api for creating stream graphs.
  */
-class StreamGraph(val system:ExecutionContext){
-  given ExecutionContext = system
+class StreamGraph(using val system:ExecutionContext){
 
   /**
    * Create node from `link`

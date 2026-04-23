@@ -5,6 +5,7 @@ import org.wisp.ActorSystem
 import org.wisp.stream.graph.StreamGraph
 import org.wisp.stream.extensions.*
 import org.wisp.utils.closeable.*
+import org.wisp.utils.extensions.*
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.*
@@ -14,11 +15,11 @@ class Streams {
   @Test
   def simple():Unit = {
     // create ActorSystem
-    ActorSystem() | { system =>
+    ActorSystem() || { system =>
       // test data
       val data = 1 to 3
       // create graph builder
-      val graph = StreamGraph(system)
+      val graph = StreamGraph()
       // convert data to Source
       val source = data.asSource
       // create stream from source then add 1 and print result
@@ -36,7 +37,7 @@ class Streams {
       // test data
       val data = 1 to 10
       // create graph builder
-      val graph = StreamGraph(system)
+      val graph = StreamGraph()
       // convert data to Source
       val source = data.asSource
 
@@ -65,13 +66,12 @@ class Streams {
   @Test
   def zip(): Unit = {
     // create ActorSystem
-    ActorSystem() | { system =>
-      given ExecutionContext = system
+    ActorSystem() || { system =>
 
       // test data
       val data = 1 to 10
       // create graph builder
-      val graph = StreamGraph(system)
+      val graph = StreamGraph()
       // convert data to Source
       val source = data.asSource
 
@@ -101,13 +101,12 @@ class Streams {
   @Test
   def split(): Unit = {
     // create ActorSystem
-    ActorSystem() | { system =>
-      given ExecutionContext = system
+    ActorSystem() || { system =>
 
       // test data
       val data = 1 to 10
       // create graph builder
-      val graph = StreamGraph(system)
+      val graph = StreamGraph()
       // convert data to Source
       val source = data.asSource
 

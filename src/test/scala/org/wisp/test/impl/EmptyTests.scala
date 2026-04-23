@@ -70,7 +70,7 @@ class EmptyTests {
     val l = Collections.synchronizedList(new util.ArrayList[Int]())
 
     ActorSystem() || { sys =>
-      val p = StreamGraph(sys).from(data).map(i => i + 1).to(l.add).start
+      val p = StreamGraph().from(data).map(i => i + 1).to(l.add).start
       Await.result(p, 1.second)
     }
 
@@ -91,7 +91,7 @@ class EmptyTests {
       val s2 = Sink[String](l2.add).map[Int]("b:" + _).map[Int](i => i * 2 + 1)
       val t = s1.thenTo(s2)
 
-      val p = StreamGraph(sys).from(data).map(i => i + 1).to(t).start
+      val p = StreamGraph().from(data).map(i => i + 1).to(t).start
       Await.result(p, 1.second)
     }
 

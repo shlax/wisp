@@ -5,6 +5,7 @@ import org.wisp.ActorSystem
 import org.wisp.stream.extensions.*
 import org.wisp.stream.graph.StreamGraph
 import org.wisp.utils.closeable.*
+import org.wisp.utils.extensions.*
 
 import java.util
 import java.util.Collections
@@ -17,8 +18,8 @@ class DocTests {
   @Test
   def zipTest():Unit = {
     val res = Collections.synchronizedSet(util.HashSet[Int]())
-    new ActorSystem()|{ as =>
-      val graph = new StreamGraph(as)
+    new ActorSystem() || { as =>
+      val graph = new StreamGraph()
       val source1 = graph.from( (0 until 5).asSource.map(i => i * 2) )
       val source2 = graph.from( (0 until 5).asSource.map(i => i * 2 + 1) )
       val future:Future[Unit] = graph.zip(source1, source2).to(i => res.add(i)).start
@@ -31,9 +32,8 @@ class DocTests {
   def splitTest(): Unit = {
     val res1 = Collections.synchronizedSet(util.HashSet[Int]())
     val res2 = Collections.synchronizedSet(util.HashSet[Int]())
-    new ActorSystem() | { as =>
-      given ExecutionContext = as
-      val source = new StreamGraph(as).from((0 until 5).asSource)
+    new ActorSystem() || { as =>
+      val source = new StreamGraph().from((0 until 5).asSource)
       val future = source.split{ s =>
         val f1 = s.copy.map(i => i * 2).to(i => res1.add(i)).start
         val f2 = s.copy.map(i => i * 2 + 1).to(i => res2.add(i)).start
