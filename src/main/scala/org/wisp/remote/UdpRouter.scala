@@ -25,7 +25,8 @@ import scala.concurrent.{ExecutionContext, Future}
  * @param address  the socket address to bind the UDP server to
  * @param capacity the buffer capacity for receiving UDP packets (If capacity is less that bytes that are required to hold the datagram then the remainder of the datagram is silently discarded)
  * @param executor the execution context for asynchronous operations
- * @param readWrite the ReadWrite serializer for message serialization/deserialization
+ * @param read the ReadWrite serializer for message deserialization
+ * @param write the ReadWrite serializer for message serialization
  */
 class UdpRouter[K, M <: RemoteMessage[K], R](address: SocketAddress, capacity: Int)(using executor: ExecutionContext, read: ReadWrite[M], write: ReadWrite[R])
   extends UdpClient[R](Some(address)), Runnable {
@@ -135,17 +136,16 @@ class UdpRouter[K, M <: RemoteMessage[K], R](address: SocketAddress, capacity: I
       throw new IllegalStateException("not found: " + rm.path)
     }
 
-    ref.apply( Message[M, R]( new Link[R, M]{
+    ref.apply( Message[M, R]( rm, new Link[R, M]{
         override def apply(t: Message[R, M]): Unit = {
           t.process(UdpRouter.this.getClass) {
             send(adr, t.value)
           }
         }
-
         override def call(v:R) : Future[Message[M, R]] = {
           throw RemoteAskException(v)
         }
-      }, rm) )
+      }) )
   }
 
   /**

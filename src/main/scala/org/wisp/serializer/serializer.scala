@@ -1,5 +1,6 @@
 package org.wisp
 
+import org.wisp.stream.iterator.{End, HasNext, Next, Operation}
 import org.wisp.utils.closeable.*
 
 import java.io.{ByteArrayInputStream, DataInput, DataInputStream, DataOutput}
@@ -66,10 +67,9 @@ package object serializer {
    *
    * @tparam T the type of the optional value
    */
-  given [T: ReadWrite] => ReadWrite[Option[T]] = new ReadWrite[Option[T]] {
+  given [T: ReadWrite as rw] => ReadWrite[Option[T]] = new ReadWrite[Option[T]] {
     override def read(in: DataInput): Option[T] = {
       if(in.readBoolean()){
-        val rw = summon[ReadWrite[T]]
         Some(rw.read(in))
       }else None
     }
@@ -77,7 +77,6 @@ package object serializer {
       t match {
         case Some(v) =>
           out.writeBoolean(true)
-          val rw = summon[ReadWrite[T]]
           rw.write(v, out)
         case None =>
           out.writeBoolean(false)
@@ -90,11 +89,10 @@ package object serializer {
    *
    * @tparam T the type of list elements
    */
-  given [T: ReadWrite] => ReadWrite[List[T]] = new ReadWrite[List[T]] {
+  given [T: ReadWrite as rw] => ReadWrite[List[T]] = new ReadWrite[List[T]] {
     override def read(in: DataInput): List[T] = {
       val size = in.readInt()
       if(size > 0){
-        val rw = summon[ReadWrite[T]]
         List.fill(size)(rw.read(in))
       }else Nil
     }
@@ -103,7 +101,6 @@ package object serializer {
       val size = t.size
       out.writeInt(size)
       if(size > 0){
-        val rw = summon[ReadWrite[T]]
         for(i <- t){ rw.write(i, out) }
       }
     }
@@ -115,12 +112,10 @@ package object serializer {
    * @tparam K the type of map keys
    * @tparam V the type of map values
    */
-  given [K: ReadWrite, V:ReadWrite] => ReadWrite[Map[K, V]] = new ReadWrite[Map[K, V]] {
+  given [K: ReadWrite as rwk, V:ReadWrite as rwv] => ReadWrite[Map[K, V]] = new ReadWrite[Map[K, V]] {
     override def read(in: DataInput): Map[K, V] = {
       val size = in.readInt()
       if(size > 0){
-        val rwk = summon[ReadWrite[K]]
-        val rwv = summon[ReadWrite[V]]
         val b = Map.newBuilder[K, V]
         b.sizeHint(size)
         var i = 0
@@ -136,12 +131,34 @@ package object serializer {
       val size = t.size
       out.writeInt(size)
       if(size > 0){
-        val rwk = summon[ReadWrite[K]]
-        val rwv = summon[ReadWrite[V]]
         for((k, v) <- t){
           rwk.write(k, out)
           rwv.write(v, out)
         }
+      }
+    }
+  }
+
+  given [T: ReadWrite as rw] => ReadWrite[Operation[T]] = new ReadWrite[Operation[T]] {
+    override def read(in: DataInput): Operation[T] = {
+      val b = in.readByte()
+      b match {
+        case 1 => HasNext
+        case 2 => Next(rw.read(in))
+        case 3 => End
+        case _ => throw new IllegalArgumentException("unknown operation " + b)
+      }
+    }
+
+    override def write(t: Operation[T], out: DataOutput): Unit = {
+      t match {
+        case HasNext =>
+          out.writeByte(1)
+        case Next(v) =>
+          out.writeByte(2)
+          rw.write(v, out)
+        case End =>
+          out.writeByte(3)
       }
     }
   }
