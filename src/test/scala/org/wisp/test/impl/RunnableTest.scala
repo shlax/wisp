@@ -5,7 +5,7 @@ import org.wisp.ActorSystem
 import org.wisp.stream.Sink
 import org.wisp.stream.extensions.*
 import org.wisp.stream.graph.StreamGraph
-import org.wisp.test.impl.tests.*
+import org.wisp.utils.extensions.*
 
 import java.util
 import java.util.Collections

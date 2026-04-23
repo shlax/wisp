@@ -4,7 +4,7 @@ import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.ActorSystem
 import org.wisp.stream.graph.StreamGraph
 import org.wisp.stream.{Sink, Source}
-import org.wisp.test.impl.tests.*
+import org.wisp.utils.extensions.*
 import org.wisp.utils.closeable.*
 
 import java.sql.{DriverManager, PreparedStatement, ResultSet}

@@ -6,10 +6,10 @@ import org.wisp.stream.Sink
 import org.wisp.stream.extensions.*
 import org.wisp.stream.iterator.{RunnableSink, RunnableSource, RunnableSourceSink, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
 import org.wisp.stream.graph.StreamGraph
-import tests.*
 import org.wisp.utils.closeable.*
 import org.wisp.test.impl.serializer.IdName
-import org.wisp.{AbstractActor, Link, ActorScheduler, ActorSystem}
+import org.wisp.utils.extensions.*
+import org.wisp.{AbstractActor, ActorScheduler, ActorSystem, Link}
 
 import java.net.InetSocketAddress
 import java.util
