@@ -88,9 +88,12 @@ class ActorSystem(inboxCapacity:Int = 3, executionContext:Option[ExecutionContex
     QueueScheduler[V, R, T](inboxSize, fn).actor
   }
 
+  /**
+   * Close executor only in case it was created by this ActorSystem
+   */
   override def close(): Unit = {
-    closed.set(true)
     if(executionContext.isEmpty) {
+      closed.set(true)
       executor.close()
     }
   }

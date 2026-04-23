@@ -19,7 +19,7 @@ object extensions {
      * }
      * }}}
      */
-    def ||[R](function: ExecutionContext ?=> T => R): R = {
+    def || [R](function: ExecutionContext ?=> T => R): R = {
       as | { a =>
         given ExecutionContext = as
         function.apply(a)
