@@ -101,7 +101,7 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
 
   }
 
-  protected val response: StreamResponse[T] = StreamResponse(lock) {
+  protected val response: StreamResponse[T] = StreamResponse(lock, RunnableSourceSink.this.getClass) {
     case Next(v) =>
       if (dstEnded) throw new IllegalStateException("ended")
       if (value.isDefined) throw new IllegalStateException("dropped value: " + v)

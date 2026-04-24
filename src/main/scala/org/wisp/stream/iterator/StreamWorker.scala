@@ -43,7 +43,7 @@ class StreamWorker[F, T](stream:OperationLink[F], flatMap: F => Source[T])(using
   protected var source: Option[Source[T]] = None
   protected var ended = false
 
-  protected val response:StreamResponse[F] = StreamResponse(lock) {
+  protected val response:StreamResponse[F] = StreamResponse(lock, StreamWorker.this.getClass) {
     case Next(v) =>
       if (ended) throw new IllegalStateException("ended")
       if (nodes.isEmpty) throw new IllegalStateException("no workers found for " + v)
