@@ -73,25 +73,13 @@ object extensions {
             value = fold(value, t)
           } catch {
             case NonFatal(e) =>
-              promise.tryFailure(e)
+              promise.failure(e)
               throw e
           }
         }
 
         override def complete(): Unit = {
-          if(!promise.trySuccess(value)){
-            promise.future.value match {
-              case Some(v) =>
-                v match {
-                  case Success(x) =>
-                    throw new IllegalStateException("already completed with: " + x )
-                  case Failure(e) =>
-                    throw e
-                }
-              case None =>
-                throw new IllegalStateException("already completed")
-            }
-          }
+          promise.success(value)
         }
 
       }
