@@ -55,8 +55,7 @@ class StreamSink[T](stream :OperationLink[T], override val sink:Sink[T])(using E
       }
 
       if(err.isEmpty && sinkException.isEmpty){
-        val c = completed.trySuccess(())
-        if (!c) throw new IllegalStateException("ended")
+        completed.success(())
       }else {
         if(err.isDefined) {
           completed.failure(err.get)
