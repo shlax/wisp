@@ -73,7 +73,7 @@ object extensions {
             value = fold(value, t)
           } catch {
             case NonFatal(e) =>
-              promise.failure(e)
+              promise.tryFailure(e)
               throw e
           }
         }
