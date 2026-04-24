@@ -4,6 +4,7 @@ import org.wisp.Link
 
 import java.{lang, util}
 import scala.concurrent.Promise
+import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
 
 object extensions {
@@ -73,12 +74,26 @@ object extensions {
           } catch {
             case NonFatal(e) =>
               promise.failure(e)
+              throw e
           }
         }
 
         override def complete(): Unit = {
-          promise.success(value)
+          if(!promise.trySuccess(value)){
+            promise.future.value match {
+              case Some(v) =>
+                v match {
+                  case Success(x) =>
+                    throw new IllegalStateException("already completed with: " + x )
+                  case Failure(e) =>
+                    throw e
+                }
+              case None =>
+                throw new IllegalStateException("already completed")
+            }
+          }
         }
+
       }
     }
 
