@@ -3,7 +3,6 @@ package org.wisp
 import org.wisp.exceptions.UndeliveredException
 import scala.annotation.targetName
 import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.util.{Failure, Success, Try}
 
 /**
  * Adds callback functionality to [[Consumer]]
@@ -15,7 +14,7 @@ trait Link[-T, +R] extends Consumer[Message[T, R]]{
    * Sends a one-way asynchronous message
    */
   @targetName("send")
-  def <<(v:T) : Unit = {
+  def << (v:T) : Unit = {
     val msg = Message[T, R]( v, t => { throw UndeliveredException(t) })
     apply(msg)
   }
@@ -37,27 +36,6 @@ trait Link[-T, +R] extends Consumer[Message[T, R]]{
    */
   def ask(v:T)(using ExecutionContext) : Future[R] = {
     call(v).map(_.value)
-  }
-
-  /**
-   * Convert [[scala.util.Try]] to stream [[org.wisp.Consumer#apply]].
-   *
-   * [[scala.util.Failure]] will be thrown as `exception`
-   *
-   * {{{
-   *   val link:ActorLink = ????
-   *   link.call(HasNext).onComplete(apply)
-   * }}}
-   */
-  def apply(t: Try[Message[T, R]]): Unit = {
-    t match {
-      case Success(message) =>
-        message.process(Link.this.getClass) {
-          apply(message)
-        }
-      case Failure(exception) =>
-        throw exception
-    }
   }
 
 }

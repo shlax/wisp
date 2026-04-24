@@ -1,6 +1,7 @@
 package org.wisp
 
 import org.wisp.stream.Source
+import scala.util.{Failure, Success, Try}
 
 object Consumer {
 
@@ -74,8 +75,22 @@ trait Consumer[-T] extends ( T => Unit ) {
     }
   }
 
-  def consume(s: Source[T]): Unit = {
-    s.forEach(apply)
+  /**
+   * Convert [[scala.util.Try]] to [[org.wisp.Consumer#apply]].
+   *
+   * [[scala.util.Failure]] will be thrown as `exception`
+   */
+  def apply(t: Try[T]): Unit = {
+    t match {
+      case Success(v) =>
+          apply(v)
+      case Failure(exception) =>
+        throw exception
+    }
   }
-  
+
+  def consume(s: Source[T]): Unit = {
+    s.forEach(this)
+  }
+
 }
