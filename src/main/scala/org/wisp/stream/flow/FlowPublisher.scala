@@ -67,8 +67,12 @@ class FlowPublisher[T](link:OperationLink[T])(using ExecutionContext) extends Fl
     }
 
     override def request(n: Long): Unit = lock.withLock {
-      toRequest += n
-      pullNext()
+      if(n <= 0){
+        subscriber.onError(new IllegalArgumentException("n must be positive"))
+      }else {
+        toRequest += n
+        pullNext()
+      }
     }
 
     override def cancel(): Unit = lock.withLock {
