@@ -4,7 +4,6 @@ import org.wisp.Link
 
 import java.{lang, util}
 import scala.concurrent.Promise
-import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
 
 object extensions {
