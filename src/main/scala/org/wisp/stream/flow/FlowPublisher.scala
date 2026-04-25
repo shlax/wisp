@@ -19,10 +19,18 @@ class FlowPublisher[T](link:OperationLink[T])(using ExecutionContext) extends Fl
     private val lock = ReentrantLock()
     private var canceled: Boolean = false
 
+    private var requested: Boolean = false
+    private var toRequest: Long = 0
+
     protected val response: StreamResponse[T] = new StreamResponse[T](lock, FlowPublisher.this.getClass)({
       case Next(t) =>
-        if (!canceled) {
-          subscriber.onNext(t)
+        try {
+          if (!canceled) {
+            subscriber.onNext(t)
+          }
+        }finally {
+          requested = false
+          pullNext()
         }
       case End =>
         if (!canceled) {
@@ -39,14 +47,28 @@ class FlowPublisher[T](link:OperationLink[T])(using ExecutionContext) extends Fl
       }
     }
 
-    def onError(e:Throwable):Unit = lock.withLock{
-      if (!canceled) {
-        subscriber.onError(e)
+    protected def pullNext():Unit = {
+      if(!requested && toRequest > 0){
+        toRequest -= 1
+        requested = true
+        link.call(HasNext).onComplete(response)
+      }
+    }
+
+    protected def onError(e:Throwable):Unit = lock.withLock{
+      try{
+        if (!canceled) {
+          subscriber.onError(e)
+        }
+      }finally {
+        requested = false
+        pullNext()
       }
     }
 
     override def request(n: Long): Unit = lock.withLock {
-      link.call(HasNext).onComplete(response)
+      toRequest += n
+      pullNext()
     }
 
     override def cancel(): Unit = lock.withLock {
