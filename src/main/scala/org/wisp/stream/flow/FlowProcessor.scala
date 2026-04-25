@@ -11,8 +11,8 @@ import scala.concurrent.ExecutionContext
 class FlowProcessor[T, R](publisher: Flow.Publisher[T], map: FlowSubscriber[T] => OperationLink[R])(using ExecutionContext)
   extends Flow.Processor[T, R] {
 
-  protected val flowSubscriber: FlowSubscriber[T] = FlowSubscriber[T](publisher)
-  protected val flowPublisher: FlowPublisher[R] = FlowPublisher[R](map(flowSubscriber))
+  val flowSubscriber: FlowSubscriber[T] = FlowSubscriber[T](publisher)
+  val flowPublisher: FlowPublisher[R] = FlowPublisher[R](map(flowSubscriber))
 
   override def subscribe(subscriber: Flow.Subscriber[? >: R]): Unit = {
     flowPublisher.subscribe(subscriber)
