@@ -34,8 +34,14 @@ class FlowPublisher[T](link:OperationLink[T])(using ExecutionContext) extends Fl
           super.apply(t)
         }catch {
           case NonFatal(e) =>
-            subscriber.onError(e)
+            onError(e)
         }
+      }
+    }
+
+    def onError(e:Throwable):Unit = lock.withLock{
+      if (!canceled) {
+        subscriber.onError(e)
       }
     }
 
