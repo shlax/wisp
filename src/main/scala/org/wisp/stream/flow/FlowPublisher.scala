@@ -16,11 +16,11 @@ import scala.util.control.NonFatal
 class FlowPublisher[T](link:OperationLink[T])(using ExecutionContext) extends Flow.Publisher[T]{
 
   protected class LinkSubscription(subscriber: Flow.Subscriber[? >: T]) extends Flow.Subscription {
-    private val lock = ReentrantLock()
-    private var canceled: Boolean = false
+    protected val lock = ReentrantLock()
+    protected var canceled: Boolean = false
 
-    private var requested: Boolean = false
-    private var toRequest: Long = 0
+    protected var requested: Boolean = false
+    protected var toRequest: Long = 0
 
     protected val response: StreamResponse[T] = new StreamResponse[T](lock, FlowPublisher.this.getClass)({
       case Next(t) =>
