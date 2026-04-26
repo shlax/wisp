@@ -49,7 +49,9 @@ class FlowPublisher[T](link:OperationLink[T])(using ExecutionContext) extends Fl
 
     protected def pullNext():Unit = {
       if(!requested && toRequest > 0){
-        toRequest -= 1
+        if(toRequest != Long.MaxValue) {
+          toRequest -= 1
+        }
         requested = true
         link.call(HasNext).onComplete(response)
       }
@@ -70,7 +72,11 @@ class FlowPublisher[T](link:OperationLink[T])(using ExecutionContext) extends Fl
       if(n <= 0){
         subscriber.onError(new IllegalArgumentException("n must be positive"))
       }else {
-        toRequest += n
+        if(n == Long.MaxValue) {
+          toRequest = Long.MaxValue
+        }else{
+          toRequest += n
+        }
         pullNext()
       }
     }
