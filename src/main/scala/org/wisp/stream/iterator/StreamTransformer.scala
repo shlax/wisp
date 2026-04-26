@@ -9,28 +9,28 @@ import scala.util.control.NonFatal
 object StreamTransformer {
 
   /**
-   * Creates new stream applying `map` function.
+   * Creates new stream applying `function`.
    */
-  def map[F, T](stream:OperationLink[F], map: F => T)(using ExecutionContext) : StreamTransformer[F, T] = {
-    flatMap(stream, i => Source( map.apply(i) ) )
+  def map[F, T](stream:OperationLink[F], function: F => T)(using ExecutionContext) : StreamTransformer[F, T] = {
+    flatMap(stream, i => Source( function.apply(i) ) )
   }
 
   /**
-   * Creates new stream applying `filter` function.
+   * Creates new stream applying `predicate`.
    */
-  def filter[F](stream: OperationLink[F], filter: F => Boolean)(using ExecutionContext): StreamTransformer[F, F] = {
-    flatMap(stream, i => { if(filter.apply(i)) Source(i) else Source.empty } )
+  def filter[F](stream: OperationLink[F], predicate: F => Boolean)(using ExecutionContext): StreamTransformer[F, F] = {
+    flatMap(stream, i => { if(predicate.apply(i)) Source(i) else Source.empty } )
   }
 
   /**
-   * Creates new stream applying `flatMap` function.
+   * Creates new stream applying `function`.
    */
-  def flatMap[F, T](stream:OperationLink[F], flatMap: F => Source[T])(using ExecutionContext): StreamTransformer[F, T] = {
-    StreamTransformer(stream, { case Some(v) => flatMap(v) case None => Source.empty } )
+  def flatMap[F, T](stream:OperationLink[F], function: F => Source[T])(using ExecutionContext): StreamTransformer[F, T] = {
+    StreamTransformer(stream, { case Some(v) => function(v) case None => Source.empty } )
   }
 
   /**
-   * Creates new stream from `zero` element applying `fold` function.
+   * Creates new stream from `zero` element applying `fold`.
    * Stream will have only one element.
    */
   def fold[F, T](stream:OperationLink[F], zero:T, fold: (T, F) => T)(using ExecutionContext): StreamTransformer[F, T] = {

@@ -14,24 +14,24 @@ class StreamNode[T](graph: StreamGraph, val link: OperationLink[T]) {
   /** 
    * Builder for [[org.wisp.stream.iterator.StreamTransformer#map]]
    */
-  def map[V](fn: T => V): StreamNode[V] = {
-    val r = StreamTransformer.map[T, V](link, fn)
+  def map[V](function: T => V): StreamNode[V] = {
+    val r = StreamTransformer.map[T, V](link, function)
     graph.node(r)
   }
 
   /** 
    * Builder for [[org.wisp.stream.iterator.StreamTransformer#filter]]
    */
-  def filter(fn: T => Boolean): StreamNode[T] = {
-    val r = StreamTransformer.filter[T](link, fn)
+  def filter(predicate: T => Boolean): StreamNode[T] = {
+    val r = StreamTransformer.filter[T](link, predicate)
     graph.node(r)
   }
 
   /** 
    * Builder for [[org.wisp.stream.iterator.StreamTransformer#flatMap]]
    */
-  def flatMap[V](fn: T => Source[V]): StreamNode[V] = {
-    val r = StreamTransformer.flatMap[T, V](link, fn)
+  def flatMap[V](function: T => Source[V]): StreamNode[V] = {
+    val r = StreamTransformer.flatMap[T, V](link, function)
     graph.node(r)
   }
 
