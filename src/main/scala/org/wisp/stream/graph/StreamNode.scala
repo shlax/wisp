@@ -38,7 +38,7 @@ class StreamNode[T](graph: StreamGraph, val link: OperationLink[T]) {
   /**
    * builder for [[org.wisp.stream.iterator.StreamTransformer#fold]]
    */
-  def fold[V](zero:V, fold: (V, T) => V): StreamNode[V] = {
+  def fold[V](zero:V)(fold: (V, T) => V): StreamNode[V] = {
     val r = StreamTransformer.fold[T, V](link, zero, fold)
     graph.node(r)
   }
