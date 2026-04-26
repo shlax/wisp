@@ -9,28 +9,29 @@ import scala.util.control.NonFatal
 object StreamTransformer {
 
   /**
-   * creates new `stream` applying `map` function
+   * Creates new stream applying `map` function.
    */
   def map[F, T](stream:OperationLink[F], map: F => T)(using ExecutionContext) : StreamTransformer[F, T] = {
     flatMap(stream, i => Source( map.apply(i) ) )
   }
 
   /**
-   * creates new `stream` applying `filter` function
+   * Creates new stream applying `filter` function.
    */
   def filter[F](stream: OperationLink[F], filter: F => Boolean)(using ExecutionContext): StreamTransformer[F, F] = {
     flatMap(stream, i => { if(filter.apply(i)) Source(i) else Source.empty } )
   }
 
   /**
-   * creates new `stream` applying `flatMap` function
+   * Creates new stream applying `flatMap` function.
    */
   def flatMap[F, T](stream:OperationLink[F], flatMap: F => Source[T])(using ExecutionContext): StreamTransformer[F, T] = {
     StreamTransformer(stream, { case Some(v) => flatMap(v) case None => Source.empty } )
   }
 
   /**
-   * creates new `stream` from `zero` element applying `fold` function
+   * Creates new stream from `zero` element applying `fold` function.
+   * Stream will have only one element.
    */
   def fold[F, T](stream:OperationLink[F], zero:T, fold: (T, F) => T)(using ExecutionContext): StreamTransformer[F, T] = {
     var acc = zero
@@ -46,7 +47,7 @@ object StreamTransformer {
 }
 
 /**
- * creates new `stream` applying `flatMap` function
+ * creates new `stream` applying `collect` function
  *
  * @param stream source stream
  * @param collect function to apply to each element of the source stream. `End` of stream will be mapped to `None`

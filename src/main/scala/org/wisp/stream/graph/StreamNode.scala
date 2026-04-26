@@ -12,7 +12,7 @@ class StreamNode[T](graph: StreamGraph, val link: OperationLink[T]) {
   given ExecutionContext = graph.system
 
   /** 
-   * builder for [[org.wisp.stream.iterator.StreamTransformer#map]]
+   * Builder for [[org.wisp.stream.iterator.StreamTransformer#map]]
    */
   def map[V](fn: T => V): StreamNode[V] = {
     val r = StreamTransformer.map[T, V](link, fn)
@@ -20,7 +20,7 @@ class StreamNode[T](graph: StreamGraph, val link: OperationLink[T]) {
   }
 
   /** 
-   * builder for [[org.wisp.stream.iterator.StreamTransformer#filter]]
+   * Builder for [[org.wisp.stream.iterator.StreamTransformer#filter]]
    */
   def filter(fn: T => Boolean): StreamNode[T] = {
     val r = StreamTransformer.filter[T](link, fn)
@@ -28,7 +28,7 @@ class StreamNode[T](graph: StreamGraph, val link: OperationLink[T]) {
   }
 
   /** 
-   * builder for [[org.wisp.stream.iterator.StreamTransformer#flatMap]]
+   * Builder for [[org.wisp.stream.iterator.StreamTransformer#flatMap]]
    */
   def flatMap[V](fn: T => Source[V]): StreamNode[V] = {
     val r = StreamTransformer.flatMap[T, V](link, fn)
@@ -36,7 +36,7 @@ class StreamNode[T](graph: StreamGraph, val link: OperationLink[T]) {
   }
 
   /**
-   * builder for [[org.wisp.stream.iterator.StreamTransformer#fold]]
+   * Builder for [[org.wisp.stream.iterator.StreamTransformer#fold]]
    */
   def fold[V](zero:V)(fold: (V, T) => V): StreamNode[V] = {
     val r = StreamTransformer.fold[T, V](link, zero, fold)
@@ -44,7 +44,7 @@ class StreamNode[T](graph: StreamGraph, val link: OperationLink[T]) {
   }
 
   /**
-   * builder for [[org.wisp.stream.iterator.StreamTransformer]]
+   * Builder for [[org.wisp.stream.iterator.StreamTransformer]]
    */
   def collect[V](function: Option[T] => Source[V]): StreamNode[V] = {
     val r = StreamTransformer[T, V](link, function)
