@@ -5,7 +5,7 @@ import org.wisp.{Link, ActorSystem}
 import org.wisp.stream.Sink
 import org.wisp.utils.extensions.*
 import org.wisp.stream.extensions.*
-import org.wisp.stream.iterator.{RunnableSourceSink, RunnableSource, RunnableSink, StreamSink, StreamSource, StreamWorker}
+import org.wisp.stream.iterator.{RunnableSourceSink, RunnableSource, RunnableSink, StreamSink, StreamSource, StreamTransformer}
 
 import java.util
 import java.util.Collections
@@ -40,7 +40,7 @@ class FlatMapExceptionTests {
       }
 
       val src = RunnableSourceSink(data, sink) { ref =>
-        StreamWorker.flatMap(ref, (q: String) =>
+        StreamTransformer.flatMap(ref, (q: String) =>
           if (q == "s:3"){
             List("w:x:3", "w:x:4").asSource.map{ q =>
               if(q == "w:x:4") {
@@ -72,7 +72,7 @@ class FlatMapExceptionTests {
 
       val src = RunnableSource(data)
 
-      val w = StreamWorker.flatMap(src, (q: String) =>
+      val w = StreamTransformer.flatMap(src, (q: String) =>
         if (q == "s:4"){
           List("w:s:4").asSource.map{ q =>
             if(q == "w:s:4") {
@@ -109,7 +109,7 @@ class FlatMapExceptionTests {
 
       val src = StreamSource(data)
 
-      val w = StreamWorker.flatMap(src, (q: String) =>
+      val w = StreamTransformer.flatMap(src, (q: String) =>
         if (q == "s:4"){
           List("w:s:4").asSource.map{ q =>
             if(q == "w:s:4") {
@@ -140,7 +140,7 @@ class FlatMapExceptionTests {
 
       val src = StreamSource(data)
 
-      val w = StreamWorker.flatMap(src, (q: String) =>
+      val w = StreamTransformer.flatMap(src, (q: String) =>
         if (q == "s:3"){
           List("w:x:3", "w:x:4").asSource.map{ q =>
             if(q == "w:x:4") {

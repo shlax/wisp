@@ -5,7 +5,7 @@ import org.wisp.{Link, ActorSystem}
 import org.wisp.stream.Sink
 import org.wisp.utils.extensions.*
 import org.wisp.stream.extensions.*
-import org.wisp.stream.iterator.{RunnableSourceSink, RunnableSource, RunnableSink, StreamSink, StreamSource, StreamWorker}
+import org.wisp.stream.iterator.{RunnableSourceSink, RunnableSource, RunnableSink, StreamSink, StreamSource, StreamTransformer}
 
 import java.util
 import java.util.Collections
@@ -43,7 +43,7 @@ class SinkExceptionTests {
         }
 
         val src = RunnableSourceSink(data, sink) { ref =>
-          StreamWorker.map(ref, (q: String) =>
+          StreamTransformer.map(ref, (q: String) =>
             "w:" + q
           )
         }
@@ -73,7 +73,7 @@ class SinkExceptionTests {
 
       val src = RunnableSource(data)
 
-      val w = StreamWorker.map(src, q => "w:" + q )
+      val w = StreamTransformer.map(src, q => "w:" + q )
 
       val f = StreamSink(w, (q:String) => {
         if (q == "w:s:4") throw new MyException("is 4")
@@ -112,7 +112,7 @@ class SinkExceptionTests {
 
         val src = StreamSource(data)
 
-        val w = StreamWorker.map(src, q => "w:" + q )
+        val w = StreamTransformer.map(src, q => "w:" + q )
 
         RunnableSink(w, (q:String) => {
           if (q == "w:s:4") throw new MyException("is 4")
@@ -144,7 +144,7 @@ class SinkExceptionTests {
 
       val src = StreamSource(data)
 
-      val w = StreamWorker.map(src, q => "w:" + q )
+      val w = StreamTransformer.map(src, q => "w:" + q )
 
       val f = StreamSink(w, (q:String) =>{
         if (q == "w:s:4") throw new MyException("is 4")

@@ -1,7 +1,7 @@
 package org.wisp.stream.graph
 
 import org.wisp.stream.{Sink, Source}
-import org.wisp.stream.iterator.{OperationLink, RunnableSink, SplitStream, StreamBuffer, StreamSink, StreamWorker}
+import org.wisp.stream.iterator.{OperationLink, RunnableSink, SplitStream, StreamBuffer, StreamSink, StreamTransformer}
 
 import scala.concurrent.ExecutionContext
 
@@ -12,26 +12,34 @@ class StreamNode[T](graph: StreamGraph, val link: OperationLink[T]) {
   given ExecutionContext = graph.system
 
   /** 
-   * builder for [[org.wisp.stream.iterator.StreamWorker#map]]
+   * builder for [[org.wisp.stream.iterator.StreamTransformer#map]]
    */
   def map[V](fn: T => V): StreamNode[V] = {
-    val r = StreamWorker.map[T, V](link, fn)
+    val r = StreamTransformer.map[T, V](link, fn)
     graph.node(r)
   }
 
   /** 
-   * builder for [[org.wisp.stream.iterator.StreamWorker#filter]]
+   * builder for [[org.wisp.stream.iterator.StreamTransformer#filter]]
    */
   def filter(fn: T => Boolean): StreamNode[T] = {
-    val r = StreamWorker.filter[T](link, fn)
+    val r = StreamTransformer.filter[T](link, fn)
     graph.node(r)
   }
 
   /** 
-   * builder for [[org.wisp.stream.iterator.StreamWorker#flatMap]]
+   * builder for [[org.wisp.stream.iterator.StreamTransformer#flatMap]]
    */
   def flatMap[V](fn: T => Source[V]): StreamNode[V] = {
-    val r = StreamWorker.flatMap[T, V](link, fn)
+    val r = StreamTransformer.flatMap[T, V](link, fn)
+    graph.node(r)
+  }
+
+  /**
+   * builder for [[org.wisp.stream.iterator.StreamTransformer#fold]]
+   */
+  def fold[V](zero:V, fold: (V, T) => V): StreamNode[V] = {
+    val r = StreamTransformer.fold[T, V](link, zero, fold)
     graph.node(r)
   }
 

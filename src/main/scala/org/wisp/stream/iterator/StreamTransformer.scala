@@ -1,0 +1,164 @@
+package org.wisp.stream.iterator
+
+import org.wisp.stream.Source
+import java.util
+import java.util.concurrent.locks.ReentrantLock
+import scala.concurrent.ExecutionContext
+import scala.util.control.NonFatal
+
+object StreamTransformer {
+
+  /**
+   * creates new `stream` applying `map` function
+   */
+  def map[F, T](stream:OperationLink[F], map: F => T)(using ExecutionContext) : StreamTransformer[F, T] = {
+    flatMap(stream, i => Source( map.apply(i) ) )
+  }
+
+  /**
+   * creates new `stream` applying `filter` function
+   */
+  def filter[F](stream: OperationLink[F], filter: F => Boolean)(using ExecutionContext): StreamTransformer[F, F] = {
+    flatMap(stream, i => { if(filter.apply(i)) Source(i) else Source.empty } )
+  }
+
+  /**
+   * creates new `stream` applying `flatMap` function
+   */
+  def flatMap[F, T](stream:OperationLink[F], flatMap: F => Source[T])(using ExecutionContext): StreamTransformer[F, T] = {
+    StreamTransformer(stream, { case Some(v) => flatMap(v) case None => Source.empty } )
+  }
+
+  /**
+   * creates new `stream` from `zero` element applying `fold` function
+   */
+  def fold[F, T](stream:OperationLink[F], zero:T, fold: (T, F) => T)(using ExecutionContext): StreamTransformer[F, T] = {
+    var acc = zero
+    StreamTransformer(stream, {
+      case Some(v) =>
+        acc = fold.apply(acc, v)
+        Source.empty
+      case None =>
+        Source(acc)
+    })
+  }
+
+}
+
+/**
+ * creates new `stream` applying `flatMap` function
+ *
+ * @param stream source stream
+ * @param flatMap function to apply to each element of the source stream. `End` of stream will be mapped to `None`
+ */
+class StreamTransformer[F, T](stream:OperationLink[F], flatMap: Option[F] => Source[T])(using ec : ExecutionContext) extends StreamLink[T], SingleNodeFlow[T]{
+
+  override protected val lock: ReentrantLock = ReentrantLock()
+
+  protected override val nodes:util.Queue[OperationLink[T]] = createNodes()
+
+  protected var source: Option[Source[T]] = None
+  protected var ended = false
+
+  protected def send(source:Source[T]):Boolean = {
+    var hasNext = true
+    while (hasNext && !nodes.isEmpty) {
+      var optVal: Option[T] = None
+      try {
+        optVal = source.next()
+      } catch {
+        case NonFatal(ex) =>
+          ec.reportFailure(ex)
+      }
+
+      optVal match {
+        case Some(v) =>
+          val n = nodes.poll()
+          n << Next(v)
+        case None =>
+          hasNext = false
+      }
+    }
+    hasNext
+  }
+
+  protected def call(value:Option[F]):Option[Source[T]] = {
+    var opt: Option[Source[T]] = None
+    try {
+      val r = flatMap.apply(value)
+      opt = Some(r)
+    } catch {
+      case NonFatal(ex) =>
+        ec.reportFailure(ex)
+    }
+    opt
+  }
+
+  protected val response:StreamResponse[F] = StreamResponse(lock, StreamTransformer.this.getClass) {
+    case Next(v) =>
+      if (ended) throw new IllegalStateException("ended")
+      if (nodes.isEmpty) throw new IllegalStateException("no workers found for " + v)
+      if (source.isDefined) throw new IllegalStateException("dropped value " + v)
+
+      val opt = call(Some(v))
+      val hasNext = opt match {
+        case Some(s) => send(s)
+        case None => false
+      }
+
+      if (hasNext) {
+        source = Some(opt.get)
+      } else if (!nodes.isEmpty) {
+        stream.call(HasNext).onComplete(response)
+      }
+
+    case End =>
+      if (source.isDefined) throw new IllegalStateException("dropped value " + source.get)
+      ended = true
+
+      val opt = call(None)
+      val hasNext = opt match {
+        case Some(s) => send(s)
+        case None => false
+      }
+
+      if (hasNext) {
+        source = Some(opt.get)
+      } else {
+        sendEnd()
+      }
+
+  }
+
+  override def apply(from: OperationLink[T]): PartialFunction[Operation[T], Unit] = {
+
+    case HasNext =>
+      if (ended && source.isEmpty) {
+        from << End
+      } else {
+        var optVal:Option[T] = None
+        if(source.isDefined){
+          try {
+            optVal = source.get.next()
+          }catch{
+            case NonFatal(ex) =>
+              ec.reportFailure(ex)
+          }
+          if(optVal.isEmpty){
+            source = None
+          }
+        }
+
+        if (optVal.isDefined) {
+          from << Next(optVal.get)
+        } else if(ended){
+          from << End
+        } else {
+          nodes.add(from)
+          stream.call(HasNext).onComplete(response)
+        }
+      }
+
+  }
+
+}

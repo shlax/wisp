@@ -1,10 +1,10 @@
 package org.wisp.test.impl
 
 import org.junit.jupiter.api.{Assertions, Test}
-import org.wisp.{Link, ActorSystem}
+import org.wisp.{ActorSystem, Link}
 import org.wisp.stream.Sink
 import org.wisp.stream.extensions.*
-import org.wisp.stream.iterator.{RunnableSourceSink, RunnableSource, RunnableSink, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
+import org.wisp.stream.iterator.{RunnableSink, RunnableSource, RunnableSourceSink, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamTransformer, ZipStream}
 import org.wisp.stream.graph.StreamGraph
 import org.wisp.utils.extensions.*
 
@@ -13,6 +13,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{Await, Future, Promise}
 import scala.util.Success
 import java.util
+import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
 import scala.concurrent.duration.*
 
 class EmptyTests {
@@ -121,7 +122,7 @@ class EmptyTests {
       }
 
       val src = RunnableSourceSink(data, sink) { ref =>
-        StreamWorker.map(ref, (q: String) =>
+        StreamTransformer.map(ref, (q: String) =>
           "w:" + q
         )
       }
@@ -148,7 +149,7 @@ class EmptyTests {
       }
       val src = RunnableSource(data)
 
-      val w = StreamWorker.map(src, q =>
+      val w = StreamTransformer.map(src, q =>
         "w:" + q
       )
 
@@ -172,7 +173,7 @@ class EmptyTests {
 
       val src = StreamSource(data)
 
-      val w = StreamWorker.map(src, q =>
+      val w = StreamTransformer.map(src, q =>
         "w:" + q
       )
 
@@ -182,6 +183,42 @@ class EmptyTests {
 
     Assertions.assertTrue(l.isEmpty)
 
+  }
+
+  @Test
+  def streamFold(): Unit = {
+    val res = AtomicReference[List[Int]]()
+    val acc = new AtomicInteger()
+
+    ActorSystem() || { sys =>
+
+      val data = Seq[Int]().asSource
+      val src = StreamSource(data)
+
+      val w = StreamTransformer.fold[Int, List[Int]](src, Nil, (q, w) =>
+        w :: q
+      )
+
+      val sink = new Sink[List[Int]] {
+        override def apply(t: List[Int]): Unit = {
+          if (res.get() != null) {
+            throw new RuntimeException("Already set")
+          }
+          res.set(t)
+        }
+
+        override def complete(): Unit = {
+          acc.incrementAndGet()
+        }
+      }
+
+      val p = StreamSink(w, sink).start
+      Await.ready(p, 1.second)
+
+    }
+
+    Assertions.assertEquals(Nil, res.get())
+    Assertions.assertEquals(1, acc.get())
   }
 
   @Test
@@ -196,7 +233,7 @@ class EmptyTests {
 
       val b = StreamBuffer(src, 3)
 
-      val w = StreamWorker.map(b, q =>
+      val w = StreamTransformer.map(b, q =>
         "w:" + q
       )
 
@@ -217,7 +254,7 @@ class EmptyTests {
       val data = Seq[Int]().asSource
       val src = StreamSource(data)
 
-      val w = StreamWorker.map(src, q =>
+      val w = StreamTransformer.map(src, q =>
         "w:" + q
       )
 
@@ -239,11 +276,11 @@ class EmptyTests {
       val data = Seq[Int]().asSource
       val src = StreamSource(data)
 
-      val w1 = StreamWorker.map(src, q => {
+      val w1 = StreamTransformer.map(src, q => {
         "w:" + q
       })
 
-      val w2 = StreamWorker.map(src, q => {
+      val w2 = StreamTransformer.map(src, q => {
         "w:" + q
       })
 

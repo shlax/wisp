@@ -4,7 +4,7 @@ import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.remote.{RemoteLink, UdpClient, UdpRouter}
 import org.wisp.stream.Sink
 import org.wisp.stream.extensions.*
-import org.wisp.stream.iterator.{RunnableSink, RunnableSource, RunnableSourceSink, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamWorker, ZipStream}
+import org.wisp.stream.iterator.{RunnableSink, RunnableSource, RunnableSourceSink, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamTransformer, ZipStream}
 import org.wisp.stream.graph.StreamGraph
 import org.wisp.utils.closeable.*
 import org.wisp.test.impl.serializer.IdName
@@ -263,7 +263,7 @@ class BasicTests {
       }
 
       val src = RunnableSourceSink(data, sink) { ref =>
-        StreamWorker.map(ref, (q: String) =>
+        StreamTransformer.map(ref, (q: String) =>
           "w:" + q
         )
       }
@@ -291,7 +291,7 @@ class BasicTests {
       }
       val src = RunnableSource(data)
 
-      val w = StreamWorker.map(src, q =>
+      val w = StreamTransformer.map(src, q =>
         "w:" + q
       )
 
@@ -326,7 +326,7 @@ class BasicTests {
 
       val src = StreamSource(data)
 
-      val w = StreamWorker.map(src, q =>
+      val w = StreamTransformer.map(src, q =>
         "w:" + q
       )
 
@@ -360,7 +360,7 @@ class BasicTests {
 
       val b = StreamBuffer(src, 3)
 
-      val w = StreamWorker.map(b, q =>
+      val w = StreamTransformer.map(b, q =>
         "w:" + q
       )
 
@@ -393,7 +393,7 @@ class BasicTests {
       val data = Seq(0, 1, 2, 3, 4, 5).asSource
       val src = StreamSource(data)
 
-      val w = StreamWorker.map(src, q =>
+      val w = StreamTransformer.map(src, q =>
         "w:" + q
       )
 
@@ -417,6 +417,42 @@ class BasicTests {
   }
 
   @Test
+  def streamFold(): Unit = {
+    val res = AtomicReference[List[Int]]()
+    val acc = new AtomicInteger()
+
+    ActorSystem() || { sys =>
+
+      val data = Seq(0, 1, 2, 3, 4, 5).asSource
+      val src = StreamSource(data)
+
+      val w = StreamTransformer.fold[Int, List[Int]](src, Nil, (q, w) =>
+        w :: q
+      )
+
+      val sink = new Sink[List[Int]] {
+        override def apply(t: List[Int]): Unit = {
+          if(res.get() != null){
+            throw new RuntimeException("Already set")
+          }
+          res.set(t)
+        }
+
+        override def complete(): Unit = {
+          acc.incrementAndGet()
+        }
+      }
+
+      val p = StreamSink(w, sink).start
+      Await.ready(p, 1.second)
+
+    }
+
+    Assertions.assertEquals(List(5, 4, 3, 2, 1, 0), res.get())
+    Assertions.assertEquals(1, acc.get())
+  }
+
+  @Test
   def zipStream():Unit = {
     val l = Collections.synchronizedSet(new util.HashSet[String]())
     val acc = new AtomicInteger()
@@ -426,11 +462,11 @@ class BasicTests {
       val data = Seq(0, 1, 2, 3, 4).asSource
       val src = StreamSource(data)
 
-      val w1 = StreamWorker.map(src, q => {
+      val w1 = StreamTransformer.map(src, q => {
         "w:" + q
       })
 
-      val w2 = StreamWorker.map(src, q => {
+      val w2 = StreamTransformer.map(src, q => {
         "w:" + q
       })
 
