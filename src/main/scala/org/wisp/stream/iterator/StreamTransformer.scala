@@ -49,9 +49,9 @@ object StreamTransformer {
  * creates new `stream` applying `flatMap` function
  *
  * @param stream source stream
- * @param flatMap function to apply to each element of the source stream. `End` of stream will be mapped to `None`
+ * @param collect function to apply to each element of the source stream. `End` of stream will be mapped to `None`
  */
-class StreamTransformer[F, T](stream:OperationLink[F], flatMap: Option[F] => Source[T])(using ec : ExecutionContext) extends StreamLink[T], SingleNodeFlow[T]{
+class StreamTransformer[F, T](stream:OperationLink[F], collect: Option[F] => Source[T])(using ec : ExecutionContext) extends StreamLink[T], SingleNodeFlow[T]{
 
   override protected val lock: ReentrantLock = ReentrantLock()
 
@@ -85,7 +85,7 @@ class StreamTransformer[F, T](stream:OperationLink[F], flatMap: Option[F] => Sou
   protected def call(value:Option[F]):Option[Source[T]] = {
     var opt: Option[Source[T]] = None
     try {
-      val r = flatMap.apply(value)
+      val r = collect.apply(value)
       opt = Some(r)
     } catch {
       case NonFatal(ex) =>
@@ -131,7 +131,6 @@ class StreamTransformer[F, T](stream:OperationLink[F], flatMap: Option[F] => Sou
   }
 
   override def apply(from: OperationLink[T]): PartialFunction[Operation[T], Unit] = {
-
     case HasNext =>
       if (ended && source.isEmpty) {
         from << End

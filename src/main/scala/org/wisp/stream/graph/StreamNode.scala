@@ -43,6 +43,14 @@ class StreamNode[T](graph: StreamGraph, val link: OperationLink[T]) {
     graph.node(r)
   }
 
+  /**
+   * builder for [[org.wisp.stream.iterator.StreamTransformer]]
+   */
+  def collect[V](function: Option[T] => Source[V]): StreamNode[V] = {
+    val r = StreamTransformer[T, V](link, function)
+    graph.node(r)
+  }
+
   class SplitNode(from: SplitStream[T]#Split) {
     /**
      * Create new copy
