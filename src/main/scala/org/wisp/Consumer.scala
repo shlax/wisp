@@ -126,7 +126,7 @@ trait Consumer[-T] extends ( T => Unit ) {
   }
 
   /**
-   * Consume [[Source]]
+   * Consume [[org.wisp.stream.Source]]
    */
   def consume(s: Source[T]): Unit = {
     s.forEach(this)
