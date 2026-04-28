@@ -30,14 +30,14 @@ object StreamTransformer {
   }
 
   /**
-   * Creates new stream from `zero` element applying `fold`.
-   * Stream will have only one element.
+   * Folds the elements of `stream` using the specified associative binary `operator`.
+   * The result of applying the fold `operator` between `zero` and all `stream` elements will be passed downstream as a single element.
    */
-  def fold[F, T](stream:OperationLink[F], zero:T, fold: (T, F) => T)(using ExecutionContext): StreamTransformer[F, T] = {
+  def fold[F, T](stream:OperationLink[F], zero:T, operator: (T, F) => T)(using ExecutionContext): StreamTransformer[F, T] = {
     var acc = zero
     StreamTransformer(stream, {
       case Some(v) =>
-        acc = fold.apply(acc, v)
+        acc = operator.apply(acc, v)
         Source.empty
       case None =>
         Source(acc)

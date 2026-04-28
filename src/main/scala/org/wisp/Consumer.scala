@@ -125,6 +125,9 @@ trait Consumer[-T] extends ( T => Unit ) {
     }
   }
 
+  /**
+   * Consume [[Source]]
+   */
   def consume(s: Source[T]): Unit = {
     s.forEach(this)
   }

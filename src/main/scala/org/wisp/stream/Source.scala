@@ -111,19 +111,26 @@ trait Source[+T]{
 
     }
   }
-  
-  def fold[E](start:E)(collectFn: (E, T) => E): E = {
-    var s = start
+
+  /**
+   * Folds the elements of this `Source` using the specified associative binary `operator`.
+   * @return the result of applying the fold `operator` between `zero` and all the elements
+   */
+  def fold[E](zero:E)(operator: (E, T) => E): E = {
+    var s = zero
     forEach{ i =>
-      s = collectFn(s, i)
+      s = operator.apply(s, i)
     }
     s
   }
 
-  def forEach[E >: T](c: E => Unit):Unit = {
+  /**
+   * Calls `consumer` for each element of the source stream.
+   */
+  def forEach[E >: T](consumer: E => Unit):Unit = {
     var v = next()
     while (v.isDefined){
-      c.apply(v.get)
+      consumer.apply(v.get)
       v = next()
     }
   }
