@@ -36,6 +36,13 @@ trait Consumer[-T] extends ( T => Unit ) {
    */
   override def apply(t:T):Unit
 
+  /**
+   * {{{
+   *   val intConsumer : Consumer[Int] = (i:Int) => println(i + 3)
+   *   val stringConsumer : Consumer[String] = intConsumer.map(s => s.toInt)
+   *   stringConsumer( "120" ) // prints 123
+   * }}}
+   */
   def map[R](fn: R => T): Consumer[R] = {
     val self = this
     (e: R) => {
@@ -43,6 +50,15 @@ trait Consumer[-T] extends ( T => Unit ) {
     }
   }
 
+  /**
+   * {{{
+   *   val intConsumer : Consumer[Int] = (i:Int) => println(i + 3)
+   *   val stringConsumer = intConsumer.flatMap{ (s:String, c:Consumer[Int]) =>
+   *     s.split(",").foreach( i => c(i.toInt) )
+   *   }
+   *   stringConsumer( "3,7" ) // prints 6 10
+   * }}}
+   */
   def flatMap[R](fn: (R, this.type) => Unit): Consumer[R] = {
     val self: this.type = this
     (e: R) => {
@@ -50,6 +66,14 @@ trait Consumer[-T] extends ( T => Unit ) {
     }
   }
 
+  /**
+   * {{{
+   *   val intConsumer: Consumer[Int] = (i: Int) => println(i)
+   *   val filtered = intConsumer.filter(i => i % 2 == 0)
+   *   filtered(1) // prints nothing
+   *   filtered(2) // prints 2
+   * }}}
+   */
   def filter[R <: T](fn: R => Boolean): Consumer[R] = {
     val self = this
     (e: R) => {
