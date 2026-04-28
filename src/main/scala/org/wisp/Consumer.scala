@@ -38,9 +38,9 @@ trait Consumer[-T] extends ( T => Unit ) {
 
   /**
    * {{{
-   *   val intConsumer : Consumer[Int] = (i:Int) => println(i + 3)
-   *   val stringConsumer : Consumer[String] = intConsumer.map(s => s.toInt)
-   *   stringConsumer( "120" ) // prints 123
+   * val intConsumer : Consumer[Int] = (i:Int) => println(i + 3)
+   * val stringConsumer : Consumer[String] = intConsumer.map(s => s.toInt)
+   * stringConsumer( "120" ) // prints 123
    * }}}
    */
   def map[R](fn: R => T): Consumer[R] = {
@@ -52,11 +52,11 @@ trait Consumer[-T] extends ( T => Unit ) {
 
   /**
    * {{{
-   *   val intConsumer : Consumer[Int] = (i:Int) => println(i + 3)
-   *   val stringConsumer = intConsumer.flatMap{ (s:String, c:Consumer[Int]) =>
-   *     s.split(",").foreach( i => c(i.toInt) )
-   *   }
-   *   stringConsumer( "3,7" ) // prints 6 10
+   * val intConsumer : Consumer[Int] = (i:Int) => println(i + 3)
+   * val stringConsumer = intConsumer.flatMap{ (s:String, c:Consumer[Int]) =>
+   *   s.split(",").foreach( i => c(i.toInt) )
+   * }
+   * stringConsumer( "3,7" ) // prints 6 10
    * }}}
    */
   def flatMap[R](fn: (R, this.type) => Unit): Consumer[R] = {
@@ -68,10 +68,10 @@ trait Consumer[-T] extends ( T => Unit ) {
 
   /**
    * {{{
-   *   val intConsumer: Consumer[Int] = (i: Int) => println(i)
-   *   val filtered = intConsumer.filter(i => i % 2 == 0)
-   *   filtered(1) // prints nothing
-   *   filtered(2) // prints 2
+   * val intConsumer: Consumer[Int] = (i: Int) => println(i)
+   * val filtered = intConsumer.filter(i => i % 2 == 0)
+   * filtered(1) // prints nothing
+   * filtered(2) // prints 2
    * }}}
    */
   def filter[R <: T](fn: R => Boolean): Consumer[R] = {
@@ -81,6 +81,18 @@ trait Consumer[-T] extends ( T => Unit ) {
     }
   }
 
+  /**
+   * Collects and converts values using [[scala.PartialFunction]]
+   *
+   * {{{
+   * val intConsumer: Consumer[Int] = (i: Int) => println(i)
+   * val anyConsumer: Consumer[Any] = intConsumer.collect{
+   *   case s:String => s.toInt
+   * }
+   * anyConsumer("1") // prints 1
+   * anyConsumer(Some(1)) // prints nothing
+   * }}}
+   */
   def collect[R](fn: PartialFunction[R, T]): Consumer[R] = {
     val self = this
     (e: R) => {

@@ -46,6 +46,18 @@ class DocTests {
   }
 
   @Test
+  def collectTest(): Unit = {
+    var res: Int = 0
+    val intConsumer: Consumer[Int] = (i: Int) => { res += i }
+    val anyConsumer: Consumer[Any] = intConsumer.collect{
+      case s:String => s.toInt
+    }
+    anyConsumer("1")
+    anyConsumer(Some(1))
+    Assertions.assertEquals(1, res)
+  }
+
+  @Test
   def consumerFilterTest(): Unit = {
     var res: Int = 0
     val intConsumer: Consumer[Int] = (i: Int) => { res += i }
