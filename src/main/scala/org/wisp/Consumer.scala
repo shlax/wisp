@@ -37,13 +37,13 @@ trait Consumer[-T] extends ( T => Unit ) {
   override def apply(t:T):Unit
 
   /**
+   * Returns `Consumer` that converts values using `function` and then calls `this`
+   *
    * {{{
    * val intConsumer : Consumer[Int] = (i:Int) => println(i + 3)
    * val stringConsumer : Consumer[String] = intConsumer.map(s => s.toInt)
    * stringConsumer( "120" ) // prints 123
    * }}}
-   *
-   * @return `Consumer` that converts values using `function` and then calls `this`
    */
   def map[R](function: R => T): Consumer[R] = {
     val self = this
@@ -71,14 +71,14 @@ trait Consumer[-T] extends ( T => Unit ) {
   }
 
   /**
+   * Returns `Consumer` that filters values using `predicate` and then calls `this`
+   *
    * {{{
    * val intConsumer: Consumer[Int] = (i: Int) => println(i)
    * val filtered = intConsumer.filter(i => i % 2 == 0)
    * filtered(1) // prints nothing
    * filtered(2) // prints 2
    * }}}
-   *
-   * @return `Consumer` that filters values using `predicate` and then calls `this`
    */
   def filter[R <: T](predicate: R => Boolean): Consumer[R] = {
     val self = this
