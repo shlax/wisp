@@ -42,15 +42,19 @@ trait Consumer[-T] extends ( T => Unit ) {
    * val stringConsumer : Consumer[String] = intConsumer.map(s => s.toInt)
    * stringConsumer( "120" ) // prints 123
    * }}}
+   *
+   * @return `Consumer` that converts values using `function` and then calls `this`
    */
-  def map[R](fn: R => T): Consumer[R] = {
+  def map[R](function: R => T): Consumer[R] = {
     val self = this
     (e: R) => {
-      self.apply(fn.apply(e))
+      self.apply(function.apply(e))
     }
   }
 
   /**
+   * Calls `function` with `this` and value from returned `org.wisp.Consumer`
+   *
    * {{{
    * val intConsumer : Consumer[Int] = (i:Int) => println(i + 3)
    * val stringConsumer = intConsumer.flatMap{ (s:String, c:Consumer[Int]) =>
@@ -59,10 +63,10 @@ trait Consumer[-T] extends ( T => Unit ) {
    * stringConsumer( "3,7" ) // prints 6 10
    * }}}
    */
-  def flatMap[R](fn: (R, this.type) => Unit): Consumer[R] = {
+  def flatMap[R](function: (R, this.type) => Unit): Consumer[R] = {
     val self: this.type = this
     (e: R) => {
-      fn.apply(e, self)
+      function.apply(e, self)
     }
   }
 
@@ -73,11 +77,13 @@ trait Consumer[-T] extends ( T => Unit ) {
    * filtered(1) // prints nothing
    * filtered(2) // prints 2
    * }}}
+   *
+   * @return `Consumer` that filters values using `predicate` and then calls `this`
    */
-  def filter[R <: T](fn: R => Boolean): Consumer[R] = {
+  def filter[R <: T](predicate: R => Boolean): Consumer[R] = {
     val self = this
     (e: R) => {
-      if (fn.apply(e)) self.apply(e)
+      if (predicate.apply(e)) self.apply(e)
     }
   }
 
