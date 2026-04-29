@@ -35,18 +35,24 @@ trait Source[+T]{
    */
   def next():Option[T]
 
-  def map[R](f: T => R): Source[R] = {
+  /**
+   * Maps each element of the source stream to a new value using the provided `function`.
+   */
+  def map[R](function: T => R): Source[R] = {
     val self = this
     new Source[R](){
 
       def next():Option[R] = {
-        self.next().map( i => f.apply(i) )
+        self.next().map( i => function.apply(i) )
       }
       
     }
   }
 
-  def flatMap[R](f: T => Source[R]): Source[R] = {
+  /**
+   * Returns a new `Source` by applying a function to all elements of this `Source` and using the elements of the resulting `Source`.
+   */
+  def flatMap[R](function: T => Source[R]): Source[R] = {
     val self = this
     new Source[R]() {
       var last:Option[Source[R]] = None
@@ -60,7 +66,7 @@ trait Source[+T]{
               case None =>
                 end = true
               case Some(x) =>
-                last = Some(f.apply(x))
+                last = Some(function.apply(x))
             }
           }
           for(q <- last){
@@ -74,13 +80,16 @@ trait Source[+T]{
     }
   }
 
-  def filter[E >: T](p: E => Boolean): Source[T] = {
+  /**
+   * Filters the elements of this `Source` using the specified `predicate`.
+   */
+  def filter[E >: T](predicate: E => Boolean): Source[T] = {
     val self = this
     new Source[T]() {
 
       def next(): Option[T] = {
         var n = self.next()
-        while (n.isDefined && !p.apply(n.get)){
+        while (n.isDefined && !predicate.apply(n.get)){
           n = self.next()
         }
         n
@@ -89,6 +98,9 @@ trait Source[+T]{
     }
   }
 
+  /**
+   * Filters and converts values using [[scala.PartialFunction]]
+   */
   def collect[E >: T, R](fn: PartialFunction[T, R]): Source[R] = {
     val self = this
     new Source[R]() {

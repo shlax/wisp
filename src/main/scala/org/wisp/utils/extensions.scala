@@ -10,7 +10,7 @@ object extensions {
   extension [T <: ActorSystem](as: T) {
 
     /**
-     * Execute `function` with `ActorSystem` given as ExecutionContext
+     * Execute `function` within `ActorSystem` given as ExecutionContext
      *
      * {{{
      * ActorSystem() || { sys =>

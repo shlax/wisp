@@ -62,11 +62,11 @@ class StreamNode[T](graph: StreamGraph, val link: OperationLink[T]) {
    * Duplicate current stream using [[org.wisp.stream.iterator.SplitStream]]
    *
    * {{{
-   *   val source = new StreamGraph(as).from((0 until 5).asSource)
-   *   source.split{ s =>
-   *     s.copy.map(i => i * 2).to(println).start // println (0 2 4 6 8)
-   *     s.copy.map(i => i * 2 + 1).to(println).start // println (1 3 5 7 9)
-   *   }
+   * val source = new StreamGraph(as).from((0 until 5).asSource)
+   * source.split{ s =>
+   *   s.copy.map(i => i * 2).to(println).start // println (0 2 4 6 8)
+   *   s.copy.map(i => i * 2 + 1).to(println).start // println (1 3 5 7 9)
+   * }
    * }}}
    */
   def split[E](fn: SplitNode => E): E = {
@@ -96,8 +96,11 @@ class StreamNode[T](graph: StreamGraph, val link: OperationLink[T]) {
     graph.node(r)
   }
 
-  def as[R](fn: this.type => R): R = {
-    fn.apply(this)
+  /**
+   * provide `this` as argument to `function`
+   */
+  def as[R](function: this.type => R): R = {
+    function.apply(this)
   }
 
 }

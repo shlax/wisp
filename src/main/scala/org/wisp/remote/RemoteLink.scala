@@ -6,6 +6,11 @@ import org.wisp.{Link, Message}
 import java.net.SocketAddress
 import scala.concurrent.Future
 
+/**
+ * Link that sends messages over UDP.
+ *
+ * `ask` and `call` operations are not supported.
+ */
 class RemoteLink[-T, +R](c: UdpClient[T], adr:SocketAddress) extends Link[T, R]{
 
   override def apply(t: Message[T, R]): Unit = {
