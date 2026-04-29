@@ -15,11 +15,11 @@ class FlowSubscriber[T](publisher: Flow.Publisher[T])(using ec: ExecutionContext
   override protected val lock: ReentrantLock = ReentrantLock()
   override protected val nodes: util.Queue[OperationLink[T]] = createNodes()
 
-  publisher.subscribe(this)
-
   protected var subscription:Option[Flow.Subscription] = None
   protected var requestedCount = 0
   protected var ended = false
+
+  publisher.subscribe(this)
 
   protected def requestNext():Unit = {
     if(requestedCount == 0 && !ended && nodes.size() > 0){
@@ -31,6 +31,7 @@ class FlowSubscriber[T](publisher: Flow.Publisher[T])(using ec: ExecutionContext
   }
 
   override def onSubscribe(s: Flow.Subscription): Unit = lock.withLock{
+    if(s == null) throw new NullPointerException("subscription is null")
     subscription = Some(s)
     requestNext()
   }

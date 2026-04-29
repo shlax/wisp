@@ -87,6 +87,7 @@ class FlowPublisher[T](link:OperationLink[T])(using ExecutionContext) extends Fl
   }
 
   override def subscribe(subscriber: Flow.Subscriber[? >: T]): Unit = {
+    if(subscriber == null) throw new NullPointerException("subscriber is null")
     subscriber.onSubscribe(new LinkSubscription(subscriber))
   }
 
