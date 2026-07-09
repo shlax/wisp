@@ -13,9 +13,9 @@ group = "org.wisp"
 version = "0.0.1-SNAPSHOT"
 
 dependencies {
-    implementation("org.scala-lang:scala3-library_3:3.8.3")
+    implementation("org.scala-lang:scala3-library_3:3.8.4")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:6.0.3")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.1")
     testImplementation("com.h2database:h2:2.4.240")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
