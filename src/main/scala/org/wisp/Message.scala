@@ -6,6 +6,9 @@ import java.util.UUID
 
 object Message {
 
+  /**
+    * generate random UUID using ThreadLocalRandom
+    */
   def randomUUID(): UUID = {
     val r = ThreadLocalRandom.current()
     val leastSigBits = r.nextLong()
