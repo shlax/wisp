@@ -74,6 +74,23 @@ class ActorSystem(inboxCapacity:Int = 3, executionContext:Option[ExecutionContex
   }
 
   /**
+   * Create new [[Actor]] from `function`
+   *
+   * {{{
+   * val actor = system.apply[F, T]( (from: Link[T, F]) => { value: F =>
+   *   ...
+   * })
+   * }}}
+   */
+  def apply[V, R](function: Link[R, V] => ( V => Unit ) ):Actor[V, R] = {
+    create( (inbox:ActorScheduler[V, R]) => new AbstractActor[V, R](inbox) {
+      override def apply(from: Link[R, V]): V => Unit = { (msg : V) =>
+        function.apply(from).apply(msg)
+      }
+    } )
+  }
+
+  /**
    * Create new [[Actor]] with [[inboxCapacity]] queue size
    */
   def create[V, R, T <: Actor[V, R]](fn: ActorScheduler[V, R] => T):T = {
