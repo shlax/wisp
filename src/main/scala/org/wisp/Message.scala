@@ -16,6 +16,13 @@ object Message {
     new UUID(mostSigBits, leastSigBits)
   }
 
+  /**
+   * unapply for [[Message]]
+   */
+  def unapply[T, R](m: Message[T, R]): (T, Link[R, T]) = {
+    (m.value, m.sender)
+  }
+
 }
 
 /**
