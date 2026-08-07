@@ -17,7 +17,7 @@ object Message {
   }
 
   /**
-   * unapply for [[Message]]
+   * Extractor for [[Message]]
    */
   def unapply[T, R](m: Message[T, R]): (T, Link[R, T]) = {
     (m.value, m.sender)
