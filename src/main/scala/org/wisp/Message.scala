@@ -1,7 +1,6 @@
 package org.wisp
 
 import org.wisp.jfr.{MessageCreated, MessageProcessed}
-import java.util.concurrent.ThreadLocalRandom
 import java.util.UUID
 import org.wisp.utils.uuid
 
