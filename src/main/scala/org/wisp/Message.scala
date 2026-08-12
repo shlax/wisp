@@ -3,18 +3,9 @@ package org.wisp
 import org.wisp.jfr.{MessageCreated, MessageProcessed}
 import java.util.concurrent.ThreadLocalRandom
 import java.util.UUID
+import org.wisp.utils.uuid
 
 object Message {
-
-  /**
-    * generate random UUID using ThreadLocalRandom
-    */
-  def randomUUID(): UUID = {
-    val r = ThreadLocalRandom.current()
-    val leastSigBits = r.nextLong()
-    val mostSigBits = r.nextLong()
-    new UUID(mostSigBits, leastSigBits)
-  }
 
   /**
    * Extractor for [[Message]]
@@ -36,7 +27,7 @@ class Message[+T, -R](val value:T, val sender:Link[R, T]) {
   val jfrId:Option[UUID] = {
     val event = MessageCreated()
     if(event.shouldCommit){
-      val id = Message.randomUUID()
+      val id = uuid.generate()
       event.uuid = id.toString
       if(value != null) {
         event.value = value.toString
