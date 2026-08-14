@@ -16,12 +16,16 @@ trait SynchronizedFlow[T] extends StreamFlow[T], StreamLock {
       try {
         lock.withLock {
           nextWithLock { v =>
-            cf.complete(v)
+            if(! cf.complete(v) ){
+              ec.reportFailure(new IllegalStateException("already completed"))
+            }
           }
         }
       } catch {
         case NonFatal(e) =>
-          cf.completeExceptionally(e)
+          if(!cf.completeExceptionally(e)){
+            ec.reportFailure(e)
+          }
       }
     } )
     cf.whenCompleteAsync( (v, e) => {
