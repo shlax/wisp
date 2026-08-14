@@ -14,7 +14,7 @@ object extensions {
      *
      * {{{
      * ActorSystem() || { sys =>
-     *   // given ExecutionContext = sys
+     *   // given ExecutionContextExecutor = sys
      *   ...
      * }
      * }}}

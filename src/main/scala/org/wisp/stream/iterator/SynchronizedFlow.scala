@@ -21,7 +21,7 @@ trait SynchronizedFlow[T] extends StreamFlow[T], StreamLock {
         }
       } catch {
         case NonFatal(e) =>
-          ec.reportFailure(e)
+          cf.completeExceptionally(e)
       }
     } )
     cf.whenCompleteAsync( (v, e) => {
