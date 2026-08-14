@@ -8,7 +8,7 @@ sealed trait Response[+T]
 /**
  * Next element
  */
-final case class Next[T](value: T) extends Response[T]
+final case class Next[+T](value: T) extends Response[T]
 
 /**
  * End of stream
