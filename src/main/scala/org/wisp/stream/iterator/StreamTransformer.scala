@@ -133,32 +133,31 @@ class StreamTransformer[F, T](stream:StreamFlow[F], collect: Option[F] => Source
   }
 
   override def nextWithLock(from: Response[T] => Unit): Unit = {
-      if (ended && source.isEmpty) {
-        from.apply(End)
-      } else {
-        var optVal:Option[T] = None
-        if(source.isDefined){
-          try {
-            optVal = source.get.next()
-          }catch{
-            case NonFatal(ex) =>
-              ec.reportFailure(ex)
-          }
-          if(optVal.isEmpty){
-            source = None
-          }
+    if (ended && source.isEmpty) {
+      from.apply(End)
+    } else {
+      var optVal:Option[T] = None
+      if(source.isDefined){
+        try {
+          optVal = source.get.next()
+        }catch{
+          case NonFatal(ex) =>
+            ec.reportFailure(ex)
         }
-
-        if (optVal.isDefined) {
-          from.apply(Next(optVal.get))
-        } else if(ended){
-          from.apply(End)
-        } else {
-          nodes.add(from)
-          stream.next(this)
+        if(optVal.isEmpty){
+          source = None
         }
       }
 
+      if (optVal.isDefined) {
+        from.apply(Next(optVal.get))
+      } else if(ended){
+        from.apply(End)
+      } else {
+        nodes.add(from)
+        stream.next(this)
+      }
+    }
   }
 
 }
