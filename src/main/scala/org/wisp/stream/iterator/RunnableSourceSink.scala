@@ -24,6 +24,9 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
 
   protected var value: Option[T] = None
 
+  /**
+   * should not be called inside lock
+   */
   protected def next(): Unit = {
     prev.call(HasNext).onComplete(response)
   }
@@ -42,62 +45,85 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
     sinkException = Some(t)
   }
 
-  override def run(): Unit = lock.withLock {
-    if (started) {
-      throw new IllegalStateException("started")
-    } else {
-      started = true
+  override def run(): Unit = {
+    lock.withLock {
+      if (started) {
+        throw new IllegalStateException("started")
+      } else {
+        started = true
+      }
     }
 
     next()
 
-    while (!dstEnded) {
+    var ended = false
+    lock.withLock {
+      ended = dstEnded
+    }
 
-      for (v <- value) {
-        value = None
-        tryApply(v)
+    while (!ended) {
+
+      var callNext = false
+      lock.withLock {
+        for (v <- value) {
+          value = None
+          tryApply(v)
+          callNext = true
+        }
+      }
+
+      if(callNext){
         next()
       }
 
-      var a = nodes.poll()
-      while (a != null) {
-        if (srcEnded) {
-          a << End
-        } else {
-          var n: Option[F] = None
-          if (!srcEnded && sourceException.isEmpty) {
-            try {
-              n = src.next()
-            } catch {
-              case NonFatal(ex) =>
-                sourceException = Some(ex)
-                ec.reportFailure(ex)
-            }
-          }
-          if (srcEnded || sourceException.isDefined) {
+      lock.withLock {
+
+        var a = nodes.poll()
+        while (a != null) {
+          if (srcEnded) {
             a << End
           } else {
-            n match {
-              case Some(v) =>
-                a << Next(v)
-              case None =>
-                srcEnded = true
-                a << End
+            var n: Option[F] = None
+            if (!srcEnded && sourceException.isEmpty) {
+              try {
+                n = src.next()
+              } catch {
+                case NonFatal(ex) =>
+                  sourceException = Some(ex)
+                  ec.reportFailure(ex)
+              }
+            }
+            if (srcEnded || sourceException.isDefined) {
+              a << End
+            } else {
+              n match {
+                case Some(v) =>
+                  a << Next(v)
+                case None =>
+                  srcEnded = true
+                  a << End
+              }
             }
           }
+          a = nodes.poll()
         }
-        a = nodes.poll()
+
+        if (!dstEnded && value.isEmpty) {
+          condition.await()
+        }
+
+
+        ended = dstEnded
       }
 
-      if (!dstEnded) {
-        condition.await()
-      }
     }
 
-    sink.complete()
+    lock.withLock {
+      sink.complete()
 
-    for(e <- sourceException) throw e
-    for(e <- sinkException) throw e
+      for (e <- sourceException) throw e
+      for (e <- sinkException) throw e
+    }
 
   }
 
