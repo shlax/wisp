@@ -193,7 +193,7 @@ class BasicTests {
 
       val s1 = Sink[String](l1.add).map[Int]("a:" + _).map[Int](i => i * 2 + 0)
       val s2 = Sink[String](l2.add).map[Int]("b:" + _).map[Int](i => i * 2 + 1)
-      val t = s1.thenTo(s2)
+      val t = s1.nextTo(s2)
 
       val p = StreamGraph().from(data).map(i => i + 1).to(t).start
       Await.result(p, 1.second)

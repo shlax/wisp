@@ -78,7 +78,7 @@ trait Sink[-T] extends Consumer[T]{
   /**
    * Returns a composed `Sink` that performs, in sequence, this operation followed by the `after` operation.
    */
-  def thenTo[S <: T](after: Sink[S]): Sink[S] = {
+  def nextTo[S <: T](after: Sink[S]): Sink[S] = {
     val self = this
     new Sink[S]{
 
