@@ -55,7 +55,7 @@ class FlowPublisher[T](link:StreamFlow[T])(using ExecutionContextExecutor) exten
       }
     }
 
-    protected def onError(e:Throwable):Unit = lock.withLock{
+    protected def onError(e:Throwable):Unit = {
       try{
         if (!canceled) {
           subscriber.onError(e)
