@@ -2,7 +2,7 @@ package org.wisp.stream.iterator
 
 import org.wisp.utils.lock.*
 
-trait StreamLink[T] extends (Response[T] => Unit), StreamLock {
+trait StreamHandler[T] extends (Response[T] => Unit), StreamLock {
 
   /**
    * method is running with lock

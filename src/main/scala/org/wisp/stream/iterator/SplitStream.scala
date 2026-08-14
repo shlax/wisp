@@ -10,7 +10,7 @@ import scala.concurrent.ExecutionContextExecutor
  * Duplicate `original` stream into links created with `link.copy`
  * Data from `original` is pulled after every link created with `link.copy` is pulled.
  */
-class SplitStream[T](original:StreamFlow[T])(link: SplitStream[T]#Split => Unit)(using ExecutionContextExecutor) extends StreamLink[T] {
+class SplitStream[T](original:StreamFlow[T])(link: SplitStream[T]#Split => Unit)(using ExecutionContextExecutor) extends StreamHandler[T] {
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 

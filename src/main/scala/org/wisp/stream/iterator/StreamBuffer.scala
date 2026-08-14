@@ -8,7 +8,7 @@ import scala.concurrent.ExecutionContextExecutor
  * Prefetch element from `stream`
  * @param size maximum no of elements to prefetch
  */
-class StreamBuffer[T](stream:StreamFlow[T], size:Int)(using ExecutionContextExecutor) extends StreamLink[T], SingleNodeFlow[T], SynchronizedFlow[T]{
+class StreamBuffer[T](stream:StreamFlow[T], size:Int)(using ExecutionContextExecutor) extends StreamHandler[T], SingleNodeFlow[T], SynchronizedFlow[T]{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 

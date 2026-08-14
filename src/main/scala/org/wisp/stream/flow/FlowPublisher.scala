@@ -1,6 +1,6 @@
 package org.wisp.stream.flow
 
-import org.wisp.stream.iterator.{End, Next, Response, StreamFlow, StreamLink}
+import org.wisp.stream.iterator.{End, Next, Response, StreamFlow, StreamHandler}
 
 import java.util.concurrent.Flow
 import java.util.concurrent.locks.ReentrantLock
@@ -15,7 +15,7 @@ import scala.util.control.NonFatal
  */
 class FlowPublisher[T](link:StreamFlow[T])(using ExecutionContextExecutor) extends Flow.Publisher[T]{
 
-  protected class LinkSubscription(subscriber: Flow.Subscriber[? >: T]) extends Flow.Subscription, StreamLink[T] {
+  protected class LinkSubscription(subscriber: Flow.Subscriber[? >: T]) extends Flow.Subscription, StreamHandler[T] {
     protected override val lock = ReentrantLock()
     protected var canceled: Boolean = false
 

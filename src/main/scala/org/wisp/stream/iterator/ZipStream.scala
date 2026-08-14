@@ -15,7 +15,7 @@ class ZipStream[T](streams:Iterable[StreamFlow[T]])(using ExecutionContextExecut
 
   protected override val nodes: util.Queue[Response[T] => Unit] = createNodes()
 
-  protected class State(val link:StreamFlow[T]) extends StreamLink[T] {
+  protected class State(val link:StreamFlow[T]) extends StreamHandler[T] {
 
     protected override def lock:ReentrantLock = ZipStream.this.lock
 
