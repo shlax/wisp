@@ -7,7 +7,6 @@ import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.ExecutionContextExecutor
 import org.wisp.utils.lock.*
 
-import scala.util.Try
 import scala.util.control.NonFatal
 
 /**
