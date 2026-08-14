@@ -82,14 +82,14 @@ class StreamNode[T](graph: StreamGraph, val link: OperationLink[T]) {
   }
 
   /**
-   * `sink` wil be run inside [[org.wisp.stream.iterator.RunnableSourceSink#run]]
+   * `sink` wil be run inside [[org.wisp.stream.iterator.RunnableSink#run]]
    */
   def toRunnable(sink: Sink[T]): RunnableSink[T] = {
     RunnableSink(link ,sink)
   }
 
   /**
-   * [[org.wisp.stream.iterator.RunnableSourceSink]]
+   * [[org.wisp.stream.iterator.StreamBuffer]]
    */
   def buffer(size:Int) : StreamNode[T] = {
     val r = StreamBuffer(link, size)
