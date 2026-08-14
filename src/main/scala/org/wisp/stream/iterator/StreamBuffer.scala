@@ -25,8 +25,7 @@ class StreamBuffer[T](stream:OperationLink[T], size:Int)(using ExecutionContext)
 
   protected def next(): Unit = {
     if(!ended && !requested){
-      val req = if(requested) 1 else 0
-      if (queue.size() + req < size) {
+      if (queue.size() < size) {
         requested = true
         stream.call(HasNext).onComplete(apply)
       }
