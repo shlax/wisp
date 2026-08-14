@@ -108,7 +108,6 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
           condition.await()
         }
 
-
         ended = dstEnded
       }
 
