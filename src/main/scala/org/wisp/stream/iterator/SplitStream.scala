@@ -71,7 +71,7 @@ class SplitStream[T](original:StreamFlow[T])(link: SplitStream[T]#Split => Unit)
   }
 
   protected class SplitLink extends SynchronizedFlow[T]{
-    override protected def lock: ReentrantLock = SplitStream.this.lock
+    override protected val lock: ReentrantLock = SplitStream.this.lock
 
     val nodes: util.Queue[Response[T] => Unit] = createNodes()
 

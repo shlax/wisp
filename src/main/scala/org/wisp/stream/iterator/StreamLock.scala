@@ -4,6 +4,6 @@ import java.util.concurrent.locks.ReentrantLock
 
 trait StreamLock {
 
-  protected def lock: ReentrantLock
+  protected val lock: ReentrantLock
 
 }
