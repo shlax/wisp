@@ -25,11 +25,16 @@ trait SynchronizedFlow[T] extends StreamFlow[T], StreamLock {
       }
     } )
     cf.whenCompleteAsync( (v, e) => {
-      if(v != null){
-        callback.apply(v)
-      }
-      if(e != null){
+      if (e != null) {
         ec.reportFailure(e)
+      }
+      try {
+        if(v != null){
+          callback.apply(v)
+        }
+      } catch {
+        case NonFatal(e) =>
+          ec.reportFailure(e)
       }
     }, ec )
   }
