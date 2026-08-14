@@ -7,7 +7,7 @@ import java.util.concurrent.locks.{Condition, ReentrantLock}
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
-class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: RunnableSourceSink[F, T] => OperationLink[T])(using ec : ExecutionContext)
+class RunnableSourceSink[F, T](src:Source[F], override val sink:Sink[T])(link: RunnableSourceSink[F, T] => OperationLink[T])(using ec : ExecutionContext)
   extends SourceLink[F], RunnableStream[F], SingleNodeFlow[F], SinkExecution[T] {
 
   protected override val lock:ReentrantLock = new ReentrantLock()
@@ -41,7 +41,7 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
 
   protected var sinkException: Option[Throwable] = None
 
-  protected override def onSinkException(t: Throwable): Unit = {
+  protected override def onSinkException(t: Throwable): Unit = lock.withLock{
     sinkException = Some(t)
   }
 
@@ -60,16 +60,14 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
 
     while (!ended) {
 
-      var callNext = false
-      lock.withLock {
-        for (v <- value) {
-          value = None
-          tryApply(v)
-          callNext = true
-        }
+      val actValue:Option[T] = lock.withLock {
+        val tmp = value
+        value = None
+        tmp
       }
 
-      if(callNext){
+      for (v <- actValue) {
+        tryApply(v)
         next()
       }
 
@@ -113,9 +111,9 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
 
     }
 
-    lock.withLock {
-      sink.complete()
+    sink.complete()
 
+    lock.withLock {
       for (e <- sourceException) throw e
       for (e <- sinkException) throw e
     }
@@ -139,15 +137,11 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
 
   override def apply(sender: OperationLink[F]): PartialFunction[Operation[F], Unit] = {
     case HasNext =>
-      if(sourceException.isDefined){
+      if(sourceException.isDefined || srcEnded){
         sender << End
       }else {
-        if (srcEnded) {
-          sender << End
-        } else {
-          nodes.add(sender)
-          condition.signal()
-        }
+        nodes.add(sender)
+        condition.signal()
       }
   }
 
