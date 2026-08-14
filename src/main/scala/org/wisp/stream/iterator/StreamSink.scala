@@ -3,13 +3,13 @@ package org.wisp.stream.iterator
 import org.wisp.stream.Sink
 import org.wisp.utils.lock.*
 import java.util.concurrent.locks.ReentrantLock
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.{ExecutionContextExecutor, Future, Promise}
 import scala.util.control.NonFatal
 
 /**
  * for each element of `stream` `sink.apply(...)` is called
  */
-class StreamSink[T](stream :OperationLink[T], override val sink:Sink[T])(using ExecutionContext) extends StreamLink[T], SinkExecution[T]{
+class StreamSink[T](stream :StreamFlow[T], override val sink:Sink[T])(using ExecutionContextExecutor) extends StreamLink[T], SinkExecution[T]{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
   
@@ -26,7 +26,7 @@ class StreamSink[T](stream :OperationLink[T], override val sink:Sink[T])(using E
       started = true
     }
 
-    stream.call(HasNext).onComplete(apply)
+    stream.next(this)
     completed.future
   }
 
@@ -36,13 +36,12 @@ class StreamSink[T](stream :OperationLink[T], override val sink:Sink[T])(using E
     sinkException = Some(t)
   }
 
-  override def apply(from: OperationLink[T]): PartialFunction[Operation[T], Unit] = {
-
+  override def applyWithLock(value:Response[T]): Unit = value match {
     case Next(v) =>
       if(completed.isCompleted) throw new IllegalStateException("ended")
 
       tryApply(v)
-      stream.call(HasNext).onComplete(apply)
+      stream.next(this)
 
     case End =>
       var err:Option[Throwable] = None

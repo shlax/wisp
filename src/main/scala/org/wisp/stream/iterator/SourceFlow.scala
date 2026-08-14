@@ -1,10 +1,10 @@
 package org.wisp.stream.iterator
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.Failure
 
-trait SourceLink[T](using ExecutionContext) extends StreamLink[T]{
-
+trait SourceFlow[T](using ExecutionContextExecutor) extends StreamFlow[T]{
+  
   def failOn(e: Throwable):this.type
 
   def failOn(p:Future[?]):this.type = {

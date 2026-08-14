@@ -4,18 +4,18 @@ import org.wisp.stream.{Sink, Source}
 import org.wisp.utils.lock.*
 import java.util
 import java.util.concurrent.locks.{Condition, ReentrantLock}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContextExecutor
 import scala.util.control.NonFatal
 
-class RunnableSourceSink[F, T](src:Source[F], override val sink:Sink[T])(link: RunnableSourceSink[F, T] => OperationLink[T])(using ec : ExecutionContext)
-  extends SourceLink[F], RunnableStream[F], SingleNodeFlow[F], SinkExecution[T] {
+class RunnableSourceSink[F, T](src:Source[F], override val sink:Sink[T])(link: RunnableSourceSink[F, T] => StreamFlow[T])(using ec : ExecutionContextExecutor)
+  extends SourceFlow[F], RunnableStream[F], SingleNodeFlow[F], SinkExecution[T], StreamLink[T], SynchronizedFlow[F] {
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
-  protected val nodes: util.Queue[OperationLink[F]] = createNodes()
+  protected val nodes: util.Queue[Response[F] => Unit] = createNodes()
 
   protected val condition: Condition = lock.newCondition()
-  protected val prev: OperationLink[T] = link.apply(this)
+  protected val prev: StreamFlow[T] = link.apply(this)
 
   protected var started: Boolean = false
 
@@ -28,7 +28,7 @@ class RunnableSourceSink[F, T](src:Source[F], override val sink:Sink[T])(link: R
    * should not to be called inside lock
    */
   protected def next(): Unit = {
-    prev.call(HasNext).onComplete(response)
+    prev.next(this)
   }
 
   protected var sourceException: Option[Throwable] = None
@@ -75,7 +75,7 @@ class RunnableSourceSink[F, T](src:Source[F], override val sink:Sink[T])(link: R
         var a = nodes.poll()
         while (a != null) {
           if (srcEnded) {
-            a << End
+            a.apply(End)
           } else {
             var n: Option[F] = None
             if (!srcEnded && sourceException.isEmpty) {
@@ -88,14 +88,14 @@ class RunnableSourceSink[F, T](src:Source[F], override val sink:Sink[T])(link: R
               }
             }
             if (srcEnded || sourceException.isDefined) {
-              a << End
+              a.apply(End)
             } else {
               n match {
                 case Some(v) =>
-                  a << Next(v)
+                  a.apply(Next(v))
                 case None =>
                   srcEnded = true
-                  a << End
+                  a.apply(End)
               }
             }
           }
@@ -120,7 +120,7 @@ class RunnableSourceSink[F, T](src:Source[F], override val sink:Sink[T])(link: R
 
   }
 
-  protected val response: StreamResponse[T] = StreamResponse(lock, RunnableSourceSink.this.getClass) {
+  protected def applyWithLock(rv:Response[T]): Unit = rv match {
     case Next(v) =>
       if (dstEnded) throw new IllegalStateException("ended")
       if (value.isDefined) throw new IllegalStateException("dropped value: " + v)
@@ -135,14 +135,13 @@ class RunnableSourceSink[F, T](src:Source[F], override val sink:Sink[T])(link: R
       condition.signal()
   }
 
-  override def apply(sender: OperationLink[F]): PartialFunction[Operation[F], Unit] = {
-    case HasNext =>
-      if(sourceException.isDefined || srcEnded){
-        sender << End
-      }else {
-        nodes.add(sender)
-        condition.signal()
-      }
+  override def nextWithLock(sender: Response[F] => Unit): Unit = {
+    if(sourceException.isDefined || srcEnded){
+      sender.apply(End)
+    }else {
+      nodes.add(sender)
+      condition.signal()
+    }
   }
 
 }

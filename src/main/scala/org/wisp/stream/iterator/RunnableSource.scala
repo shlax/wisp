@@ -5,14 +5,15 @@ import java.util
 import org.wisp.utils.lock.*
 
 import java.util.concurrent.locks.{Condition, ReentrantLock}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContextExecutor
 import scala.util.control.NonFatal
 
-class RunnableSource[T](src:Source[T])(using ec : ExecutionContext) extends SourceLink[T], RunnableStream[T], SingleNodeFlow[T]{
+class RunnableSource[T](src:Source[T])(using ec : ExecutionContextExecutor) 
+  extends SourceFlow[T], RunnableStream[T], SingleNodeFlow[T], SynchronizedFlow[T]{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
-  protected val nodes:util.Queue[OperationLink[T]] = createNodes()
+  protected val nodes:util.Queue[Response[T] => Unit] = createNodes()
 
   protected val condition: Condition = lock.newCondition()
   
@@ -44,14 +45,14 @@ class RunnableSource[T](src:Source[T])(using ec : ExecutionContext) extends Sour
         }
 
         if(ended || sourceException.isDefined){
-          a << End
+          a.apply(End)
         }else{
           n match {
             case Some(v) =>
-              a << Next(v)
+              a.apply(Next(v))
             case None =>
               ended = true
-              a << End
+              a.apply(End)
           }
         }
 
@@ -68,10 +69,9 @@ class RunnableSource[T](src:Source[T])(using ec : ExecutionContext) extends Sour
     
   }
 
-  override def apply(sender: OperationLink[T]): PartialFunction[Operation[T], Unit] = {
-    case HasNext =>
+  override def nextWithLock(sender: Response[T] => Unit): Unit = {
       if (ended) {
-        sender << End
+        sender.apply(End)
       } else {
         nodes.add(sender)
         condition.signal()

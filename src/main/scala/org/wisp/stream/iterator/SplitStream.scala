@@ -4,18 +4,18 @@ import org.wisp.utils.lock.*
 
 import java.util
 import java.util.concurrent.locks.ReentrantLock
-import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContextExecutor
 
 /**
  * Duplicate `original` stream into links created with `link.copy`
  * Data from `original` is pulled after every link created with `link.copy` is pulled.
  */
-class SplitStream[T](original:OperationLink[T])(link: SplitStream[T]#Split => Unit)(using ExecutionContext) extends StreamLink[T] {
+class SplitStream[T](original:StreamFlow[T])(link: SplitStream[T]#Split => Unit)(using ExecutionContextExecutor) extends StreamLink[T] {
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
   trait Split {
-    def copy: OperationLink[T]
+    def copy: StreamFlow[T]
   }
 
   protected class SplitBuilder extends Split {
@@ -29,8 +29,8 @@ class SplitStream[T](original:OperationLink[T])(link: SplitStream[T]#Split => Un
 
   }
 
-  protected def createNodes(): util.Queue[OperationLink[T]] = {
-    util.LinkedList[OperationLink[T]]()
+  protected def createNodes(): util.Queue[Response[T] => Unit] = {
+    util.LinkedList[Response[T] => Unit]()
   }
 
   protected var requested = true
@@ -48,7 +48,7 @@ class SplitStream[T](original:OperationLink[T])(link: SplitStream[T]#Split => Un
     pullNext()
   }
 
-  override def apply(from: OperationLink[T]): PartialFunction[Operation[T], Unit] = {
+  override def applyWithLock(rv:Response[T]): Unit = rv match {
     case Next(v) =>
       if(!requested) throw new IllegalStateException("not requested")
       requested = false
@@ -66,40 +66,39 @@ class SplitStream[T](original:OperationLink[T])(link: SplitStream[T]#Split => Un
   protected def pullNext():Unit = {
     if (!requested && nextTo.forall(i => !i.nodes.isEmpty)) {
       requested = true
-      original.call(HasNext).onComplete(SplitStream.this.apply)
+      original.next(SplitStream.this)
     }
   }
 
-  protected class SplitLink extends StreamLink[T]{
-
+  protected class SplitLink extends SynchronizedFlow[T]{
     override protected def lock: ReentrantLock = SplitStream.this.lock
 
-    val nodes: util.Queue[OperationLink[T]] = createNodes()
+    val nodes: util.Queue[Response[T] => Unit] = createNodes()
 
     def next(v:T): Unit = {
       val n = nodes.poll()
-      if(n == null) throw new IllegalStateException("nodes are empty")
-      n << Next(v)
+      if(n == null){
+        throw new IllegalStateException("nodes are empty")
+      }
+      n.apply(Next(v))
     }
 
     def end(): Unit = {
       var n = nodes.poll()
       if(n == null) throw new IllegalStateException("nodes are empty")
       while(n != null){
-        n << End
+        n.apply(End)
         n = nodes.poll()
       }
     }
 
-
-    override def apply(from: OperationLink[T]): PartialFunction[Operation[T], Unit] = {
-      case HasNext =>
-        if (ended) {
-          from << End
-        } else {
-          nodes.add(from)
-          pullNext()
-        }
+    override def nextWithLock(from: Response[T] => Unit): Unit = {
+      if (ended) {
+        from.apply(End)
+      } else {
+        nodes.add(from)
+        pullNext()
+      }
     }
 
   }

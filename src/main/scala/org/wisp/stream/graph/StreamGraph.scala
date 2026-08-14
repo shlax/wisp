@@ -1,26 +1,26 @@
 package org.wisp.stream.graph
 
 import org.wisp.stream.{Sink, Source}
-import org.wisp.stream.iterator.{OperationLink, RunnableSource, RunnableSourceSink, SourceLink, StreamSource, ZipStream}
+import org.wisp.stream.iterator.{RunnableSource, RunnableSourceSink, SourceFlow, StreamFlow, StreamSource, ZipStream}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContextExecutor
 
 /**
  * Api for creating stream graphs.
  */
-class StreamGraph(using val system:ExecutionContext){
+class StreamGraph(using val system:ExecutionContextExecutor){
 
   /**
    * Create node from `link`
    */
-  def node[T](link: OperationLink[T]): StreamNode[T] = {
+  def node[T](link: StreamFlow[T]): StreamNode[T] = {
     StreamNode(this, link)
   }
 
   /**
    * Create stream from `link`
    */
-  def from[T](link: SourceLink[T]): SourceNode[T] = {
+  def from[T](link: SourceFlow[T]): SourceNode[T] = {
     SourceNode(this, link)
   }
 

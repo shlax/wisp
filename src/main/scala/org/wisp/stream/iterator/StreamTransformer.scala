@@ -3,7 +3,7 @@ package org.wisp.stream.iterator
 import org.wisp.stream.Source
 import java.util
 import java.util.concurrent.locks.ReentrantLock
-import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContextExecutor
 import scala.util.control.NonFatal
 
 object StreamTransformer {
@@ -11,21 +11,21 @@ object StreamTransformer {
   /**
    * Creates new stream applying `function`.
    */
-  def map[F, T](stream:OperationLink[F], function: F => T)(using ExecutionContext) : StreamTransformer[F, T] = {
+  def map[F, T](stream:StreamFlow[F], function: F => T)(using ExecutionContextExecutor) : StreamTransformer[F, T] = {
     flatMap(stream, i => Source( function.apply(i) ) )
   }
 
   /**
    * Creates new stream applying `predicate`.
    */
-  def filter[F](stream: OperationLink[F], predicate: F => Boolean)(using ExecutionContext): StreamTransformer[F, F] = {
+  def filter[F](stream: StreamFlow[F], predicate: F => Boolean)(using ExecutionContextExecutor): StreamTransformer[F, F] = {
     flatMap(stream, i => { if(predicate.apply(i)) Source(i) else Source.empty } )
   }
 
   /**
    * Creates new stream applying `function`.
    */
-  def flatMap[F, T](stream:OperationLink[F], function: F => Source[T])(using ExecutionContext): StreamTransformer[F, T] = {
+  def flatMap[F, T](stream:StreamFlow[F], function: F => Source[T])(using ExecutionContextExecutor): StreamTransformer[F, T] = {
     StreamTransformer(stream, { case Some(v) => function(v) case None => Source.empty } )
   }
 
@@ -33,7 +33,7 @@ object StreamTransformer {
    * Folds the elements of `stream` using the specified associative binary `operator`.
    * The result of applying the fold `operator` between `zero` and all `stream` elements will be passed downstream as a single element.
    */
-  def fold[F, T](stream:OperationLink[F], zero:T, operator: (T, F) => T)(using ExecutionContext): StreamTransformer[F, T] = {
+  def fold[F, T](stream:StreamFlow[F], zero:T, operator: (T, F) => T)(using ExecutionContextExecutor): StreamTransformer[F, T] = {
     var acc = zero
     StreamTransformer(stream, {
       case Some(v) =>
@@ -52,11 +52,12 @@ object StreamTransformer {
  * @param stream source stream
  * @param collect function to apply to each element of the source stream. `End` of stream will be mapped to `None`
  */
-class StreamTransformer[F, T](stream:OperationLink[F], collect: Option[F] => Source[T])(using ec : ExecutionContext) extends StreamLink[T], SingleNodeFlow[T]{
+class StreamTransformer[F, T](stream:StreamFlow[F], collect: Option[F] => Source[T])(using ec : ExecutionContextExecutor) 
+  extends StreamLink[F], SingleNodeFlow[T], SynchronizedFlow[T]{
 
   override protected val lock: ReentrantLock = ReentrantLock()
 
-  protected override val nodes:util.Queue[OperationLink[T]] = createNodes()
+  protected override val nodes:util.Queue[Response[T] => Unit] = createNodes()
 
   protected var source: Option[Source[T]] = None
   protected var ended = false
@@ -75,7 +76,7 @@ class StreamTransformer[F, T](stream:OperationLink[F], collect: Option[F] => Sou
       optVal match {
         case Some(v) =>
           val n = nodes.poll()
-          n << Next(v)
+          n.apply(Next(v))
         case None =>
           hasNext = false
       }
@@ -95,7 +96,7 @@ class StreamTransformer[F, T](stream:OperationLink[F], collect: Option[F] => Sou
     opt
   }
 
-  protected val response:StreamResponse[F] = StreamResponse(lock, StreamTransformer.this.getClass) {
+  protected def applyWithLock(sr:Response[F]): Unit = sr match {
     case Next(v) =>
       if (ended) throw new IllegalStateException("ended")
       if (nodes.isEmpty) throw new IllegalStateException("no workers found for " + v)
@@ -110,7 +111,7 @@ class StreamTransformer[F, T](stream:OperationLink[F], collect: Option[F] => Sou
       if (hasNext) {
         source = Some(opt.get)
       } else if (!nodes.isEmpty) {
-        stream.call(HasNext).onComplete(response)
+        stream.next(this)
       }
 
     case End =>
@@ -131,10 +132,9 @@ class StreamTransformer[F, T](stream:OperationLink[F], collect: Option[F] => Sou
 
   }
 
-  override def apply(from: OperationLink[T]): PartialFunction[Operation[T], Unit] = {
-    case HasNext =>
+  override def nextWithLock(from: Response[T] => Unit): Unit = {
       if (ended && source.isEmpty) {
-        from << End
+        from.apply(End)
       } else {
         var optVal:Option[T] = None
         if(source.isDefined){
@@ -150,12 +150,12 @@ class StreamTransformer[F, T](stream:OperationLink[F], collect: Option[F] => Sou
         }
 
         if (optVal.isDefined) {
-          from << Next(optVal.get)
+          from.apply(Next(optVal.get))
         } else if(ended){
-          from << End
+          from.apply(End)
         } else {
           nodes.add(from)
-          stream.call(HasNext).onComplete(response)
+          stream.next(this)
         }
       }
 

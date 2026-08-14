@@ -1,19 +1,9 @@
 package org.wisp.stream.iterator
 
 /**
- * Stream operation
- */
-sealed trait Operation[+T]
-
-/**
- * Request next element
- */
-case object HasNext extends Operation[Nothing]
-
-/**
  * Stream response
  */
-sealed trait Response[+T] extends Operation[T]
+sealed trait Response[+T]
 
 /**
  * Next element

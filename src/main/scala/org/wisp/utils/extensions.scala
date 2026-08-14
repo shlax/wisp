@@ -3,14 +3,14 @@ package org.wisp.utils
 import org.wisp.ActorSystem
 import org.wisp.utils.closeable.*
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContextExecutor
 
 object extensions {
 
   extension [T <: ActorSystem](as: T) {
 
     /**
-     * Execute `function` within `ActorSystem` given as ExecutionContext
+     * Execute `function` within `ActorSystem` given as ExecutionContextExecutor
      *
      * {{{
      * ActorSystem() || { sys =>
@@ -19,9 +19,9 @@ object extensions {
      * }
      * }}}
      */
-    def || [R](function: ExecutionContext ?=> T => R): R = {
+    def || [R](function: ExecutionContextExecutor ?=> T => R): R = {
       as | { a =>
-        given ExecutionContext = as
+        given ExecutionContextExecutor = as
         function.apply(a)
       }
     }

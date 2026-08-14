@@ -4,10 +4,10 @@ import org.wisp.stream.Source
 import org.wisp.utils.lock.*
 
 import java.util.concurrent.locks.ReentrantLock
-import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContextExecutor
 import scala.util.control.NonFatal
 
-class StreamSource[T](src:Source[T])(using ec : ExecutionContext) extends SourceLink[T] {
+class StreamSource[T](src:Source[T])(using ec : ExecutionContextExecutor) extends SourceFlow[T], SynchronizedFlow[T] {
 
   protected override val lock:ReentrantLock = new ReentrantLock()
   
@@ -20,35 +20,34 @@ class StreamSource[T](src:Source[T])(using ec : ExecutionContext) extends Source
     this
   }
 
-  override def apply(sender: OperationLink[T]): PartialFunction[Operation[T], Unit] = {
-    case HasNext =>
-      if(sourceException.isDefined){
-        sender << End
-      }else {
-        if (ended) {
-          sender << End
-        } else {
-          var n:Option[T] = None
-          try{
-            n = src.next()
-          }catch{
-            case NonFatal(e)=>
-              sourceException = Some(e)
-              ec.reportFailure(e)
-          }
+  override def nextWithLock(sender: Response[T] => Unit): Unit = {
+    if (sourceException.isDefined) {
+      sender.apply(End)
+    } else {
+      if (ended) {
+        sender.apply(End)
+      } else {
+        var n: Option[T] = None
+        try {
+          n = src.next()
+        } catch {
+          case NonFatal(e) =>
+            sourceException = Some(e)
+            ec.reportFailure(e)
+        }
 
-          if(sourceException.isDefined){
-            sender << End
-          }else {
-            if (n.isDefined) {
-              sender << Next(n.get)
-            } else {
-              ended = true
-              sender << End
-            }
+        if (sourceException.isDefined) {
+          sender.apply(End)
+        } else {
+          if (n.isDefined) {
+            sender.apply(Next(n.get))
+          } else {
+            ended = true
+            sender.apply(End)
           }
         }
       }
+    }
   }
 
 }

@@ -2,7 +2,7 @@ package org.wisp
 
 import org.wisp.exceptions.UndeliveredException
 import scala.annotation.targetName
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.{ExecutionContextExecutor, Future, Promise}
 
 /**
  * Adds callback functionality to [[Consumer]]
@@ -34,7 +34,7 @@ trait Link[-T, +R] extends Consumer[Message[T, R]]{
   /**
    * Sends an asynchronous message and reply value can be obtained through returned future
    */
-  def ask(v:T)(using ExecutionContext) : Future[R] = {
+  def ask(v:T)(using ExecutionContextExecutor) : Future[R] = {
     call(v).map(_.value)
   }
 

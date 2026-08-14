@@ -7,7 +7,7 @@ import org.wisp.stream.extensions.*
 import org.wisp.utils.closeable.*
 import org.wisp.utils.extensions.*
 
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 import scala.concurrent.duration.*
 
 class Streams {
@@ -33,7 +33,7 @@ class Streams {
   def workers(): Unit = {
     // create ActorSystem
     ActorSystem() | { system =>
-      given ExecutionContext = system
+      given ExecutionContextExecutor = system
       // test data
       val data = 1 to 10
       // create graph builder

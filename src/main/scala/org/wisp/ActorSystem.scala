@@ -5,7 +5,7 @@ import org.wisp.utils.lock.withLock
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.{Executors, RejectedExecutionException}
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, ExecutionContextExecutorService}
 
 /**
  * Hold [[scala.concurrent.ExecutionContext]] for actors
@@ -13,7 +13,7 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
  * @param inboxCapacity default size for inboxes
  * @param executionContext where the calls to [[execute]] are redirected
  */
-class ActorSystem(inboxCapacity:Int = 3, executionContext:Option[ExecutionContextExecutorService] = None) extends ExecutionContext, AutoCloseable{
+class ActorSystem(inboxCapacity:Int = 3, executionContext:Option[ExecutionContextExecutorService] = None) extends ExecutionContextExecutor, AutoCloseable{
 
   protected val executor: ExecutionContextExecutorService = createExecutor()
 
@@ -31,9 +31,9 @@ class ActorSystem(inboxCapacity:Int = 3, executionContext:Option[ExecutionContex
   protected val closed: AtomicBoolean = AtomicBoolean(false)
 
   protected val lock:ReentrantLock = new ReentrantLock()
-  protected var finalizeWith:Option[ExecutionContext] = None
+  protected var finalizeWith:Option[ExecutionContextExecutor] = None
 
-  protected def createFinalizeWith() : ExecutionContext = {
+  protected def createFinalizeWith() : ExecutionContextExecutor = {
     ExecutionContext.parasitic
   }
 

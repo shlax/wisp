@@ -2,18 +2,15 @@ package org.wisp.stream.iterator
 
 import org.wisp.utils.lock.*
 
-trait StreamLink[T] extends OperationLink[T], StreamLock {
+trait StreamLink[T] extends (Response[T] => Unit), StreamLock {
 
   /**
    * method is running with lock
    */
-  def apply(from:OperationLink[T]): PartialFunction[Operation[T], Unit]
+  protected def applyWithLock(from:Response[T]): Unit
 
-  override def apply(t: OperationMessage[T]): Unit = lock.withLock{
-    t.process(StreamLink.this.getClass) {
-      val f = apply(t.sender)
-      f.apply(t.value)
-    }
+  override def apply(t: Response[T]): Unit = lock.withLock{
+    applyWithLock(t)
   }
   
 }

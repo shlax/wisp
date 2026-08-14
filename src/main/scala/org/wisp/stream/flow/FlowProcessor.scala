@@ -1,14 +1,14 @@
 package org.wisp.stream.flow
 
-import org.wisp.stream.iterator.OperationLink
+import org.wisp.stream.iterator.StreamFlow
 
 import java.util.concurrent.Flow
-import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContextExecutor
 
 /**
  * provides interoperability with [[java.util.concurrent.Flow.Processor]]
  */
-class FlowProcessor[T, R](publisher: Flow.Publisher[T], map: FlowSubscriber[T] => OperationLink[R])(using ExecutionContext)
+class FlowProcessor[T, R](publisher: Flow.Publisher[T], map: FlowSubscriber[T] => StreamFlow[R])(using ExecutionContextExecutor)
   extends Flow.Processor[T, R] {
 
   val flowSubscriber: FlowSubscriber[T] = FlowSubscriber[T](publisher)
