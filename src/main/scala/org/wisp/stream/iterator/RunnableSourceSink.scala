@@ -25,7 +25,7 @@ class RunnableSourceSink[F, T](src:Source[F], override  val sink:Sink[T])(link: 
   protected var value: Option[T] = None
 
   /**
-   * should not be called inside lock
+   * should not to be called inside lock
    */
   protected def next(): Unit = {
     prev.call(HasNext).onComplete(response)
