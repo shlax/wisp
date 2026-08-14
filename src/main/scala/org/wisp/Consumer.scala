@@ -125,7 +125,7 @@ trait Consumer[-T] extends ( T => Unit ) {
   def apply(t: Try[T]): Unit = {
     t match {
       case Success(v) =>
-          apply(v)
+        apply(v)
       case Failure(exception) =>
         throw exception
     }
