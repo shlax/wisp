@@ -63,7 +63,7 @@ class RunnableSink[T](upstream:StreamFlow[T], override val sink:Sink[T])(using e
 
     next()
 
-    var end: Boolean = lock.withLock(ended)
+    var end: Boolean = lock.withLock(ended && value.isEmpty)
 
     while (!end) {
 
@@ -78,12 +78,12 @@ class RunnableSink[T](upstream:StreamFlow[T], override val sink:Sink[T])(using e
         next()
       }
 
-      lock.withLock {
+      end = lock.withLock {
         if (!ended && value.isEmpty) {
           condition.await()
         }
 
-        end = ended
+        ended && value.isEmpty
       }
 
     }
