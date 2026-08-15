@@ -72,22 +72,24 @@ class RunnableSourceSink[F, T](src:Source[F], override val sink:Sink[T])(link: R
         next()
       }
 
-      lock.withLock {
-        var a = nodes.poll()
-        while (a != null) {
-          if (srcEnded) {
-            a.apply(End)
-          } else {
-            var n: Option[F] = None
-            if (!srcEnded && sourceException.isEmpty) {
-              try {
-                n = src.next()
-              } catch {
-                case NonFatal(ex) =>
-                  sourceException = Some(ex)
-                  ec.reportFailure(ex)
-              }
+      var srcDone = false // local srcEnded to avoid re-locking
+
+      var a = lock.withLock( nodes.poll() )
+      while (a != null) {
+        if (srcDone){
+          a.apply(End)
+        } else {
+          var n: Option[F] = None
+          if ( lock.withLock( !srcEnded && sourceException.isEmpty) ) {
+            try {
+              n = src.next()
+            } catch {
+              case NonFatal(ex) =>
+                lock.withLock{ sourceException = Some(ex) }
+                ec.reportFailure(ex)
             }
+          }
+          lock.withLock {
             if (srcEnded || sourceException.isDefined) {
               a.apply(End)
             } else {
@@ -95,14 +97,17 @@ class RunnableSourceSink[F, T](src:Source[F], override val sink:Sink[T])(link: R
                 case Some(v) =>
                   a.apply(Next(v))
                 case None =>
+                  srcDone = true
                   srcEnded = true
                   a.apply(End)
               }
             }
           }
-          a = nodes.poll()
         }
+        a = lock.withLock( nodes.poll() )
+      }
 
+      lock.withLock {
         if (!dstEnded && value.isEmpty) {
           condition.await()
         }
