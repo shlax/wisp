@@ -1,6 +1,6 @@
 package org.wisp.stream.flow
 
-import org.wisp.stream.iterator.{End, Next, Response, SingleNodeFlow, StreamFlow, StreamHandler, SynchronizedFlow}
+import org.wisp.stream.iterator.{End, Next, Response, SingleNodeFlow, StreamFlow, StreamHandler, ExecutionFlow}
 import org.wisp.utils.lock.withLock
 
 import java.util
@@ -11,7 +11,7 @@ import scala.concurrent.ExecutionContext
 /**
  * provides interoperability with [[java.util.concurrent.Flow.Subscriber]]
  */
-class FlowSubscriber[T](publisher: Flow.Publisher[T])(using ec: ExecutionContext) extends SynchronizedFlow[T], SingleNodeFlow[T], Flow.Subscriber[T] {
+class FlowSubscriber[T](publisher: Flow.Publisher[T])(using ec: ExecutionContext) extends ExecutionFlow[T], SingleNodeFlow[T], Flow.Subscriber[T] {
   override protected val lock: ReentrantLock = ReentrantLock()
   override protected val nodes: util.Queue[Response[T] => Unit] = createNodes()
 

@@ -53,7 +53,7 @@ object StreamTransformer {
  * @param collect function to apply to each element of the source stream. `End` of stream will be mapped to `None`
  */
 class StreamTransformer[F, T](stream:StreamFlow[F], collect: Option[F] => Source[T])(using ec : ExecutionContextExecutor) 
-  extends StreamHandler[F], SingleNodeFlow[T], SynchronizedFlow[T]{
+  extends StreamHandler[F], SingleNodeFlow[T], ExecutionFlow[T]{
 
   override protected val lock: ReentrantLock = ReentrantLock()
 

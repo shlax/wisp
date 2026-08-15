@@ -7,7 +7,7 @@ import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.ExecutionContextExecutor
 import scala.util.control.NonFatal
 
-class StreamSource[T](src:Source[T])(using ec : ExecutionContextExecutor) extends SourceFlow[T], SynchronizedFlow[T] {
+class StreamSource[T](src:Source[T])(using ec : ExecutionContextExecutor) extends SourceFlow[T], ExecutionFlow[T] {
 
   protected override val lock:ReentrantLock = new ReentrantLock()
   

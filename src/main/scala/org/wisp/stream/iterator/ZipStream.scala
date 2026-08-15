@@ -8,7 +8,7 @@ import scala.concurrent.ExecutionContextExecutor
  * Combine multiple `streams` into one
  * @param streams streams to combine
  */
-class ZipStream[T](streams:Iterable[StreamFlow[T]])(using ExecutionContextExecutor) extends SingleNodeFlow[T], SynchronizedFlow[T]{
+class ZipStream[T](streams:Iterable[StreamFlow[T]])(using ExecutionContextExecutor) extends SingleNodeFlow[T], ExecutionFlow[T]{
   def this(l:StreamFlow[T]*)(using ExecutionContextExecutor) = this(l)
 
   protected override val lock:ReentrantLock = new ReentrantLock()

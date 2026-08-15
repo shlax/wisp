@@ -9,7 +9,7 @@ import scala.concurrent.ExecutionContextExecutor
 import scala.util.control.NonFatal
 
 class RunnableSource[T](src:Source[T])(using ec : ExecutionContextExecutor) 
-  extends SourceFlow[T], RunnableStream[T], SingleNodeFlow[T], SynchronizedFlow[T]{
+  extends SourceFlow[T], RunnableStream[T], SingleNodeFlow[T], ExecutionFlow[T]{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 

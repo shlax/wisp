@@ -5,7 +5,7 @@ import org.wisp.utils.lock.withLock
 import scala.concurrent.ExecutionContextExecutor
 import scala.util.control.NonFatal
 
-trait SynchronizedFlow[T] extends StreamFlow[T], StreamLock {
+trait ExecutionFlow[T] extends StreamFlow[T], StreamLock {
 
   protected def nextWithLock(callback: Response[T] => Unit): Unit
 
