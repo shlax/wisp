@@ -8,6 +8,9 @@ import java.util.concurrent.locks.{Condition, ReentrantLock}
 import scala.concurrent.ExecutionContextExecutor
 import scala.util.control.NonFatal
 
+/**
+ * This class implements a stream source that can be executed on a thread to consume elements from [[Source]]
+ */
 class RunnableSource[T](src:Source[T])(using ec : ExecutionContextExecutor) 
   extends SourceFlow[T], RunnableStream[T], SingleNodeFlow[T], ExecutionFlow[T]{
 
