@@ -110,7 +110,7 @@ class RunnableSourceSink[F, T](src:Source[F], override val sink:Sink[T])(link: R
       }
 
       ended = lock.withLock {
-        if (!dstEnded && value.isEmpty) {
+        if (!dstEnded && value.isEmpty && nodes.isEmpty) {
           condition.await()
         }
 

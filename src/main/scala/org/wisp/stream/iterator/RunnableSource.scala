@@ -30,22 +30,22 @@ class RunnableSource[T](src:Source[T])(using ec : ExecutionContextExecutor)
   protected var started: Boolean = false
 
   override def run():Unit = {
-    var running: Boolean = lock.withLock {
+    var srcEnded: Boolean = lock.withLock {
       if (started) {
         throw new IllegalStateException("started")
       } else {
         started = true
       }
 
-      !ended && sourceException.isEmpty
+      ( ended || sourceException.isDefined ) && nodes.isEmpty
     }
-    
-    while (running){
+
+    while (!srcEnded){
 
       var a = lock.withLock( nodes.poll() )
       while (a != null) {
         var n: Option[T] = None
-        
+
         if ( lock.withLock( !ended && sourceException.isEmpty) ) {
           try {
             n = src.next()
@@ -68,18 +68,18 @@ class RunnableSource[T](src:Source[T])(using ec : ExecutionContextExecutor)
                 a.apply(End)
             }
           }
-          
+
           nodes.poll()
         }
-        
+
       }
 
-      running = lock.withLock {
-        if (!ended && sourceException.isEmpty) {
+      srcEnded = lock.withLock {
+        if (!ended && sourceException.isEmpty && nodes.isEmpty) {
           condition.await()
         }
 
-        !ended && sourceException.isEmpty
+        ( ended || sourceException.isDefined ) && nodes.isEmpty
       }
 
     }
