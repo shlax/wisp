@@ -57,7 +57,9 @@ class RunnableSourceSink[F, T](src:Source[F], override val sink:Sink[T])(link: R
 
     next()
 
-    var ended: Boolean = lock.withLock(dstEnded && value.isEmpty)
+    var ended: Boolean = lock.withLock{
+      dstEnded && value.isEmpty && nodes.isEmpty && (srcEnded || sourceException.isDefined)
+    }
 
     while (!ended) {
 
@@ -112,7 +114,7 @@ class RunnableSourceSink[F, T](src:Source[F], override val sink:Sink[T])(link: R
           condition.await()
         }
 
-        dstEnded && value.isEmpty
+        dstEnded && value.isEmpty && nodes.isEmpty && (srcEnded || sourceException.isDefined)
       }
 
     }
