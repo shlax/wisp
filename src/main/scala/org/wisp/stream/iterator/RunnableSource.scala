@@ -27,45 +27,66 @@ class RunnableSource[T](src:Source[T])(using ec : ExecutionContextExecutor)
     this
   }
 
-  override def run():Unit = lock.withLock {
+  protected var started: Boolean = false
 
-    while (!ended && sourceException.isEmpty){
+  override def run():Unit = {
+    var running: Boolean = lock.withLock {
+      if (started) {
+        throw new IllegalStateException("started")
+      } else {
+        started = true
+      }
 
-      var a = nodes.poll()
+      !ended && sourceException.isEmpty
+    }
+    
+    while (running){
+
+      var a = lock.withLock( nodes.poll() )
       while (a != null) {
         var n: Option[T] = None
-        if (!ended && sourceException.isEmpty) {
+        
+        if ( lock.withLock( !ended && sourceException.isEmpty) ) {
           try {
             n = src.next()
           } catch {
             case NonFatal(ex) =>
-              sourceException = Some(ex)
+              lock.withLock { sourceException = Some(ex) }
               ec.reportFailure(ex)
           }
         }
 
-        if(ended || sourceException.isDefined){
-          a.apply(End)
-        }else{
-          n match {
-            case Some(v) =>
-              a.apply(Next(v))
-            case None =>
-              ended = true
-              a.apply(End)
+        a = lock.withLock {
+          if (ended || sourceException.isDefined) {
+            a.apply(End)
+          } else {
+            n match {
+              case Some(v) =>
+                a.apply(Next(v))
+              case None =>
+                ended = true
+                a.apply(End)
+            }
           }
+          
+          nodes.poll()
         }
-
-        a = nodes.poll()
+        
       }
 
-      if(!ended && sourceException.isEmpty){
-        condition.await()
+      running = lock.withLock {
+        if (!ended && sourceException.isEmpty) {
+          condition.await()
+        }
+
+        !ended && sourceException.isEmpty
       }
 
     }
-    
-    for(e <- sourceException) throw e
+
+    lock.withLock {
+      for (e <- sourceException) throw e
+    }
     
   }
 
