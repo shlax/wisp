@@ -104,7 +104,7 @@ class RunnableSink[T](upstream:StreamFlow[T], override val sink:Sink[T])(using e
   override def applyWithLock(rv: Response[T]): Unit = rv match {
     case Next(v) =>
       if(ended) throw new IllegalStateException("ended")
-      if(value.isDefined) throw new IllegalStateException("dropped value: "+rv)
+      if(value.isDefined) throw new IllegalStateException("dropped value: "+v)
 
       value = Some(v)
       condition.signal()
