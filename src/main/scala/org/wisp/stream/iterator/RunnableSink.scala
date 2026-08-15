@@ -16,7 +16,7 @@ import scala.concurrent.ExecutionContextExecutor
  * @param upstream         the upstream link providing elements
  * @param sink             the underlying sink implementation that processes elements
  */
-class RunnableSink[T](upstream:StreamFlow[T], override val sink:Sink[T])(using ExecutionContextExecutor) extends StreamHandler[T], RunnableStream[T], SinkExecution[T]{
+class RunnableSink[T](upstream:StreamFlow[T], override val sink:Sink[T])(using ec: ExecutionContextExecutor) extends StreamHandler[T], RunnableStream[T], SinkExecution[T]{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
@@ -43,40 +43,57 @@ class RunnableSink[T](upstream:StreamFlow[T], override val sink:Sink[T])(using E
   protected var sinkException: Option[Throwable] = None
 
   protected override def onSinkException(t: Throwable): Unit = {
-    sinkException = Some(t)
+    lock.withLock{ sinkException = Some(t) }
+    ec.reportFailure(t)
   }
 
   /**
    * Executes the sink processing loop on the calling thread. This method blocks until the stream ends.
    * After processing all elements, completes the sink and rethrows last exception that occurred during processing.
    */
-  override def run(): Unit = lock.withLock {
-    if (started) {
-      throw new IllegalStateException("started")
-    } else {
-      started = true
+  override def run(): Unit = {
+
+    lock.withLock{
+      if (started) {
+        throw new IllegalStateException("started")
+      } else {
+        started = true
+      }
     }
 
     next()
 
-    while (!ended) {
+    var end: Boolean = lock.withLock(ended)
 
-      for (v <- value) {
+    while (!end) {
+
+      val actValue:Option[T] = lock.withLock {
+        val tmp = value
         value = None
+        tmp
+      }
+
+      for (v <- actValue) {
         tryApply(v)
         next()
       }
 
-      if (!ended) {
-        condition.await()
+      lock.withLock {
+        if (!ended) {
+          condition.await()
+        }
+
+        end = ended
       }
 
     }
 
     sink.complete()
-    
-    if (sinkException.isDefined) {
-      throw sinkException.get
+
+    lock.withLock {
+      if (sinkException.isDefined) {
+        throw sinkException.get
+      }
     }
 
   }

@@ -25,7 +25,7 @@ class RunnableSourceSink[F, T](src:Source[F], override val sink:Sink[T])(link: R
   protected var value: Option[T] = None
 
   /**
-   * should not to be called inside lock
+   * Requests the next element from the upstream link.
    */
   protected def next(): Unit = {
     prev.next(this)
