@@ -41,8 +41,9 @@ class RunnableSourceSink[F, T](src:Source[F], override val sink:Sink[T])(link: R
 
   protected var sinkException: Option[Throwable] = None
 
-  protected override def onSinkException(t: Throwable): Unit = lock.withLock{
-    sinkException = Some(t)
+  protected override def onSinkException(t: Throwable): Unit ={
+    lock.withLock{ sinkException = Some(t) }
+    ec.reportFailure(t)
   }
 
   override def run(): Unit = {
