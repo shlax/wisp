@@ -91,9 +91,7 @@ class RunnableSink[T](upstream:StreamFlow[T], override val sink:Sink[T])(using e
     sink.complete()
 
     lock.withLock {
-      if (sinkException.isDefined) {
-        throw sinkException.get
-      }
+      for (ex <- sinkException) throw ex
     }
 
   }
