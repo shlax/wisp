@@ -79,7 +79,7 @@ class RunnableSink[T](upstream:StreamFlow[T], override val sink:Sink[T])(using e
       }
 
       lock.withLock {
-        if (!ended) {
+        if (!ended && value.isEmpty) {
           condition.await()
         }
 
