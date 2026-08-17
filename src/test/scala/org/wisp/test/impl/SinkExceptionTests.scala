@@ -80,7 +80,12 @@ class SinkExceptionTests {
         l.add(q)
       }).start
 
-      src.failOn(f).run()
+      try {
+        src.failOn(f).run()
+      }catch {
+        case NonFatal(q) =>
+          ar.set(q)
+      }
 
       Await.ready(f, 5.second)
       val v = f.value.get
