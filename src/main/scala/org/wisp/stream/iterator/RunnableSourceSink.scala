@@ -131,6 +131,7 @@ class RunnableSourceSink[F, T](src:Source[F], override val sink:Sink[T])(link: R
 
     case End =>
       if (dstEnded) throw new IllegalStateException("ended")
+      if(!(srcEnded || sourceException.isDefined)) throw new IllegalStateException("source not ended")
 
       dstEnded = true
       condition.signal()
