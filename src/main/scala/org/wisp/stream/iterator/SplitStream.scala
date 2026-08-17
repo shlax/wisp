@@ -18,11 +18,13 @@ class SplitStream[T](original:StreamFlow[T])(link: SplitStream[T]#Split => Unit)
     def copy: StreamFlow[T]
   }
 
+  protected def createSplitBuilder(): SplitBuilder = SplitBuilder()
+
   protected class SplitBuilder extends Split {
     var links:List[SplitLink] = Nil
 
     override def copy: SplitLink = {
-      val link = SplitLink()
+      val link = createSplitLink()
       links = link :: links
       link
     }
@@ -38,7 +40,7 @@ class SplitStream[T](original:StreamFlow[T])(link: SplitStream[T]#Split => Unit)
   protected var ended = false
 
   protected val nextTo: List[SplitLink] = {
-    val s = SplitBuilder()
+    val s = createSplitBuilder()
     link.apply(s)
     s.links
   }
@@ -69,6 +71,8 @@ class SplitStream[T](original:StreamFlow[T])(link: SplitStream[T]#Split => Unit)
       original.next(SplitStream.this)
     }
   }
+
+  protected def createSplitLink():SplitLink = SplitLink()
 
   protected class SplitLink extends ExecutionFlow[T]{
     override protected val lock: ReentrantLock = SplitStream.this.lock
