@@ -21,32 +21,26 @@ class StreamSource[T](src:Source[T])(using ec : ExecutionContextExecutor) extend
   }
 
   override def nextWithLock(sender: Response[T] => Unit): Unit = {
-    if (sourceException.isDefined) {
+    if (ended || sourceException.isDefined) {
       sender.apply(End)
     } else {
-      if (ended) {
-        sender.apply(End)
-      } else {
-        var n: Option[T] = None
-        try {
-          n = src.next()
-        } catch {
-          case NonFatal(e) =>
-            sourceException = Some(e)
-            ec.reportFailure(e)
-        }
 
-        if (sourceException.isDefined) {
-          sender.apply(End)
-        } else {
-          if (n.isDefined) {
-            sender.apply(Next(n.get))
-          } else {
-            ended = true
-            sender.apply(End)
-          }
-        }
+      var n: Option[T] = None
+      try {
+        n = src.next()
+      } catch {
+        case NonFatal(e) =>
+          sourceException = Some(e)
+          ec.reportFailure(e)
       }
+
+      if (n.isDefined) {
+        sender.apply(Next(n.get))
+      } else {
+        ended = true
+        sender.apply(End)
+      }
+
     }
   }
 
