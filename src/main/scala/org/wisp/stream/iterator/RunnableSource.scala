@@ -47,9 +47,12 @@ class RunnableSource[T](src:Source[T])(using ec : ExecutionContextExecutor)
 
       var a = lock.withLock( nodes.poll() )
       while (a != null) {
-        var n: Option[T] = None
 
-        if ( lock.withLock( !ended && sourceException.isEmpty) ) {
+        if ( lock.withLock( ended || sourceException.isDefined) ) {
+          a.apply(End)
+        } else {
+          var n: Option[T] = None
+
           try {
             n = src.next()
           } catch {
@@ -57,23 +60,17 @@ class RunnableSource[T](src:Source[T])(using ec : ExecutionContextExecutor)
               lock.withLock { sourceException = Some(ex) }
               ec.reportFailure(ex)
           }
-        }
 
-        a = lock.withLock {
-          if (ended || sourceException.isDefined) {
-            a.apply(End)
-          } else {
-            n match {
-              case Some(v) =>
-                a.apply(Next(v))
-              case None =>
-                ended = true
-                a.apply(End)
-            }
+          n match {
+            case Some(v) =>
+              a.apply(Next(v))
+            case None =>
+              lock.withLock { ended = true }
+              a.apply(End)
           }
-
-          nodes.poll()
         }
+
+        a = lock.withLock( nodes.poll() )
 
       }
 
