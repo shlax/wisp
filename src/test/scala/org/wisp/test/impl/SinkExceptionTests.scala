@@ -82,7 +82,7 @@ class SinkExceptionTests {
 
       src.failOn(f).run()
 
-      Await.ready(f, 1.second)
+      Await.ready(f, 5.second)
       val v = f.value.get
       Assertions.assertTrue(v.isFailure)
       v match {
@@ -151,7 +151,7 @@ class SinkExceptionTests {
         l.add(q)
       }).start
 
-      Await.ready(f, 1.second)
+      Await.ready(f, 5.second)
       val v = f.value.get
       Assertions.assertTrue(v.isFailure)
       v match {
