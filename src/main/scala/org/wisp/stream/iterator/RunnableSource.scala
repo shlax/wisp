@@ -92,11 +92,11 @@ class RunnableSource[T](src:Source[T])(using ec : ExecutionContextExecutor)
 
   override def nextWithLock(sender: Response[T] => Unit): Unit = {
     if (ended || sourceException.isDefined) {
-        sender.apply(End)
-      } else {
-        nodes.add(sender)
-        condition.signal()
-      }
+      sender.apply(End)
+    } else {
+      nodes.add(sender)
+      condition.signal()
+    }
   }
 
 }
