@@ -4,7 +4,7 @@ import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.{ActorSystem, Link}
 import org.wisp.stream.Sink
 import org.wisp.stream.extensions.*
-import org.wisp.stream.iterator.{RunnableSink, RunnableSource, RunnableSourceSink, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamTransformer, ZipStream}
+import org.wisp.stream.iterator.{RunnableSink, RunnableSource, RunnableSourceSink, RunnableTransformer, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamTransformer, ZipStream}
 import org.wisp.stream.graph.StreamGraph
 import org.wisp.utils.extensions.*
 
@@ -14,6 +14,7 @@ import scala.concurrent.{Await, Future, Promise}
 import scala.util.Success
 import java.util
 import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
+import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.concurrent.duration.*
 
 class EmptyTests {
@@ -44,6 +45,48 @@ class EmptyTests {
     s.consume(data)
 
     Assertions.assertEquals(Some(Success(0)), f.value)
+  }
+
+  @Test
+  def runnableTransformerMap(): Unit = {
+    val l = Collections.synchronizedList(new util.ArrayList[String]())
+    val acc = new AtomicInteger()
+
+    ActorSystem() || { sys =>
+
+      val tId = Thread.currentThread()
+
+      val data = Seq[Int]().asSource.map { i =>
+        Assertions.assertTrue(Thread.currentThread() == tId)
+        "s:" + i
+      }
+      val src = RunnableSource(data)
+
+      val w = RunnableTransformer.map(src, q =>
+        "w:" + q
+      )
+
+      val sink = new Sink[String] {
+        override def apply(t: String): Unit = {
+          l.add(t)
+        }
+
+        override def complete(): Unit = {
+          acc.incrementAndGet()
+        }
+      }
+
+      val tr = w.start
+
+      val p = StreamSink(w, sink).start
+      src.run()
+      Await.ready(p, 1.second)
+      Await.ready(tr, 1.second)
+
+    }
+
+    Assertions.assertEquals(0, l.size())
+    Assertions.assertEquals(1, acc.get())
   }
 
   @Test

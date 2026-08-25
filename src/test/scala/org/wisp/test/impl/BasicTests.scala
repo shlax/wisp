@@ -4,7 +4,7 @@ import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.remote.{RemoteLink, UdpClient, UdpRouter}
 import org.wisp.stream.Sink
 import org.wisp.stream.extensions.*
-import org.wisp.stream.iterator.{RunnableSink, RunnableSource, RunnableSourceSink, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamTransformer, ZipStream}
+import org.wisp.stream.iterator.{RunnableSink, RunnableSource, RunnableSourceSink, RunnableTransformer, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamTransformer, ZipStream}
 import org.wisp.stream.graph.StreamGraph
 import org.wisp.utils.closeable.*
 import org.wisp.test.impl.serializer.IdName
@@ -273,6 +273,125 @@ class BasicTests {
     }
 
     Assertions.assertEquals(List("d:w:s:0", "d:w:s:1", "d:w:s:2", "d:w:s:3", "d:w:s:4", "d:w:s:5"), l.asScala)
+    Assertions.assertEquals(1, acc.get())
+  }
+
+  @Test
+  def streamTransformerFilter(): Unit = {
+    val l = Collections.synchronizedList(new util.ArrayList[Int]())
+    val acc = new AtomicInteger()
+
+    ActorSystem() || { sys =>
+
+      val tId = Thread.currentThread()
+
+      val data = Seq(0, 1, 2, 3, 4, 5)
+
+      val src = RunnableSource(data.asSource)
+
+      val w = StreamTransformer.filter(src, (q: Int) =>
+        q % 2 == 0
+      )
+
+      val sink = new Sink[Int] {
+        override def apply(t: Int): Unit = {
+          l.add(t)
+        }
+
+        override def complete(): Unit = {
+          acc.incrementAndGet()
+        }
+      }
+
+      val p = StreamSink(w, sink).start
+      src.run()
+      Await.ready(p, 1.second)
+
+    }
+
+    Assertions.assertEquals(List(0, 2, 4), l.asScala)
+    Assertions.assertEquals(1, acc.get())
+  }
+
+  @Test
+  def runnableTransformerFilter(): Unit = {
+    val l = Collections.synchronizedList(new util.ArrayList[Int]())
+    val acc = new AtomicInteger()
+
+    ActorSystem() || { sys =>
+
+      val tId = Thread.currentThread()
+
+      val data = Seq(0, 1, 2, 3, 4, 5)
+
+      val src = RunnableSource(data.asSource)
+
+      val w = RunnableTransformer.filter(src, (q:Int) =>
+        q % 2 == 0
+      )
+
+      val sink = new Sink[Int] {
+        override def apply(t: Int): Unit = {
+          l.add(t)
+        }
+
+        override def complete(): Unit = {
+          acc.incrementAndGet()
+        }
+      }
+
+      val tr = w.start
+
+      val p = StreamSink(w, sink).start
+      src.run()
+      Await.ready(p, 1.second)
+      Await.ready(tr, 1.second)
+
+    }
+
+    Assertions.assertEquals(List(0, 2, 4), l.asScala)
+    Assertions.assertEquals(1, acc.get())
+  }
+
+  @Test
+  def runnableTransformerMap():Unit = {
+    val l = Collections.synchronizedList(new util.ArrayList[String]())
+    val acc = new AtomicInteger()
+
+    ActorSystem() || { sys =>
+
+      val tId = Thread.currentThread()
+
+      val data = Seq(0, 1, 2, 3, 4, 5).asSource.map { i =>
+        Assertions.assertTrue(Thread.currentThread() == tId)
+        "s:" + i
+      }
+      val src = RunnableSource(data)
+
+      val w = RunnableTransformer.map(src, q =>
+        "w:" + q
+      )
+
+      val sink = new Sink[String] {
+        override def apply(t: String): Unit = {
+          l.add(t)
+        }
+
+        override def complete(): Unit = {
+          acc.incrementAndGet()
+        }
+      }
+
+      val tr = w.start
+
+      val p = StreamSink(w, sink).start
+      src.run()
+      Await.ready(p, 1.second)
+      Await.ready(tr, 1.second)
+
+    }
+
+    Assertions.assertEquals(List("w:s:0", "w:s:1", "w:s:2", "w:s:3", "w:s:4", "w:s:5"), l.asScala)
     Assertions.assertEquals(1, acc.get())
   }
 
