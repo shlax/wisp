@@ -6,7 +6,6 @@ import org.wisp.utils.lock.withLock
 import java.util
 import java.util.concurrent.locks.{Condition, ReentrantLock}
 import scala.concurrent.ExecutionContextExecutor
-import scala.util.control.NonFatal
 
 object RunnableTransformer {
 
@@ -76,6 +75,7 @@ class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val col
 
     var calledNone = false
     var src: Option[Source[T]] = None
+
     stream.next(this)
 
     while ( lock.withLock( !ended || value.isDefined ) || src.isDefined || !calledNone) {
