@@ -6,6 +6,7 @@ import org.wisp.utils.lock.withLock
 import java.util
 import java.util.concurrent.locks.{Condition, ReentrantLock}
 import scala.concurrent.ExecutionContextExecutor
+import scala.util.control.NonFatal
 
 object RunnableTransformer {
 
@@ -61,7 +62,19 @@ class RunnableTransformer[F, T](stream:StreamFlow[F], collect: Option[F] => Sour
   protected var started: Boolean = false
 
   protected var value: Option[F] = None
-  var ended = false
+  protected var ended = false
+
+  protected def call(value: Option[F]): Option[Source[T]] = {
+    var opt: Option[Source[T]] = None
+    try {
+      val r = collect.apply(value)
+      opt = Some(r)
+    } catch {
+      case NonFatal(ex) =>
+        ec.reportFailure(ex)
+    }
+    opt
+  }
 
   override def run(): Unit = {
 
@@ -86,10 +99,10 @@ class RunnableTransformer[F, T](stream:StreamFlow[F], collect: Option[F] => Sour
             value = None
             tmp
           }
-          src = Some(collect.apply(actValue))
+          src = call(actValue)
         }else if(ended && !sendNone){
           sendNone = true
-          src = Some(collect.apply(None))
+          src = call(None)
         }
       }
 
