@@ -354,6 +354,46 @@ class BasicTests {
   }
 
   @Test
+  def runnableTransformerFold(): Unit = {
+    val l = Collections.synchronizedList(new util.ArrayList[Int]())
+    val acc = new AtomicInteger()
+
+    ActorSystem() || { sys =>
+
+      val tId = Thread.currentThread()
+
+      val data = Seq(1, 2, 3, 4, 5)
+
+      val src = RunnableSource(data.asSource)
+
+      val w = RunnableTransformer.fold(src, 0, (a, b) =>
+        a + b
+      )
+
+      val sink = new Sink[Int] {
+        override def apply(t: Int): Unit = {
+          l.add(t)
+        }
+
+        override def complete(): Unit = {
+          acc.incrementAndGet()
+        }
+      }
+
+      val tr = w.start
+
+      val p = StreamSink(w, sink).start
+      src.run()
+      Await.ready(p, 1.second)
+      Await.ready(tr, 1.second)
+
+    }
+
+    Assertions.assertEquals(List(15), l.asScala)
+    Assertions.assertEquals(1, acc.get())
+  }
+
+  @Test
   def runnableTransformerMap():Unit = {
     val l = Collections.synchronizedList(new util.ArrayList[String]())
     val acc = new AtomicInteger()

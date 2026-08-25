@@ -229,6 +229,45 @@ class EmptyTests {
   }
 
   @Test
+  def runnableFold(): Unit = {
+    val res = AtomicReference[List[Int]]()
+    val acc = new AtomicInteger()
+
+    ActorSystem() || { sys =>
+
+      val data = Seq[Int]().asSource
+      val src = StreamSource(data)
+
+      val w = RunnableTransformer.fold[Int, List[Int]](src, Nil, (q, w) =>
+        w :: q
+      )
+
+      val sink = new Sink[List[Int]] {
+        override def apply(t: List[Int]): Unit = {
+          if (res.get() != null) {
+            throw new RuntimeException("Already set")
+          }
+          res.set(t)
+        }
+
+        override def complete(): Unit = {
+          acc.incrementAndGet()
+        }
+      }
+
+      val wf = w.start
+
+      val p = StreamSink(w, sink).start
+      Await.ready(p, 1.second)
+      Await.ready(wf, 1.second)
+
+    }
+
+    Assertions.assertEquals(Nil, res.get())
+    Assertions.assertEquals(1, acc.get())
+  }
+
+  @Test
   def streamFold(): Unit = {
     val res = AtomicReference[List[Int]]()
     val acc = new AtomicInteger()

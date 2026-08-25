@@ -64,8 +64,6 @@ class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val col
   protected var value: Option[F] = None
   protected var ended = false
 
-
-
   override def run(): Unit = {
 
     lock.withLock {
@@ -80,7 +78,7 @@ class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val col
     var src: Option[Source[T]] = None
     stream.next(this)
 
-    while (!ended || value.isDefined || src.isDefined){
+    while (!ended || value.isDefined || src.isDefined || !sendNone){
 
       if(src.isEmpty) {
         if( lock.withLock(value.isDefined) ) {
@@ -119,10 +117,13 @@ class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val col
     }
 
     lock.withLock {
+      runEnded = true
       sendEnd()
     }
 
   }
+
+  protected var runEnded: Boolean = false
 
   override protected def applyWithLock(r: Response[F]): Unit = {
     r match {
@@ -141,7 +142,7 @@ class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val col
   }
 
   override protected def nextWithLock(callback: Response[T] => Unit): Unit = {
-    if(ended){
+    if(runEnded){
       callback.apply(End)
     }else {
       nodes.add(callback)
