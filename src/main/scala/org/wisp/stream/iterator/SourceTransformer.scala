@@ -7,6 +7,10 @@ import scala.util.control.NonFatal
 
 trait SourceTransformer[F, T] (using ec: ExecutionContext){
 
+  /**
+   * Collects elements.
+   * Will be called with `None` at the end of the stream.
+   */
   protected val collect: Option[F] => Source[T]
 
   protected def call(value: Option[F]): Option[Source[T]] = {
