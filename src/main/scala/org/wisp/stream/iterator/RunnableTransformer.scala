@@ -74,11 +74,11 @@ class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val col
       }
     }
 
-    var sendNone = false
+    var calledNone = false
     var src: Option[Source[T]] = None
     stream.next(this)
 
-    while (!ended || value.isDefined || src.isDefined || !sendNone){
+    while (!ended || value.isDefined || src.isDefined || !calledNone){
 
       if(src.isEmpty) {
         if( lock.withLock(value.isDefined) ) {
@@ -88,8 +88,8 @@ class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val col
             tmp
           }
           src = call(actValue)
-        }else if(ended && !sendNone){
-          sendNone = true
+        }else if(ended && !calledNone){
+          calledNone = true
           src = call(None)
         }
       }
