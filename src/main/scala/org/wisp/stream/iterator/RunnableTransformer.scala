@@ -50,8 +50,8 @@ object RunnableTransformer {
 
 }
 
-class RunnableTransformer[F, T](stream:StreamFlow[F], collect: Option[F] => Source[T])(using ec : ExecutionContextExecutor)
-  extends RunnableStream[T], SingleNodeFlow[T], ExecutionFlow[T], StreamHandler[F]{
+class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val collect: Option[F] => Source[T])(using ec : ExecutionContextExecutor)
+  extends RunnableStream[T], SingleNodeFlow[T], ExecutionFlow[T], StreamHandler[F], SourceTransformer[F, T]{
 
   override protected val nodes: util.Queue[Response[T] => Unit] = createNodes()
 
@@ -64,17 +64,7 @@ class RunnableTransformer[F, T](stream:StreamFlow[F], collect: Option[F] => Sour
   protected var value: Option[F] = None
   protected var ended = false
 
-  protected def call(value: Option[F]): Option[Source[T]] = {
-    var opt: Option[Source[T]] = None
-    try {
-      val r = collect.apply(value)
-      opt = Some(r)
-    } catch {
-      case NonFatal(ex) =>
-        ec.reportFailure(ex)
-    }
-    opt
-  }
+
 
   override def run(): Unit = {
 

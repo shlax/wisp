@@ -7,7 +7,7 @@ import scala.util.control.NonFatal
 
 trait SinkExecution[T](using executionContext: ExecutionContext) {
 
-  def sink:Sink[T]
+  protected val sink:Sink[T]
 
   protected def onSinkException(e:Throwable):Unit
 

@@ -9,7 +9,7 @@ import scala.util.control.NonFatal
 /**
  * for each element of `stream` `sink.apply(...)` is called
  */
-class StreamSink[T](stream :StreamFlow[T], override val sink:Sink[T])(using ExecutionContextExecutor) extends StreamHandler[T], SinkExecution[T]{
+class StreamSink[T](stream :StreamFlow[T], override protected val sink:Sink[T])(using ExecutionContextExecutor) extends StreamHandler[T], SinkExecution[T]{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
   

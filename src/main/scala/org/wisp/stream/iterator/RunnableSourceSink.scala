@@ -7,7 +7,7 @@ import java.util.concurrent.locks.{Condition, ReentrantLock}
 import scala.concurrent.ExecutionContextExecutor
 import scala.util.control.NonFatal
 
-class RunnableSourceSink[F, T](src:Source[F], override val sink:Sink[T])(link: RunnableSourceSink[F, T] => StreamFlow[T])(using ec : ExecutionContextExecutor)
+class RunnableSourceSink[F, T](src:Source[F], override protected val sink:Sink[T])(link: RunnableSourceSink[F, T] => StreamFlow[T])(using ec : ExecutionContextExecutor)
   extends SourceFlow[F], RunnableStream[F], SingleNodeFlow[F], SinkExecution[T], StreamHandler[T], ExecutionFlow[F] {
 
   protected override val lock:ReentrantLock = new ReentrantLock()

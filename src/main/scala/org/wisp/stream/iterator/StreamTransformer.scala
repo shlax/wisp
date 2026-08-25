@@ -52,8 +52,8 @@ object StreamTransformer {
  * @param stream source stream
  * @param collect function to apply to each element of the source stream. `End` of stream will be mapped to `None`
  */
-class StreamTransformer[F, T](stream:StreamFlow[F], collect: Option[F] => Source[T])(using ec : ExecutionContextExecutor) 
-  extends StreamHandler[F], SingleNodeFlow[T], ExecutionFlow[T]{
+class StreamTransformer[F, T](stream:StreamFlow[F], override protected val collect: Option[F] => Source[T])(using ec : ExecutionContextExecutor)
+  extends StreamHandler[F], SingleNodeFlow[T], ExecutionFlow[T], SourceTransformer[F, T]{
 
   override protected val lock: ReentrantLock = ReentrantLock()
 
@@ -82,18 +82,6 @@ class StreamTransformer[F, T](stream:StreamFlow[F], collect: Option[F] => Source
       }
     }
     hasNext
-  }
-
-  protected def call(value:Option[F]):Option[Source[T]] = {
-    var opt: Option[Source[T]] = None
-    try {
-      val r = collect.apply(value)
-      opt = Some(r)
-    } catch {
-      case NonFatal(ex) =>
-        ec.reportFailure(ex)
-    }
-    opt
   }
 
   protected def applyWithLock(sr:Response[F]): Unit = sr match {
