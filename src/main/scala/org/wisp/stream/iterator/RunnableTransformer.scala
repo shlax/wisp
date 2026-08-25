@@ -109,8 +109,14 @@ class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val col
       }
 
       lock.withLock {
-        if( ( (value.isEmpty && src.isEmpty) || nodes.isEmpty ) && !ended ){
-          condition.await()
+        if(ended){
+          if(nodes.isEmpty){
+            condition.await()
+          }
+        }else{
+          if( (value.isEmpty && src.isEmpty) || nodes.isEmpty ) {
+            condition.await()
+          }
         }
       }
 
@@ -128,6 +134,9 @@ class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val col
   override protected def applyWithLock(r: Response[F]): Unit = {
     r match {
       case Next(v) =>
+        if(ended){
+          throw new IllegalStateException("ended")
+        }
         if (value.isDefined){
           throw new IllegalStateException("dropped value: " + v)
         }
