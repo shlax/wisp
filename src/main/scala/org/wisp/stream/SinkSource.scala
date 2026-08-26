@@ -15,16 +15,18 @@ object SinkSource {
  */
 class SinkSource[T] {
 
-  private val lock = new ReentrantLock()
-  private val condition = lock.newCondition()
+  protected val lock = new ReentrantLock()
+  protected val condition = lock.newCondition()
 
-  private var value:Option[T] = None
-  private var ended = false
+  protected var value:Option[T] = None
+  protected var ended = false
 
   /**
    * Source that can be used to read elements from the sink.
    */
-  val source:Source[T] = new Source[T] {
+  val source:Source[T] = createSource()
+
+  protected def createSource(): Source[T] = new Source[T] {
     override def next(): Option[T] = lock.withLock {
       while (value.isEmpty && !ended) condition.await()
       val v = value
@@ -37,7 +39,9 @@ class SinkSource[T] {
   /**
    * Sink that can be used to write elements to the source.
    */
-  val sink:Sink[T] = new Sink[T] {
+  val sink:Sink[T] = createSink()
+
+  protected def createSink(): Sink[T] = new Sink[T] {
     override def apply(t: T): Unit = lock.withLock {
       if (ended) throw new IllegalStateException("ended")
       while (value.isDefined) condition.await()
