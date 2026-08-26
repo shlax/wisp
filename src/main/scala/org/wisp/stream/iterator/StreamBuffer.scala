@@ -9,6 +9,7 @@ import scala.concurrent.ExecutionContextExecutor
  * @param size maximum no of elements to prefetch
  */
 class StreamBuffer[T](stream:StreamFlow[T], size:Int)(using ExecutionContextExecutor) extends StreamHandler[T], SingleNodeFlow[T], ExecutionFlow[T]{
+  if(size <= 0) throw new IllegalArgumentException("size <= 0")
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
