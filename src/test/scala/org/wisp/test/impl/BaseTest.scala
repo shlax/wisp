@@ -83,7 +83,7 @@ class BaseTest {
   def sinkSourceConsume():Unit = {
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    val s = SinkSource[Int]()
+    val s = SinkSource[Int](2)
 
     val f1 = Future[List[Int]] {
       var l:List[Int] = Nil
@@ -94,13 +94,13 @@ class BaseTest {
     }
 
     val f2 = Future[Unit] {
-      s.sink.consume( Seq(1,2).asSource )
+      s.sink.consume( Seq(1,2,3).asSource )
     }
 
     Await.ready(f1, 1.second)
     Await.ready(f2, 1.second)
 
-    Assertions.assertEquals(f1.value.get.get, List(2,1))
+    Assertions.assertEquals(f1.value.get.get, List(3,2,1))
 
   }
 

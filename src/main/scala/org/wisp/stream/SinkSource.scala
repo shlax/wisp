@@ -2,6 +2,7 @@ package org.wisp.stream
 
 import org.wisp.utils.lock.withLock
 import java.util.concurrent.locks.ReentrantLock
+import java.util
 
 object SinkSource {
 
@@ -12,14 +13,19 @@ object SinkSource {
 
 /**
  * Provides a [[Source]] and [[Sink]] that can be used to communicate between different threads.
+ * @param bufferSize maximum no of elements to buffer
  */
-class SinkSource[T] {
+class SinkSource[T](bufferSize:Int = 1) {
 
   protected val lock = new ReentrantLock()
   protected val condition = lock.newCondition()
 
-  protected var value:Option[T] = None
   protected var ended = false
+  protected val queue:util.Queue[T] = createQueue(bufferSize)
+
+  protected def createQueue(size:Int): util.Queue[T] = {
+    new util.LinkedList[T]()
+  }
 
   /**
    * Source that can be used to read elements from the sink.
@@ -28,11 +34,10 @@ class SinkSource[T] {
 
   protected def createSource(): Source[T] = new Source[T] {
     override def next(): Option[T] = lock.withLock {
-      while (value.isEmpty && !ended) condition.await()
-      val v = value
-      value = None
+      while (queue.isEmpty && !ended) condition.await()
+      val v = queue.poll()
       condition.signal()
-      v
+      Option(v)
     }
   }
 
@@ -43,15 +48,16 @@ class SinkSource[T] {
 
   protected def createSink(): Sink[T] = new Sink[T] {
     override def apply(t: T): Unit = lock.withLock {
-      if (ended) throw new IllegalStateException("ended")
-      while (value.isDefined) condition.await()
-      value = Some(t)
+      if(t == null) throw new NullPointerException()
+      if(ended) throw new IllegalStateException("ended")
+      while (queue.size() >= bufferSize) condition.await()
+      queue.add(t)
       condition.signal()
     }
 
     override def complete(): Unit = lock.withLock {
       if (ended) throw new IllegalStateException("ended")
-      while (value.isDefined) condition.await()
+      while (!queue.isEmpty) condition.await()
       ended = true
       condition.signal()
     }
