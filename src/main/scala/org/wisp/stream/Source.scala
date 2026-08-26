@@ -10,13 +10,14 @@ object Source{
   /**
    * Source containing only the specified object
    */
-  def apply[T](value:T) : Source[T] = {
+  def apply[T](value:T*) : Source[T] = {
     new Source[T] {
-      private var ended = false
+      private var cnt:Int = 0
       override def next(): Option[T] = {
-        if (ended) None else {
-          ended = true
-          Some(value)
+        if (cnt == value.size) None else {
+          val v = Some(value(cnt))
+          cnt += 1
+          v
         }
       }
     }
