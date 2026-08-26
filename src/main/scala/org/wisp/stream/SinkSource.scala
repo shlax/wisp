@@ -16,6 +16,7 @@ object SinkSource {
  * @param bufferSize maximum no of elements to buffer
  */
 class SinkSource[T](bufferSize:Int = 1) {
+  if(bufferSize <= 0) throw new IllegalArgumentException("bufferSize <= 0")
 
   protected val lock = new ReentrantLock()
   protected val condition = lock.newCondition()
