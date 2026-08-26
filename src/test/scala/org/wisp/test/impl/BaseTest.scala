@@ -2,7 +2,11 @@ package org.wisp.test.impl
 
 import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.exceptions.UndeliveredException
+import org.wisp.stream.SinkSource
 import org.wisp.{Link, Message}
+
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.{Await, Future}
 
 class BaseTest {
 
@@ -45,5 +49,34 @@ class BaseTest {
     Assertions.assertEquals(m.get.value, 3)
 
   }
+
+  @Test
+  def sinkSource():Unit = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+
+    val s = SinkSource[Int]()
+
+    val f1 = Future[List[Int]] {
+      var l:List[Int] = Nil
+      s.source.forEach{ i =>
+        l = i :: l
+      }
+      l
+    }
+
+    val f2 = Future[Unit] {
+      val x = s.sink
+      x.apply(1)
+      x.apply(2)
+      x.complete()
+    }
+
+    Await.ready(f1, 1.second)
+    Await.ready(f2, 1.second)
+
+    Assertions.assertEquals(f1.value.get.get, List(2,1))
+
+  }
+
 
 }
