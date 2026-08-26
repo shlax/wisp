@@ -1,6 +1,9 @@
 package org.wisp
 
 import org.wisp.stream.Source
+import org.wisp.utils.lock.withLock
+
+import java.util.concurrent.locks.ReentrantLock
 import scala.util.{Failure, Success, Try}
 
 object Consumer {
@@ -136,6 +139,17 @@ trait Consumer[-T] extends ( T => Unit ) {
    */
   def consume(s: Source[T]): Unit = {
     s.forEach(this)
+  }
+
+  def withSynchronization(): Consumer[T] = {
+    val self = this
+    new Consumer[T]{
+      private val lock = new ReentrantLock()
+
+      override def apply(t: T): Unit = lock.withLock{
+        self.apply(t)
+      }
+    }
   }
 
 }

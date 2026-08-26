@@ -30,7 +30,7 @@ abstract class AbstractObservable[T] extends Observable[T]{
   /**
    * @return synchronized view over this [[Observable]]
    */
-  def withSynchronization(): Observable[T] = {
+  override def withSynchronization(): Observable[T] = {
     val self = this
     new Observable[T]{
       private val lock = ReentrantLock()

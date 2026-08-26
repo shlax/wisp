@@ -1,6 +1,9 @@
 package org.wisp.stream
 
 import org.wisp.Consumer
+import org.wisp.utils.lock.withLock
+
+import java.util.concurrent.locks.ReentrantLock
 
 object Sink {
 
@@ -95,9 +98,29 @@ trait Sink[-T] extends Consumer[T]{
     }
   }
 
+  /**
+   * Consume [[org.wisp.stream.Source]] and call `complete`
+   */
   override def consume(s:Source[T]):Unit = {
     super.consume(s)
     complete()
+  }
+
+  /**
+   * @return synchronized view over this [[Sink]]
+   */
+  override def withSynchronization(): Sink[T] = {
+    val self = this
+    new Sink[T]{
+      private val lock = new ReentrantLock()
+
+      override def apply(t: T): Unit = lock.withLock{
+        self.apply(t)
+      }
+      override def complete(): Unit = lock.withLock{
+        self.complete()
+      }
+    }
   }
 
 }

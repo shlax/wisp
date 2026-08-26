@@ -1,5 +1,9 @@
 package org.wisp.stream
 
+import org.wisp.utils.lock.withLock
+
+import java.util.concurrent.locks.ReentrantLock
+
 object Source{
 
   /**
@@ -145,6 +149,20 @@ trait Source[+T]{
     while (v.isDefined){
       consumer.apply(v.get)
       v = next()
+    }
+  }
+
+  /**
+   * @return synchronized view over this [[Source]]
+   */
+  def withSynchronization(): Source[T] = {
+    val self = this
+    new Source[T](){
+      private val lock = new ReentrantLock()
+
+      override def next(): Option[T] = lock.withLock {
+        self.next()
+      }
     }
   }
 
