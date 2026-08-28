@@ -15,7 +15,7 @@ trait StreamFlow[T] {
    * with a [[Response]] instance. The callback will receive either the next element
    * wrapped in [[Some]] or [[None]] to signify the end of the stream.
    *
-   * Per one `next(callback)` call, exactly one `callback` is going to be called with [[Next]] or [[End]] message.
+   * Per one `next(callback)` call, exactly one `callback` is going to be called with [[Some]] or [[None]] message.
    *
    * @param callback A function to process the [[Response]] received from the stream.
    * @param executionContext An implicit `ExecutionContextExecutor` used to execute the callback asynchronously.
