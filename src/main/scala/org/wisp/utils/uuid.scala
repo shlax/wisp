@@ -8,7 +8,7 @@ object uuid {
   /**
    * generate random UUID using ThreadLocalRandom
    */
-  def generate():UUID = {
+  def generateUUID():UUID = {
     val timestamp = System.currentTimeMillis()
     val random = ThreadLocalRandom.current()
 

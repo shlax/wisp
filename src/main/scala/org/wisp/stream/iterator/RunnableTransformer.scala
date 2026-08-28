@@ -52,7 +52,7 @@ object RunnableTransformer {
 class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val collect: Option[F] => Source[T])(using ec : ExecutionContextExecutor)
   extends RunnableStream[T], SingleNodeFlow[T], ExecutionFlow[T], StreamHandler[F], SourceTransformer[F, T]{
 
-  override protected val nodes: util.Queue[Response[T] => Unit] = createNodes()
+  override protected val nodes: util.Queue[Option[T] => Unit] = createNodes()
 
   override protected val lock: ReentrantLock = new ReentrantLock()
 
@@ -99,7 +99,7 @@ class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val col
         source.next() match {
           case Some(v) =>
             val n = lock.withLock( nodes.poll() )
-            n.apply(Next(v))
+            n.apply(Some(v))
           case None =>
             src = None
             if(! lock.withLock(ended) ) {
@@ -131,9 +131,9 @@ class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val col
 
   protected var runEnded: Boolean = false
 
-  override protected def applyWithLock(r: Response[F]): Unit = {
+  override protected def applyWithLock(r: Option[F]): Unit = {
     r match {
-      case Next(v) =>
+      case Some(v) =>
         if(ended){
           throw new IllegalStateException("ended")
         }
@@ -141,7 +141,7 @@ class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val col
           throw new IllegalStateException("dropped value: " + v)
         }
         value = Some(v)
-      case End =>
+      case None =>
         if (value.nonEmpty){
           throw new IllegalStateException("not ended")
         }
@@ -150,9 +150,9 @@ class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val col
     condition.signal()
   }
 
-  override protected def nextWithLock(callback: Response[T] => Unit): Unit = {
+  override protected def nextWithLock(callback: Option[T] => Unit): Unit = {
     if(runEnded){
-      callback.apply(End)
+      callback.apply(None)
     }else {
       nodes.add(callback)
       condition.signal()

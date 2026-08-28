@@ -36,14 +36,14 @@ class StreamSink[T](stream :StreamFlow[T], override protected val sink:Sink[T])(
     sinkException = Some(t)
   }
 
-  override def applyWithLock(value:Response[T]): Unit = value match {
-    case Next(v) =>
+  override def applyWithLock(value:Option[T]): Unit = value match {
+    case Some(v) =>
       if(completed.isCompleted) throw new IllegalStateException("ended")
 
       tryApply(v)
       stream.next(this)
 
-    case End =>
+    case None =>
       var err:Option[Throwable] = None
 
       try {

@@ -12,7 +12,7 @@ class RunnableSourceSink[F, T](src:Source[F], override protected val sink:Sink[T
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
-  protected val nodes: util.Queue[Response[F] => Unit] = createNodes()
+  protected val nodes: util.Queue[Option[F] => Unit] = createNodes()
 
   protected val condition: Condition = lock.newCondition()
   protected val prev: StreamFlow[T] = link.apply(this)
@@ -78,7 +78,7 @@ class RunnableSourceSink[F, T](src:Source[F], override protected val sink:Sink[T
       while (a != null) {
 
         if ( lock.withLock( srcEnded || sourceException.isDefined) ){
-          a.apply(End)
+          a.apply(None)
         } else {
           var n: Option[F] = None
 
@@ -92,10 +92,10 @@ class RunnableSourceSink[F, T](src:Source[F], override protected val sink:Sink[T
 
           n match {
             case Some(v) =>
-              a.apply(Next(v))
+              a.apply(Some(v))
             case None =>
               lock.withLock { srcEnded = true }
-              a.apply(End)
+              a.apply(None)
           }
 
         }
@@ -121,15 +121,15 @@ class RunnableSourceSink[F, T](src:Source[F], override protected val sink:Sink[T
 
   }
 
-  protected def applyWithLock(rv:Response[T]): Unit = rv match {
-    case Next(v) =>
+  protected def applyWithLock(rv:Option[T]): Unit = rv match {
+    case Some(v) =>
       if (dstEnded) throw new IllegalStateException("ended")
       if (value.isDefined) throw new IllegalStateException("dropped value: " + v)
 
       value = Some(v)
       condition.signal()
 
-    case End =>
+    case None =>
       if (dstEnded) throw new IllegalStateException("ended")
       if(!(srcEnded || sourceException.isDefined)) throw new IllegalStateException("source not ended")
 
@@ -137,9 +137,9 @@ class RunnableSourceSink[F, T](src:Source[F], override protected val sink:Sink[T
       condition.signal()
   }
 
-  override def nextWithLock(sender: Response[F] => Unit): Unit = {
+  override def nextWithLock(sender: Option[F] => Unit): Unit = {
     if(sourceException.isDefined || srcEnded){
-      sender.apply(End)
+      sender.apply(None)
     }else {
       nodes.add(sender)
       condition.signal()

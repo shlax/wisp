@@ -19,7 +19,7 @@ class StreamBuffer[T](stream:StreamFlow[T], size:Int)(using ExecutionContextExec
     util.LinkedList[T]()
   }
 
-  protected override val nodes: util.Queue[Response[T] => Unit] = createNodes()
+  protected override val nodes: util.Queue[Option[T] => Unit] = createNodes()
 
   protected var requested = false
   protected var ended = false
@@ -33,23 +33,23 @@ class StreamBuffer[T](stream:StreamFlow[T], size:Int)(using ExecutionContextExec
     }
   }
 
-  override def nextWithLock(sender: Response[T] => Unit): Unit = {
+  override def nextWithLock(sender: Option[T] => Unit): Unit = {
     val e = queue.poll()
     if (e == null) {
       if (ended) {
-        sender.apply(End)
+        sender.apply(None)
       } else {
         nodes.add(sender)
         next()
       }
     } else {
-      sender.apply(Next(e))
+      sender.apply(Some(e))
       next()
     }
   }
 
-  override def applyWithLock(t: Response[T]): Unit = t match {
-    case Next(v) =>
+  override def applyWithLock(t: Option[T]): Unit = t match {
+    case Some(v) =>
       if(ended){
         throw new IllegalStateException("ended")
       }
@@ -59,12 +59,12 @@ class StreamBuffer[T](stream:StreamFlow[T], size:Int)(using ExecutionContextExec
       if (n == null) {
         queue.add(v)
       } else {
-        n.apply(Next(v))
+        n.apply(Some(v))
       }
 
       next()
 
-    case End =>
+    case None =>
       if(ended) throw new IllegalStateException("ended")
 
       requested = false

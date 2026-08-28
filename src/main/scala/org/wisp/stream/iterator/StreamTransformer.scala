@@ -57,7 +57,7 @@ class StreamTransformer[F, T](stream:StreamFlow[F], override protected val colle
 
   override protected val lock: ReentrantLock = ReentrantLock()
 
-  protected override val nodes:util.Queue[Response[T] => Unit] = createNodes()
+  protected override val nodes:util.Queue[Option[T] => Unit] = createNodes()
 
   protected var source: Option[Source[T]] = None
   protected var ended = false
@@ -76,7 +76,7 @@ class StreamTransformer[F, T](stream:StreamFlow[F], override protected val colle
       optVal match {
         case Some(v) =>
           val n = nodes.poll()
-          n.apply(Next(v))
+          n.apply(Some(v))
         case None =>
           hasNext = false
       }
@@ -84,8 +84,8 @@ class StreamTransformer[F, T](stream:StreamFlow[F], override protected val colle
     hasNext
   }
 
-  protected def applyWithLock(sr:Response[F]): Unit = sr match {
-    case Next(v) =>
+  protected def applyWithLock(sr:Option[F]): Unit = sr match {
+    case Some(v) =>
       if (ended) throw new IllegalStateException("ended")
       if (nodes.isEmpty) throw new IllegalStateException("no workers found for " + v)
       if (source.isDefined) throw new IllegalStateException("dropped value " + v)
@@ -102,7 +102,7 @@ class StreamTransformer[F, T](stream:StreamFlow[F], override protected val colle
         stream.next(this)
       }
 
-    case End =>
+    case None =>
       if (source.isDefined) throw new IllegalStateException("dropped value " + source.get)
       ended = true
 
@@ -120,9 +120,9 @@ class StreamTransformer[F, T](stream:StreamFlow[F], override protected val colle
 
   }
 
-  override def nextWithLock(from: Response[T] => Unit): Unit = {
+  override def nextWithLock(from: Option[T] => Unit): Unit = {
     if (ended && source.isEmpty) {
-      from.apply(End)
+      from.apply(None)
     } else {
       var optVal:Option[T] = None
       if(source.isDefined){
@@ -138,9 +138,9 @@ class StreamTransformer[F, T](stream:StreamFlow[F], override protected val colle
       }
 
       if (optVal.isDefined) {
-        from.apply(Next(optVal.get))
+        from.apply(optVal)
       } else if(ended){
-        from.apply(End)
+        from.apply(None)
       } else {
         nodes.add(from)
         stream.next(this)

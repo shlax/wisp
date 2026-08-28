@@ -13,7 +13,7 @@ class ZipStream[T](streams:Iterable[StreamFlow[T]])(using ExecutionContextExecut
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
-  protected override val nodes: util.Queue[Response[T] => Unit] = createNodes()
+  protected override val nodes: util.Queue[Option[T] => Unit] = createNodes()
 
   protected class State(val link:StreamFlow[T]) extends StreamHandler[T] {
 
@@ -39,17 +39,17 @@ class ZipStream[T](streams:Iterable[StreamFlow[T]])(using ExecutionContextExecut
       }
     }
 
-    def send(ref: Response[T] => Unit):Unit = {
+    def send(ref: Option[T] => Unit):Unit = {
       val v = value.get
       value = None
-      ref.apply(Next(v))
+      ref.apply(Some(v))
       requestNext()
     }
 
-    override def applyWithLock(rv: Response[T]): Unit = rv match {
-      case Next(v) =>
+    override def applyWithLock(rv: Option[T]): Unit = rv match {
+      case Some(v) =>
         next(v)
-      case End =>
+      case None =>
         end()
     }
 
@@ -64,7 +64,7 @@ class ZipStream[T](streams:Iterable[StreamFlow[T]])(using ExecutionContextExecut
       if (n == null) {
         value = Some(v)
       } else {
-        n.apply(Next(v))
+        n.apply(Some(v))
         requestNext()
       }
 
@@ -103,14 +103,14 @@ class ZipStream[T](streams:Iterable[StreamFlow[T]])(using ExecutionContextExecut
     state.find(_.hasValue)
   }
 
-  override def nextWithLock(sender: Response[T] => Unit): Unit = {
+  override def nextWithLock(sender: Option[T] => Unit): Unit = {
     select match {
       case Some(n) =>
         n.send(sender)
 
       case None =>
         if (state.forall(_.isFinished)) {
-          sender.apply(End)
+          sender.apply(None)
         } else {
           nodes.add(sender)
           for (x <- state) x.requestNext()

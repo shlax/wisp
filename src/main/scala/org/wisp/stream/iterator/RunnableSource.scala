@@ -16,7 +16,7 @@ class RunnableSource[T](src:Source[T])(using ec : ExecutionContextExecutor)
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
-  protected val nodes:util.Queue[Response[T] => Unit] = createNodes()
+  protected val nodes:util.Queue[Option[T] => Unit] = createNodes()
 
   protected val condition: Condition = lock.newCondition()
   
@@ -49,7 +49,7 @@ class RunnableSource[T](src:Source[T])(using ec : ExecutionContextExecutor)
       while (a != null) {
 
         if ( lock.withLock( ended || sourceException.isDefined) ) {
-          a.apply(End)
+          a.apply(None)
         } else {
           var n: Option[T] = None
 
@@ -63,10 +63,10 @@ class RunnableSource[T](src:Source[T])(using ec : ExecutionContextExecutor)
 
           n match {
             case Some(v) =>
-              a.apply(Next(v))
+              a.apply(Some(v))
             case None =>
               lock.withLock { ended = true }
-              a.apply(End)
+              a.apply(None)
           }
         }
 
@@ -90,9 +90,9 @@ class RunnableSource[T](src:Source[T])(using ec : ExecutionContextExecutor)
     
   }
 
-  override def nextWithLock(sender: Response[T] => Unit): Unit = {
+  override def nextWithLock(sender: Option[T] => Unit): Unit = {
     if (ended || sourceException.isDefined) {
-      sender.apply(End)
+      sender.apply(None)
     } else {
       nodes.add(sender)
       condition.signal()

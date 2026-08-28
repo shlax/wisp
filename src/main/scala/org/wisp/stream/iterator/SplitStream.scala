@@ -31,8 +31,8 @@ class SplitStream[T](original:StreamFlow[T])(link: SplitStream[T]#Split => Unit)
 
   }
 
-  protected def createNodes(): util.Queue[Response[T] => Unit] = {
-    util.LinkedList[Response[T] => Unit]()
+  protected def createNodes(): util.Queue[Option[T] => Unit] = {
+    util.LinkedList[Option[T] => Unit]()
   }
 
   protected var requested = true
@@ -50,14 +50,14 @@ class SplitStream[T](original:StreamFlow[T])(link: SplitStream[T]#Split => Unit)
     pullNext()
   }
 
-  override def applyWithLock(rv:Response[T]): Unit = rv match {
-    case Next(v) =>
+  override def applyWithLock(rv:Option[T]): Unit = rv match {
+    case Some(v) =>
       if(!requested) throw new IllegalStateException("not requested")
       requested = false
 
       for (n <- nextTo) n.next(v)
       pullNext()
-    case End =>
+    case None =>
       if(!requested) throw new IllegalStateException("not requested")
       requested = false
 
@@ -77,28 +77,28 @@ class SplitStream[T](original:StreamFlow[T])(link: SplitStream[T]#Split => Unit)
   protected class SplitLink extends ExecutionFlow[T]{
     override protected val lock: ReentrantLock = SplitStream.this.lock
 
-    val nodes: util.Queue[Response[T] => Unit] = createNodes()
+    val nodes: util.Queue[Option[T] => Unit] = createNodes()
 
     def next(v:T): Unit = {
       val n = nodes.poll()
       if(n == null){
         throw new IllegalStateException("nodes are empty")
       }
-      n.apply(Next(v))
+      n.apply(Some(v))
     }
 
     def end(): Unit = {
       var n = nodes.poll()
       if(n == null) throw new IllegalStateException("nodes are empty")
       while(n != null){
-        n.apply(End)
+        n.apply(None)
         n = nodes.poll()
       }
     }
 
-    override def nextWithLock(from: Response[T] => Unit): Unit = {
+    override def nextWithLock(from: Option[T] => Unit): Unit = {
       if (ended) {
-        from.apply(End)
+        from.apply(None)
       } else {
         nodes.add(from)
         pullNext()

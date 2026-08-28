@@ -26,7 +26,7 @@ class Message[+T, -R](val value:T, val sender:Link[R, T]) {
   val jfrId:Option[UUID] = {
     val event = MessageCreated()
     if(event.shouldCommit){
-      val id = uuid.generate()
+      val id = uuid.generateUUID()
       event.uuid = id.toString
       if(value != null) {
         event.value = value.toString

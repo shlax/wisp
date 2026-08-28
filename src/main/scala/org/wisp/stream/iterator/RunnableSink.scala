@@ -99,14 +99,14 @@ class RunnableSink[T](upstream:StreamFlow[T], override protected val sink:Sink[T
   /**
    * Handles messages from the upstream link.
    */
-  override def applyWithLock(rv: Response[T]): Unit = rv match {
-    case Next(v) =>
+  override def applyWithLock(rv: Option[T]): Unit = rv match {
+    case Some(v) =>
       if(ended) throw new IllegalStateException("ended")
       if(value.isDefined) throw new IllegalStateException("dropped value: "+v)
 
       value = Some(v)
       condition.signal()
-    case End =>
+    case None =>
       if(ended) throw new IllegalStateException("ended")
       
       ended = true

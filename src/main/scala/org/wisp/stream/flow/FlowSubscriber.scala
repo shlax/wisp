@@ -1,6 +1,6 @@
 package org.wisp.stream.flow
 
-import org.wisp.stream.iterator.{End, Next, Response, SingleNodeFlow, StreamFlow, StreamHandler, ExecutionFlow}
+import org.wisp.stream.iterator.{SingleNodeFlow, StreamFlow, StreamHandler, ExecutionFlow}
 import org.wisp.utils.lock.withLock
 
 import java.util
@@ -13,7 +13,7 @@ import scala.concurrent.ExecutionContext
  */
 class FlowSubscriber[T](publisher: Flow.Publisher[T])(using ec: ExecutionContext) extends ExecutionFlow[T], SingleNodeFlow[T], Flow.Subscriber[T] {
   override protected val lock: ReentrantLock = ReentrantLock()
-  override protected val nodes: util.Queue[Response[T] => Unit] = createNodes()
+  override protected val nodes: util.Queue[Option[T] => Unit] = createNodes()
 
   protected var subscription:Option[Flow.Subscription] = None
   protected var requestedCount = 0
@@ -43,7 +43,7 @@ class FlowSubscriber[T](publisher: Flow.Publisher[T])(using ec: ExecutionContext
     if(requestedCount < 0){
       throw new IllegalStateException("requestedCount < 0")
     }
-    n.apply(Next(item))
+    n.apply(Some(item))
     if(requestedCount == 0) {
       requestNext()
     }
@@ -54,9 +54,9 @@ class FlowSubscriber[T](publisher: Flow.Publisher[T])(using ec: ExecutionContext
     sendEnd()
   }
 
-  override def nextWithLock(from: Response[T] => Unit): Unit = {
+  override def nextWithLock(from: Option[T] => Unit): Unit = {
       if(ended){
-        from.apply(End)
+        from.apply(None)
       }else{
         nodes.add(from)
         requestNext()
