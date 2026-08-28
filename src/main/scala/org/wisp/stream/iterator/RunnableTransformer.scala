@@ -78,7 +78,9 @@ class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val col
 
     stream.next(this)
 
-    while ( lock.withLock( !ended || value.isDefined ) || src.isDefined || !calledNone) {
+    var notEnded = lock.withLock( !ended || value.isDefined )
+    
+    while ( notEnded || src.isDefined || !calledNone) {
 
       if(src.isEmpty) {
         if( lock.withLock(value.isDefined) ) {
@@ -108,7 +110,7 @@ class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val col
         }
       }
 
-      lock.withLock {
+      notEnded = lock.withLock {
         if(ended){
           if(nodes.isEmpty){
             condition.await()
@@ -118,6 +120,8 @@ class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val col
             condition.await()
           }
         }
+
+        !ended || value.isDefined
       }
 
     }
