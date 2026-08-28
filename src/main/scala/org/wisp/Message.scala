@@ -1,8 +1,8 @@
 package org.wisp
 
 import org.wisp.jfr.{MessageCreated, MessageProcessed}
+import org.wisp.utils.uuid.*
 import java.util.UUID
-import org.wisp.utils.uuid
 
 object Message {
 
@@ -26,7 +26,7 @@ class Message[+T, -R](val value:T, val sender:Link[R, T]) {
   val jfrId:Option[UUID] = {
     val event = MessageCreated()
     if(event.shouldCommit){
-      val id = uuid.generateUUID()
+      val id = generateUUID()
       event.uuid = id.toString
       if(value != null) {
         event.value = value.toString
