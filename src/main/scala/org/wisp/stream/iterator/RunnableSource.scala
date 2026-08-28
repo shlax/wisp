@@ -62,8 +62,8 @@ class RunnableSource[T](src:Source[T])(using ec : ExecutionContextExecutor)
           }
 
           n match {
-            case Some(v) =>
-              a.apply(Some(v))
+            case sv : Some[T] =>
+              a.apply(sv)
             case None =>
               lock.withLock { ended = true }
               a.apply(None)

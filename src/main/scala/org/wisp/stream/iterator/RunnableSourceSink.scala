@@ -91,8 +91,8 @@ class RunnableSourceSink[F, T](src:Source[F], override protected val sink:Sink[T
           }
 
           n match {
-            case Some(v) =>
-              a.apply(Some(v))
+            case sv : Some[F] =>
+              a.apply(sv)
             case None =>
               lock.withLock { srcEnded = true }
               a.apply(None)
@@ -122,11 +122,11 @@ class RunnableSourceSink[F, T](src:Source[F], override protected val sink:Sink[T
   }
 
   protected def applyWithLock(rv:Option[T]): Unit = rv match {
-    case Some(v) =>
+    case sv : Some[T] =>
       if (dstEnded) throw new IllegalStateException("ended")
-      if (value.isDefined) throw new IllegalStateException("dropped value: " + v)
+      if (value.isDefined) throw new IllegalStateException("dropped value: " + sv.get)
 
-      value = Some(v)
+      value = sv
       condition.signal()
 
     case None =>

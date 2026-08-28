@@ -74,9 +74,9 @@ class StreamTransformer[F, T](stream:StreamFlow[F], override protected val colle
       }
 
       optVal match {
-        case Some(v) =>
+        case sv : Some[T] =>
           val n = nodes.poll()
-          n.apply(Some(v))
+          n.apply(sv)
         case None =>
           hasNext = false
       }
@@ -85,12 +85,12 @@ class StreamTransformer[F, T](stream:StreamFlow[F], override protected val colle
   }
 
   protected def applyWithLock(sr:Option[F]): Unit = sr match {
-    case Some(v) =>
+    case sv : Some[F] =>
       if (ended) throw new IllegalStateException("ended")
-      if (nodes.isEmpty) throw new IllegalStateException("no workers found for " + v)
-      if (source.isDefined) throw new IllegalStateException("dropped value " + v)
+      if (nodes.isEmpty) throw new IllegalStateException("no workers found for " + sv)
+      if (source.isDefined) throw new IllegalStateException("dropped value " + sv)
 
-      val opt = call(Some(v))
+      val opt = call(sv)
       val hasNext = opt match {
         case Some(s) => send(s)
         case None => false

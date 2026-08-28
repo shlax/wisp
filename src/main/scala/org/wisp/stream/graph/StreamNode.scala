@@ -22,7 +22,7 @@ class StreamNode[T](graph: StreamGraph, val link: StreamFlow[T]) {
   /**
    * Builder for [[org.wisp.stream.iterator.RunnableTransformer#map]]
    */
-  def toMap[V](function: T => V): RunnableTransformer[T, V] = {
+  def mapTo[V](function: T => V): RunnableTransformer[T, V] = {
     RunnableTransformer.map[T, V](link, function)
   }
 
@@ -37,7 +37,7 @@ class StreamNode[T](graph: StreamGraph, val link: StreamFlow[T]) {
   /**
    * Builder for [[org.wisp.stream.iterator.RunnableTransformer#filter]]
    */
-  def toFilter(predicate: T => Boolean): RunnableTransformer[T, T] = {
+  def filterTo(predicate: T => Boolean): RunnableTransformer[T, T] = {
     RunnableTransformer.filter[T](link, predicate)
   }
 
@@ -52,7 +52,7 @@ class StreamNode[T](graph: StreamGraph, val link: StreamFlow[T]) {
   /**
    * Builder for [[org.wisp.stream.iterator.RunnableTransformer#flatMap]]
    */
-  def toFlatMap[V](function: T => Source[V]): RunnableTransformer[T, V] = {
+  def flatMapTo[V](function: T => Source[V]): RunnableTransformer[T, V] = {
     RunnableTransformer.flatMap[T, V](link, function)
   }
 
@@ -67,7 +67,7 @@ class StreamNode[T](graph: StreamGraph, val link: StreamFlow[T]) {
   /**
    * Builder for [[org.wisp.stream.iterator.RunnableTransformer#fold]]
    */
-  def toFold[V](zero:V)(fold: (V, T) => V): RunnableTransformer[T, V] = {
+  def foldTo[V](zero:V)(fold: (V, T) => V): RunnableTransformer[T, V] = {
     RunnableTransformer.fold[T, V](link, zero, fold)
   }
 
@@ -77,6 +77,13 @@ class StreamNode[T](graph: StreamGraph, val link: StreamFlow[T]) {
   def collect[V](function: Option[T] => Source[V]): StreamNode[V] = {
     val r = StreamTransformer[T, V](link, function)
     graph.node(r)
+  }
+
+  /**
+   * Builder for [[org.wisp.stream.iterator.RunnableTransformer]]
+   */
+  def collectTo[V](function: Option[T] => Source[V]): RunnableTransformer[T, V] = {
+    RunnableTransformer[T, V](link, function)
   }
 
   class SplitNode(from: SplitStream[T]#Split) {
