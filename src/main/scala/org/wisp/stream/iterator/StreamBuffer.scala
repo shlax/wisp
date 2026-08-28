@@ -49,7 +49,7 @@ class StreamBuffer[T](stream:StreamFlow[T], size:Int)(using ExecutionContextExec
   }
 
   override def applyWithLock(t: Option[T]): Unit = t match {
-    case Some(v) =>
+    case sv @ Some(v) =>
       if(ended){
         throw new IllegalStateException("ended")
       }
@@ -59,7 +59,7 @@ class StreamBuffer[T](stream:StreamFlow[T], size:Int)(using ExecutionContextExec
       if (n == null) {
         queue.add(v)
       } else {
-        n.apply(Some(v))
+        n.apply(sv)
       }
 
       next()
