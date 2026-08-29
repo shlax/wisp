@@ -29,8 +29,7 @@ class StreamGraph(using val system:ExecutionContextExecutor){
    * Combine multiple `streams` into one using [[org.wisp.stream.iterator.ZipStream]]
    */
   def zip[T](streams: Iterable[StreamNode[T]]): StreamNode[T] = {
-    val r = ZipStream[T]( streams.map(_.link) )
-    apply(r)
+    zip(streams.map(_.link))
   }
 
   /**
