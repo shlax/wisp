@@ -1,7 +1,7 @@
 package org.wisp.test.impl
 
 import org.junit.jupiter.api.{Assertions, Test}
-import org.wisp.{ActorSystem, Link}
+import org.wisp.ActorSystem
 import org.wisp.stream.Sink
 import org.wisp.stream.extensions.*
 import org.wisp.stream.iterator.{RunnableSink, RunnableSource, RunnableSourceSink, RunnableTransformer, SplitStream, StreamBuffer, StreamSink, StreamSource, StreamTransformer, ZipStream}
@@ -14,7 +14,6 @@ import scala.concurrent.{Await, Future, Promise}
 import scala.util.Success
 import java.util
 import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
-import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.concurrent.duration.*
 
 class EmptyTests {
