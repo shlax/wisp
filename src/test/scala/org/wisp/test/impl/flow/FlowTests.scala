@@ -22,7 +22,7 @@ class FlowTests {
       val subscriber = FlowSubscriber(proc)
 
       var res: List[Int] = Nil
-      graph.node(subscriber).toRunnable(Sink{ v =>
+      graph(subscriber).toRunnable(Sink{ v =>
         res = v :: res
       }).run()
 

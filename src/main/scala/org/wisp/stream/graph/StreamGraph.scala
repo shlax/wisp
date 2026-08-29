@@ -1,8 +1,9 @@
 package org.wisp.stream.graph
 
 import org.wisp.stream.{Sink, Source}
-import org.wisp.stream.iterator.{RunnableSource, RunnableSourceSink, SourceFlow, StreamFlow, StreamSource, ZipStream}
+import org.wisp.stream.iterator.{RunnableSource, RunnableSourceSink, StreamFlow, StreamSource, ZipStream}
 
+import scala.annotation.targetName
 import scala.concurrent.ExecutionContextExecutor
 
 /**
@@ -13,22 +14,15 @@ class StreamGraph(using val system:ExecutionContextExecutor){
   /**
    * Create node from `link`
    */
-  def node[T](link: StreamFlow[T]): StreamNode[T] = {
+  def apply[T](link: StreamFlow[T]): StreamNode[T] = {
     StreamNode(this, link)
-  }
-
-  /**
-   * Create stream from `link`
-   */
-  def from[T](link: SourceFlow[T]): SourceNode[T] = {
-    SourceNode(this, link)
   }
 
   /**
    * Create stream from `source` ussing [[org.wisp.stream.iterator.StreamSource]]
    */
-  def from[T](source:Source[T]) : SourceNode[T] = {
-    from(StreamSource(source))
+  def from[T](source:Source[T]) : StreamNode[T] = {
+    apply(StreamSource(source))
   }
 
   /**
@@ -36,7 +30,16 @@ class StreamGraph(using val system:ExecutionContextExecutor){
    */
   def zip[T](streams: Iterable[StreamNode[T]]): StreamNode[T] = {
     val r = ZipStream[T]( streams.map(_.link) )
-    node(r)
+    apply(r)
+  }
+
+  /**
+   * Combine multiple `streams` into one using [[org.wisp.stream.iterator.ZipStream]]
+   */
+  @targetName("zipStreams")
+  def zip[T](streams: Iterable[StreamFlow[T]]): StreamNode[T] = {
+    val r = ZipStream[T]( streams )
+    apply(r)
   }
 
   /**
@@ -54,20 +57,28 @@ class StreamGraph(using val system:ExecutionContextExecutor){
   }
 
   /**
+   * Combine multiple `streams` into one using [[org.wisp.stream.iterator.ZipStream]]
+   */
+  @targetName("zipStreams")
+  def zip[T](streams:StreamFlow[T]*): StreamNode[T] = {
+    zip(streams)
+  }
+
+  /**
    * `source` wil be run inside [[org.wisp.stream.iterator.RunnableSource#run]]
    */
-  def fromRunnable[T, R](source:Source[T])(fn : SourceNode[T] => Unit ) : RunnableSource[T] = {
+  def fromRunnable[T, R](source:Source[T])(fn : StreamNode[T] => Unit ) : RunnableSource[T] = {
     val f = RunnableSource(source)
-    fn.apply(from(f))
+    fn.apply(apply(f))
     f
   }
 
   /**
    * `source` and `sink` wil be run inside [[org.wisp.stream.iterator.RunnableSourceSink#run]]
    */
-  def runnable[T, R](source:Source[T], sink:Sink[R])(fn: SourceNode[T] => StreamNode[R]) : RunnableSourceSink[T, R] = {
+  def runnable[T, R](source:Source[T], sink:Sink[R])(fn: StreamNode[T] => StreamNode[R]) : RunnableSourceSink[T, R] = {
     RunnableSourceSink(source, sink ){ prev =>
-      fn.apply(from(prev)).link
+      fn.apply(apply(prev)).link
     }
   }
 

@@ -7,9 +7,11 @@ import org.wisp.stream.extensions.*
 import org.wisp.stream.graph.StreamGraph
 import org.wisp.utils.extensions.*
 
+import scala.concurrent.duration.*
 import java.util
 import java.util.Collections
 import java.util.concurrent.atomic.AtomicInteger
+import scala.concurrent.{Await, Future}
 import scala.jdk.CollectionConverters.*
 
 class RunnableTest {
@@ -45,6 +47,53 @@ class RunnableTest {
     Assertions.assertEquals(0 to 5, l.asScala)
     Assertions.assertEquals(1, cnt.get())
 
+  }
+
+  @Test
+  def runnableTransformerFilter(): Unit = {
+    val l = Collections.synchronizedList(new util.ArrayList[Int]())
+    val acc = new AtomicInteger()
+
+    ActorSystem() || { sys =>
+
+      val tId = Thread.currentThread()
+
+      val data = Seq(0, 1, 2, 3, 4, 5)
+
+      val sink = new Sink[Int] {
+        override def apply(t: Int): Unit = {
+          l.add(t)
+        }
+
+        override def complete(): Unit = {
+          acc.incrementAndGet()
+        }
+      }
+
+      val g = StreamGraph()
+      var futures: List[Future[Unit]] = Nil
+
+      val src = g.fromRunnable(data.asSource){ s =>
+        val w1 = s.filterTo( (q: Int) => q % 2 == 0 )
+        val w2 = s.filterTo( (q: Int) => q % 2 == 0 )
+
+        futures = w1.start :: futures
+        futures = w2.start :: futures
+
+        g.zip(w1, w2).toRunnable(sink).start
+
+      }
+
+      src.run()
+
+      for(f <- futures){
+        Await.ready(f, 1.second)
+      }
+
+    }
+
+    Assertions.assertEquals(List(0, 2, 4).toSet, l.asScala.toSet)
+    Assertions.assertEquals(1, acc.get())
   }
 
 }
