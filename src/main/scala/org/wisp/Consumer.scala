@@ -134,13 +134,6 @@ trait Consumer[-T] extends ( T => Unit ) {
     }
   }
 
-  /**
-   * Consume [[org.wisp.stream.Source]]
-   */
-  def consume(s: Source[T]): Unit = {
-    s.forEach(this)
-  }
-
   def withSynchronization(): Consumer[T] = {
     val self = this
     new Consumer[T]{

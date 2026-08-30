@@ -34,12 +34,10 @@ class SinkExceptionTests {
           "s:" + i
         }
 
-        val sink = new Sink[String] {
-          override def apply(t: String): Unit = {
-            Assertions.assertTrue(Thread.currentThread() == thread)
-            if (t == "w:s:4") throw new MyException("is 4")
-            l.add(t)
-          }
+        val sink = Sink[String] { t =>
+          Assertions.assertTrue(Thread.currentThread() == thread)
+          if (t == "w:s:4") throw new MyException("is 4")
+          l.add(t)
         }
 
         val src = RunnableSourceSink(data, sink) { ref =>
@@ -75,10 +73,10 @@ class SinkExceptionTests {
 
       val w = StreamTransformer.map(src, q => "w:" + q )
 
-      val f = StreamSink(w, (q:String) => {
+      val f = StreamSink(w, Sink{ (q:String) => {
         if (q == "w:s:4") throw new MyException("is 4")
         l.add(q)
-      }).start
+      } }).start
 
       try {
         src.failOn(f).run()
@@ -119,10 +117,10 @@ class SinkExceptionTests {
 
         val w = StreamTransformer.map(src, q => "w:" + q )
 
-        RunnableSink(w, (q:String) => {
+        RunnableSink(w, Sink{ (q:String) => {
           if (q == "w:s:4") throw new MyException("is 4")
           l.add(q)
-        }).run()
+        } }).run()
 
       }
     } catch {
@@ -151,10 +149,10 @@ class SinkExceptionTests {
 
       val w = StreamTransformer.map(src, q => "w:" + q )
 
-      val f = StreamSink(w, (q:String) =>{
+      val f = StreamSink(w, Sink{ (q:String) => {
         if (q == "w:s:4") throw new MyException("is 4")
         l.add(q)
-      }).start
+      } }).start
 
       Await.ready(f, 5.second)
       val v = f.value.get

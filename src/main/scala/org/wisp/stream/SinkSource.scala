@@ -48,20 +48,23 @@ class SinkSource[T](bufferSize:Int = 1) {
   val sink:Sink[T] = createSink()
 
   protected def createSink(): Sink[T] = new Sink[T] {
-    override def apply(t: T): Unit = lock.withLock {
-      if(t == null) throw new NullPointerException()
-      if(ended) throw new IllegalStateException("ended")
-      while (queue.size() >= bufferSize) condition.await()
-      queue.add(t)
-      condition.signal()
+    override def apply(o: Option[T]): Unit = lock.withLock {
+      o match {
+        case Some(t) =>
+          if(t == null) throw new NullPointerException()
+          if(ended) throw new IllegalStateException("ended")
+          while (queue.size() >= bufferSize) condition.await()
+          queue.add(t)
+          condition.signal()
+        case None =>
+          if (ended) throw new IllegalStateException("ended")
+          while (!queue.isEmpty) condition.await()
+          ended = true
+          condition.signal()
+      }
+
     }
 
-    override def complete(): Unit = lock.withLock {
-      if (ended) throw new IllegalStateException("ended")
-      while (!queue.isEmpty) condition.await()
-      ended = true
-      condition.signal()
-    }
   }
 
 }

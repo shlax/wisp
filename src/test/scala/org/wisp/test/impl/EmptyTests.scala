@@ -24,8 +24,8 @@ class EmptyTests {
     val l = ArrayBuffer[Int]()
 
     val x = Sink[Int](i => l += i)
-    val y = x.flatMap[List[Int]]{ (t, self) =>
-      for (i <- t) self.apply(i)
+    val y = x.flatMapValues[List[Int]]{ (t, self) =>
+      for (i <- t) self.accept(i)
     }
 
     y.consume(data)
@@ -66,12 +66,11 @@ class EmptyTests {
       )
 
       val sink = new Sink[String] {
-        override def apply(t: String): Unit = {
-          l.add(t)
-        }
-
-        override def complete(): Unit = {
-          acc.incrementAndGet()
+        override def apply(o: Option[String]): Unit = o match {
+          case Some(t) =>
+            l.add(t)
+          case None =>
+            acc.incrementAndGet()
         }
       }
 
@@ -113,7 +112,7 @@ class EmptyTests {
     val l = Collections.synchronizedList(new util.ArrayList[Int]())
 
     ActorSystem() || { sys =>
-      val p = StreamGraph().from(data).map(i => i + 1).to(l.add).start
+      val p = StreamGraph().from(data).map(i => i + 1).to(Sink(l.add)).start
       Await.result(p, 1.second)
     }
 
@@ -130,9 +129,9 @@ class EmptyTests {
 
     ActorSystem() || { sys =>
 
-      val s1 = Sink[String](l1.add).map[Int]("a:" + _).map[Int](i => i * 2 + 0)
-      val s2 = Sink[String](l2.add).map[Int]("b:" + _).map[Int](i => i * 2 + 1)
-      val t = s1.nextTo(s2)
+      val s1 = Sink[String](l1.add).mapValues[Int]("a:" + _).mapValues[Int](i => i * 2 + 0)
+      val s2 = Sink[String](l2.add).mapValues[Int]("b:" + _).mapValues[Int](i => i * 2 + 1)
+      val t = s1.thenTo(s2)
 
       val p = StreamGraph().from(data).map(i => i + 1).to(t).start
       Await.result(p, 1.second)
@@ -156,11 +155,9 @@ class EmptyTests {
         "s:" + i
       }
 
-      val sink = new Sink[String] {
-        override def apply(t: String): Unit = {
-          Assertions.assertTrue(Thread.currentThread() == thread)
-          l.add("d:" + t)
-        }
+      val sink = Sink[String] { t =>
+        Assertions.assertTrue(Thread.currentThread() == thread)
+        l.add("d:" + t)
       }
 
       val src = RunnableSourceSink(data, sink) { ref =>
@@ -195,7 +192,7 @@ class EmptyTests {
         "w:" + q
       )
 
-      val p = StreamSink(w, l.add).start
+      val p = StreamSink(w, Sink(l.add)).start
       src.failOn(p).run()
       Await.ready(p, 1.second)
 
@@ -219,7 +216,7 @@ class EmptyTests {
         "w:" + q
       )
 
-      RunnableSink(w, l.add).run()
+      RunnableSink(w, Sink(l.add)).run()
 
     }
 
@@ -242,15 +239,14 @@ class EmptyTests {
       )
 
       val sink = new Sink[List[Int]] {
-        override def apply(t: List[Int]): Unit = {
-          if (res.get() != null) {
-            throw new RuntimeException("Already set")
-          }
-          res.set(t)
-        }
-
-        override def complete(): Unit = {
-          acc.incrementAndGet()
+        override def apply(o: Option[List[Int]]): Unit = o match {
+          case Some(t) =>
+            if (res.get() != null) {
+              throw new RuntimeException("Already set")
+            }
+            res.set(t)
+          case None =>
+            acc.incrementAndGet()
         }
       }
 
@@ -281,15 +277,14 @@ class EmptyTests {
       )
 
       val sink = new Sink[List[Int]] {
-        override def apply(t: List[Int]): Unit = {
-          if (res.get() != null) {
-            throw new RuntimeException("Already set")
-          }
-          res.set(t)
-        }
-
-        override def complete(): Unit = {
-          acc.incrementAndGet()
+        override def apply(o: Option[List[Int]]): Unit = o match {
+          case Some(t) =>
+            if (res.get() != null) {
+              throw new RuntimeException("Already set")
+            }
+            res.set(t)
+          case None =>
+            acc.incrementAndGet()
         }
       }
 
@@ -318,7 +313,7 @@ class EmptyTests {
         "w:" + q
       )
 
-      val p = StreamSink(w, l.add).start
+      val p = StreamSink(w, Sink(l.add)).start
       Await.ready(p, 1.second)
     }
 
@@ -339,7 +334,7 @@ class EmptyTests {
         "w:" + q
       )
 
-      val p = StreamSink(w, l.add).start
+      val p = StreamSink(w, Sink(l.add)).start
       Await.ready(p, 1.second)
 
     }
@@ -367,7 +362,7 @@ class EmptyTests {
 
       val r = ZipStream(w1, w2)
 
-      val p = StreamSink(r, l.add).start
+      val p = StreamSink(r, Sink(l.add)).start
       Await.ready(p, 1.second)
 
     }
@@ -389,8 +384,8 @@ class EmptyTests {
       var sl: List[StreamSink[?]] = Nil
 
       val r = SplitStream(src) { b =>
-        sl = StreamSink(b.copy, l1.add) :: sl
-        sl = StreamSink(b.copy, l2.add) :: sl
+        sl = StreamSink(b.copy, Sink[Int](l1.add)) :: sl
+        sl = StreamSink(b.copy, Sink[Int](l2.add)) :: sl
       }
 
       val p = Future.sequence(sl.map(_.start))

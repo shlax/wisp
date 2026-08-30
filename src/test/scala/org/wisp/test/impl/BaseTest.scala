@@ -67,8 +67,8 @@ class BaseTest {
 
     val f2 = Future[Unit] {
       val x = s.sink
-      x.apply(1)
-      x.apply(2)
+      x.accept(1)
+      x.accept(2)
       x.complete()
     }
 

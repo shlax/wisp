@@ -1,98 +1,94 @@
 package org.wisp.stream
 
 import org.wisp.Consumer
-import org.wisp.utils.lock.withLock
-
-import java.util.concurrent.locks.ReentrantLock
 
 object Sink {
 
   /**
-   * Creates [[Sink]] from function
+   * Creates [[Sink]] from function.
+   *
+   * Ignores `None` values
    */
   def apply[T](fn: T => Unit): Sink[T] = {
-    (t: T) => {
-      fn.apply(t)
+    (t: Option[T]) => {
+      if(t.isDefined){
+        fn.apply(t.get)
+      }
     }
   }
 
 }
 
 /**
- * Extends [[Consumer]] with `complete` method
+ * Is a [[Consumer]] of [[Option]]
+ *
+ * `Some(value)` is a value to be processed
+ *
+ * `None` indicates end of stream
  */
 @FunctionalInterface
-trait Sink[-T] extends Consumer[T]{
+trait Sink[-T] extends Consumer[Option[T]]{
+
+  def accept(t: T): Unit = {
+    apply(Some(t))
+  }
 
   /**
    * Indicates end of stream
    */
-  def complete(): Unit = {}
+  def complete(): Unit = {
+    apply(None)
+  }
 
-  override def map[R](fn: R => T): Sink[R] = {
+  def mapValues[R](fn: R => T): Sink[R] = {
     val self = this
     new Sink[R] {
-      override def apply(e: R): Unit = {
-        self.apply(fn.apply(e))
+      override def apply(e: Option[R]): Unit = {
+        self.apply(e.map(fn))
       }
-      override def complete(): Unit = {
-        self.complete()
-      }
+
     }
   }
 
-  override def flatMap[R](fn: (R, this.type) => Unit): Sink[R] = {
+  def flatMapValues[R](fn: (R, this.type) => Unit): Sink[R] = {
     val self:this.type = this
     new Sink[R] {
-      override def apply(e: R): Unit = {
-        fn.apply(e, self)
-      }
-      override def complete(): Unit = {
-        self.complete()
+      override def apply(e: Option[R]): Unit = {
+        if(e.isDefined){
+          fn.apply(e.get, self)
+        }else{
+          self.apply(None)
+        }
       }
     }
   }
 
-  override def filter[R <: T](fn: R => Boolean): Sink[R] = {
+  def filterValues[R <: T](fn: R => Boolean): Sink[R] = {
     val self = this
     new Sink[R] {
-      override def apply(e: R): Unit = {
-        if(fn.apply(e)) self.apply(e)
-      }
-      override def complete(): Unit = {
-        self.complete()
+      override def apply(e: Option[R]): Unit = {
+        if(e.isDefined) {
+          if (fn.apply(e.get)) self.apply(e)
+        }else{
+          self.apply(None)
+        }
       }
     }
   }
 
-  override def collect[R](fn: PartialFunction[R, T]): Sink[R] = {
+  def collectValues[R](fn: PartialFunction[R, T]): Sink[R] = {
     val self = this
     new Sink[R] {
-      override def apply(e: R): Unit = {
-        if (fn.isDefinedAt(e)) self.apply(fn.apply(e))
-      }
-
-      override def complete(): Unit = {
-        self.complete()
-      }
-    }
-  }
-
-  /**
-   * Returns a composed `Sink` that performs, in sequence, this operation followed by the `after` operation.
-   */
-  def nextTo[S <: T](after: Sink[S]): Sink[S] = {
-    val self = this
-    new Sink[S]{
-
-      override def apply(t: S): Unit = {
-        self.apply(t)
-        after.apply(t)
-      }
-
-      override def complete(): Unit = {
-        self.complete()
-        after.complete()
+      override def apply(e: Option[R]): Unit = {
+        if(e.isDefined) {
+          val v = e.get
+          if (fn.isDefinedAt(v)){
+            val u = fn.apply(v)
+            self.apply(Some(u))
+          }
+        }else{
+          self.apply(None)
+        }
       }
 
     }
@@ -101,26 +97,14 @@ trait Sink[-T] extends Consumer[T]{
   /**
    * Consume [[org.wisp.stream.Source]] and call `complete`
    */
-  override def consume(s:Source[T]):Unit = {
-    super.consume(s)
+  def consume(s:Source[T]):Unit = {
+    var v = s.next()
+    while(v.isDefined){
+      apply(v)
+      v = s.next()
+    }
     complete()
   }
 
-  /**
-   * @return synchronized view over this [[Sink]]
-   */
-  override def withSynchronization(): Sink[T] = {
-    val self = this
-    new Sink[T]{
-      private val lock = new ReentrantLock()
-
-      override def apply(t: T): Unit = lock.withLock{
-        self.apply(t)
-      }
-      override def complete(): Unit = lock.withLock{
-        self.complete()
-      }
-    }
-  }
 
 }

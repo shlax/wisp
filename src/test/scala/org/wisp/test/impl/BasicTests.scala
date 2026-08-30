@@ -78,15 +78,16 @@ class BasicTests {
 
     val cnt = new AtomicInteger()
     val x = new Sink[Int]{
-      override def apply(i: Int): Unit = {
-        l += i
+      override def apply(o: Option[Int]): Unit = o match {
+        case Some(i) =>
+          l += i
+        case None =>
+          cnt.incrementAndGet()
       }
-      override def complete(): Unit = {
-        cnt.incrementAndGet()
-      }
+
     }
-    val y = x.flatMap[List[Int]]{ (t, self) =>
-      for (i <- t) self.apply(i)
+    val y = x.flatMapValues[List[Int]]{ (t, self) =>
+      for (i <- t) self.accept(i)
     }
 
     y.consume(data)
@@ -116,7 +117,7 @@ class BasicTests {
     val s = p.asSink[Int](0){ (a, b) => a + b }
     val pf = p.future
 
-    val f = s.filter( _ % 2 == 1 )
+    val f = s.filterValues( _ % 2 == 1 )
     Assertions.assertFalse(p.isCompleted)
     f.consume(data)
 
@@ -130,8 +131,8 @@ class BasicTests {
     var r:Option[String] = None
 
     val s1 = Sink[String]{ i => r = Some(i) }
-    val s2 = s1.map( (i:Int) => ""+i )
-    s2.apply(1)
+    val s2 = s1.mapValues( (i:Int) => ""+i )
+    s2.accept(1)
 
     Assertions.assertEquals("1", r.get)
   }
@@ -142,7 +143,7 @@ class BasicTests {
 
     val l = ArrayBuffer[Int]()
 
-    val t = Sink[Int](i => l += i).map[Int](_ + 1)
+    val t = Sink[Int](i => l += i).mapValues[Int](_ + 1)
 
     t.consume(data)
 
@@ -174,7 +175,7 @@ class BasicTests {
     val l = Collections.synchronizedList(new util.ArrayList[Int]())
 
     ActorSystem() || { sys =>
-      val p = StreamGraph().from(data).map(i => i + 1).to(l.add).start
+      val p = StreamGraph().from(data).map(i => i + 1).to(Sink(l.add)).start
       Await.result(p, 1.second)
     }
 
@@ -191,9 +192,9 @@ class BasicTests {
 
     ActorSystem() || { sys =>
 
-      val s1 = Sink[String](l1.add).map[Int]("a:" + _).map[Int](i => i * 2 + 0)
-      val s2 = Sink[String](l2.add).map[Int]("b:" + _).map[Int](i => i * 2 + 1)
-      val t = s1.nextTo(s2)
+      val s1 = Sink[String](l1.add).mapValues[Int]("a:" + _).mapValues[Int](i => i * 2 + 0)
+      val s2 = Sink[String](l2.add).mapValues[Int]("b:" + _).mapValues[Int](i => i * 2 + 1)
+      val t = s1.thenTo(s2)
 
       val p = StreamGraph().from(data).map(i => i + 1).to(t).start
       Await.result(p, 1.second)
@@ -252,13 +253,13 @@ class BasicTests {
       }
 
       val sink = new Sink[String] {
-        override def apply(t: String): Unit = {
-          Assertions.assertTrue(Thread.currentThread() == thread)
-          l.add("d:" + t)
-        }
-        override def complete(): Unit = {
-          Assertions.assertTrue(Thread.currentThread() == thread)
-          acc.incrementAndGet()
+        override def apply(o: Option[String]): Unit = o match {
+          case Some(t) =>
+            Assertions.assertTrue(Thread.currentThread() == thread)
+            l.add("d:" + t)
+          case None =>
+            Assertions.assertTrue(Thread.currentThread() == thread)
+            acc.incrementAndGet()
         }
       }
 
@@ -294,12 +295,11 @@ class BasicTests {
       )
 
       val sink = new Sink[Int] {
-        override def apply(t: Int): Unit = {
-          l.add(t)
-        }
-
-        override def complete(): Unit = {
-          acc.incrementAndGet()
+        override def apply(o: Option[Int]): Unit = o match {
+          case Some(t) =>
+            l.add(t)
+          case None =>
+            acc.incrementAndGet()
         }
       }
 
@@ -331,12 +331,11 @@ class BasicTests {
       )
 
       val sink = new Sink[Int] {
-        override def apply(t: Int): Unit = {
-          l.add(t)
-        }
-
-        override def complete(): Unit = {
-          acc.incrementAndGet()
+        override def apply(o: Option[Int]): Unit = o match {
+          case Some(t) =>
+            l.add(t)
+          case None =>
+            acc.incrementAndGet()
         }
       }
 
@@ -371,12 +370,11 @@ class BasicTests {
       )
 
       val sink = new Sink[Int] {
-        override def apply(t: Int): Unit = {
-          l.add(t)
-        }
-
-        override def complete(): Unit = {
-          acc.incrementAndGet()
+        override def apply(o: Option[Int]): Unit = o match {
+          case Some(t) =>
+            l.add(t)
+          case None =>
+            acc.incrementAndGet()
         }
       }
 
@@ -413,12 +411,11 @@ class BasicTests {
       )
 
       val sink = new Sink[String] {
-        override def apply(t: String): Unit = {
-          l.add(t)
-        }
-
-        override def complete(): Unit = {
-          acc.incrementAndGet()
+        override def apply(o: Option[String]): Unit = o match {
+          case Some(t) =>
+            l.add(t)
+          case None =>
+            acc.incrementAndGet()
         }
       }
 
@@ -455,12 +452,11 @@ class BasicTests {
       )
 
       val sink = new Sink[String] {
-        override def apply(t: String): Unit = {
-          l.add(t)
-        }
-
-        override def complete(): Unit = {
-          acc.incrementAndGet()
+        override def apply(o: Option[String]): Unit = o match {
+          case Some(t) =>
+            l.add(t)
+          case None =>
+            acc.incrementAndGet()
         }
       }
 
@@ -490,11 +486,11 @@ class BasicTests {
       )
 
       val sink = new Sink[String] {
-        override def apply(t: String): Unit = {
-          l.add(t)
-        }
-        override def complete(): Unit = {
-          acc.incrementAndGet()
+        override def apply(o: Option[String]): Unit = o match {
+          case Some(t) =>
+            l.add(t)
+          case None =>
+            acc.incrementAndGet()
         }
       }
 
@@ -524,12 +520,11 @@ class BasicTests {
       )
 
       val sink = new Sink[String] {
-        override def apply(t: String): Unit = {
-          l.add(t)
-        }
-
-        override def complete(): Unit = {
-          acc.incrementAndGet()
+        override def apply(o: Option[String]): Unit = o match {
+          case Some(t) =>
+            l.add(t)
+          case None =>
+            acc.incrementAndGet()
         }
       }
 
@@ -557,12 +552,11 @@ class BasicTests {
       )
 
       val sink = new Sink[String] {
-        override def apply(t: String): Unit = {
-          l.add(t)
-        }
-
-        override def complete(): Unit = {
-          acc.incrementAndGet()
+        override def apply(o: Option[String]): Unit = o match {
+          case Some(t) =>
+            l.add(t)
+          case None =>
+            acc.incrementAndGet()
         }
       }
 
@@ -590,15 +584,14 @@ class BasicTests {
       )
 
       val sink = new Sink[List[Int]] {
-        override def apply(t: List[Int]): Unit = {
-          if(res.get() != null){
-            throw new RuntimeException("Already set")
-          }
-          res.set(t)
-        }
-
-        override def complete(): Unit = {
-          acc.incrementAndGet()
+        override def apply(o: Option[List[Int]]): Unit = o match {
+          case Some(t) =>
+            if(res.get() != null){
+              throw new RuntimeException("Already set")
+            }
+            res.set(t)
+          case None =>
+            acc.incrementAndGet()
         }
       }
 
@@ -632,12 +625,11 @@ class BasicTests {
       val r = ZipStream(w1, w2)
 
       val sink = new Sink[String] {
-        override def apply(t: String): Unit = {
-          l.add(t)
-        }
-
-        override def complete(): Unit = {
-          acc.incrementAndGet()
+        override def apply(o: Option[String]): Unit = o match {
+          case Some(t) =>
+            l.add(t)
+          case None =>
+            acc.incrementAndGet()
         }
       }
 
@@ -667,22 +659,20 @@ class BasicTests {
       var sl:List[StreamSink[?]] = Nil
 
       val sink1 = new Sink[Int] {
-        override def apply(t: Int): Unit = {
-          l1.add(t)
-        }
-
-        override def complete(): Unit = {
-          acc1.incrementAndGet()
+        override def apply(o: Option[Int]): Unit = o match {
+          case Some(t) =>
+            l1.add(t)
+          case None =>
+            acc1.incrementAndGet()
         }
       }
 
       val sink2 = new Sink[Int] {
-        override def apply(t: Int): Unit = {
-          l2.add(t)
-        }
-
-        override def complete(): Unit = {
-          acc2.incrementAndGet()
+        override def apply(o: Option[Int]): Unit = o match {
+          case Some(t) =>
+            l2.add(t)
+          case None =>
+            acc2.incrementAndGet()
         }
       }
 
@@ -712,7 +702,7 @@ class BasicTests {
     ActorSystem() || { sys =>
 
       val p = StreamGraph().from(data).split{ n =>
-        Seq( n.copy.to(l1.add), n.copy.to(l2.add) )
+        Seq( n.copy.to(Sink(l1.add)), n.copy.to(Sink(l2.add)) )
       }
 
       Await.result( Future.sequence( p.map(_.start) ), 1.second)

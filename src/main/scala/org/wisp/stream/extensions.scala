@@ -53,8 +53,8 @@ object extensions {
   }
 
   extension [E, T](i: Link[E, T]) {
-    def asSink: Sink[E] = (t: E) => {
-      i << t
+    def asSink: Sink[E] = (t: Option[E]) => {
+      if(t.isDefined) i << t.get
     }
   }
 
@@ -67,18 +67,21 @@ object extensions {
       new Sink[T] {
         private var value: E = start
 
-        override def apply(t: T): Unit = {
-          try {
-            value = fold(value, t)
-          } catch {
-            case NonFatal(e) =>
-              promise.failure(e)
-              throw e
+        override def apply(o: Option[T]): Unit = {
+          o match {
+            case Some(t) =>
+              try {
+                value = fold(value, t)
+              } catch {
+                case NonFatal(e) =>
+                  promise.failure(e)
+                  throw e
+              }
+            case None =>
+              promise.success(value)
           }
-        }
 
-        override def complete(): Unit = {
-          promise.success(value)
+
         }
 
       }
@@ -92,12 +95,8 @@ object extensions {
      * @return [[Sink]] that will call all sinks in `iterable`
      */
     def asSink: Sink[E] = new Sink[E] {
-      override def apply(t: E): Unit = {
+      override def apply(t: Option[E]): Unit = {
         for (i <- iterable) i.apply(t)
-      }
-
-      override def complete(): Unit = {
-        for (i <- iterable) i.complete()
       }
     }
 

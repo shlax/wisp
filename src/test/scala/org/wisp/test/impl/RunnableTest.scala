@@ -29,13 +29,13 @@ class RunnableTest {
 
     val cnt = new AtomicInteger()
     val sink = new Sink[Int] {
-      override def apply(t: Int): Unit = {
-        Assertions.assertTrue(Thread.currentThread() == thread)
-        l.add(t)
-      }
-      override def complete(): Unit = {
-        Assertions.assertTrue(Thread.currentThread() == thread)
-        cnt.incrementAndGet()
+      override def apply(o: Option[Int]): Unit = o match {
+        case Some(t) =>
+          Assertions.assertTrue(Thread.currentThread() == thread)
+          l.add(t)
+        case None =>
+          Assertions.assertTrue(Thread.currentThread() == thread)
+          cnt.incrementAndGet()
       }
     }
 
@@ -61,12 +61,11 @@ class RunnableTest {
       val data = Seq(0, 1, 2, 3, 4, 5)
 
       val sink = new Sink[Int] {
-        override def apply(t: Int): Unit = {
-          l.add(t)
-        }
-
-        override def complete(): Unit = {
-          acc.incrementAndGet()
+        override def apply(o: Option[Int]): Unit = o match {
+          case Some(t) =>
+            l.add(t)
+          case None =>
+            acc.incrementAndGet()
         }
       }
 

@@ -32,11 +32,9 @@ class FlatMapExceptionTests {
         "s:" + i
       }
 
-      val sink = new Sink[String] {
-        override def apply(t: String): Unit = {
-          Assertions.assertTrue(Thread.currentThread() == thread)
-          l.add(t)
-        }
+      val sink = Sink[String] { t =>
+        Assertions.assertTrue(Thread.currentThread() == thread)
+        l.add(t)
       }
 
       val src = RunnableSourceSink(data, sink) { ref =>
@@ -83,7 +81,7 @@ class FlatMapExceptionTests {
         }else List("w:" + q).asSource
       )
 
-      val f = StreamSink(w, l.add).start
+      val f = StreamSink(w, Sink(l.add)).start
 
       src.failOn(f).run()
 
@@ -120,7 +118,7 @@ class FlatMapExceptionTests {
         }else List("w:" + q).asSource
       )
 
-      RunnableSink(w, l.add).run()
+      RunnableSink(w, Sink(l.add)).run()
 
     }
 
@@ -151,7 +149,7 @@ class FlatMapExceptionTests {
         }else List("w:" + q).asSource
       )
 
-      val f = StreamSink(w, l.add).start
+      val f = StreamSink(w, Sink(l.add)).start
 
       Await.ready(f, 1.second)
       val v = f.value.get

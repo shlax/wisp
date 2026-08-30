@@ -35,11 +35,9 @@ class SourceExceptionTests {
           "s:" + i
         }
 
-        val sink = new Sink[String] {
-          override def apply(t: String): Unit = {
-            Assertions.assertTrue(Thread.currentThread() == thread)
-            l.add(t)
-          }
+        val sink = Sink[String] { t =>
+          Assertions.assertTrue(Thread.currentThread() == thread)
+          l.add(t)
         }
 
         val src = RunnableSourceSink(data, sink) { ref =>
@@ -82,7 +80,7 @@ class SourceExceptionTests {
         "w:" + q
       )
 
-      val f = StreamSink(w, l.add).start
+      val f = StreamSink(w, Sink(l.add)).start
 
       var srcEx:Option[Throwable] = None
 
@@ -121,7 +119,7 @@ class SourceExceptionTests {
         "w:" + q
       )
 
-      RunnableSink(w, l.add).run()
+      RunnableSink(w, Sink(l.add)).run()
 
     }
 
@@ -146,7 +144,7 @@ class SourceExceptionTests {
         "w:" + q
       )
 
-      val f = StreamSink(w, l.add).start
+      val f = StreamSink(w, Sink(l.add)).start
 
       Await.ready(f, 1.second)
       val v = f.value.get
@@ -176,7 +174,7 @@ class SourceExceptionTests {
         "w:" + q
       )
 
-      val f = StreamSink(w, l.add).start
+      val f = StreamSink(w, Sink(l.add)).start
 
       Await.ready(f, 1.second)
       val v = f.value.get
@@ -210,7 +208,7 @@ class SourceExceptionTests {
 
       val r = ZipStream(w1, w2)
 
-      val f = StreamSink(r, l.add).start
+      val f = StreamSink(r, Sink(l.add)).start
 
       Await.ready(f, 1.second)
       val v = f.value.get

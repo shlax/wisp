@@ -1,6 +1,6 @@
 package org.wisp.stream.graph
 
-import org.wisp.stream.{Sink, Source}
+import org.wisp.stream.Source
 import org.wisp.stream.iterator.{RunnableSink, RunnableTransformer, SplitStream, StreamBuffer, StreamFlow, StreamSink, StreamTransformer}
 
 import scala.concurrent.ExecutionContextExecutor
@@ -112,14 +112,14 @@ class StreamNode[T](graph: StreamGraph, val link: StreamFlow[T]) {
     res.get
   }
 
-  def to(c: Sink[T]): StreamSink[T] = {
+  def to(c: Option[T] => Unit): StreamSink[T] = {
     StreamSink(link, c)
   }
 
   /**
    * `sink` wil be run inside [[org.wisp.stream.iterator.RunnableSink#run]]
    */
-  def toRunnable(sink: Sink[T]): RunnableSink[T] = {
+  def toRunnable(sink: Option[T] => Unit): RunnableSink[T] = {
     RunnableSink(link ,sink)
   }
 

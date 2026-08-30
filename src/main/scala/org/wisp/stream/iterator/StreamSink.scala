@@ -1,6 +1,5 @@
 package org.wisp.stream.iterator
 
-import org.wisp.stream.Sink
 import org.wisp.utils.lock.*
 import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.{ExecutionContextExecutor, Future, Promise}
@@ -9,7 +8,7 @@ import scala.util.control.NonFatal
 /**
  * for each element of `stream` `sink.apply(...)` is called
  */
-class StreamSink[T](stream :StreamFlow[T], override protected val sink:Sink[T])(using ExecutionContextExecutor) extends StreamHandler[T], SinkExecution[T]{
+class StreamSink[T](stream :StreamFlow[T], override protected val sink:Option[T] => Unit)(using ExecutionContextExecutor) extends StreamHandler[T], SinkExecution[T]{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
   
@@ -47,7 +46,7 @@ class StreamSink[T](stream :StreamFlow[T], override protected val sink:Sink[T])(
       var err:Option[Throwable] = None
 
       try {
-        sink.complete()
+        complete()
       } catch {
         case NonFatal(exc) =>
           err = Some(exc)
