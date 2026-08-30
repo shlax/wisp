@@ -34,7 +34,7 @@ class SinkSource[T](bufferSize:Int = 1) {
   val source:Source[T] = createSource()
 
   protected def createSource(): Source[T] = new Source[T] {
-    override def next(): Option[T] = lock.withLock {
+    override def apply(): Option[T] = lock.withLock {
       while (queue.isEmpty && !ended) condition.await()
       val v = queue.poll()
       condition.signal()

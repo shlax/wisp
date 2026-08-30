@@ -28,7 +28,7 @@ object RunnableTransformer {
   /**
    * Creates new stream applying `function`.
    */
-  def flatMap[F, T](stream: StreamFlow[F], function: F => Source[T])(using ExecutionContextExecutor): RunnableTransformer[F, T] = {
+  def flatMap[F, T](stream: StreamFlow[F], function: F => () => Option[T])(using ExecutionContextExecutor): RunnableTransformer[F, T] = {
     RunnableTransformer(stream, { case Some(v) => function(v) case None => Source.empty })
   }
 
@@ -49,7 +49,7 @@ object RunnableTransformer {
 
 }
 
-class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val collect: Option[F] => Source[T])(using ec : ExecutionContextExecutor)
+class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val collect: Option[F] => () => Option[T])(using ec : ExecutionContextExecutor)
   extends RunnableStream[T], SingleNodeFlow[T], ExecutionFlow[T], StreamHandler[F], SourceTransformer[F, T]{
 
   override protected val nodes: util.Queue[Option[T] => Unit] = createNodes()
@@ -74,7 +74,7 @@ class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val col
     }
 
     var calledNone = false
-    var src: Option[Source[T]] = None
+    var src: Option[() => Option[T]] = None
 
     stream.next(this)
 
@@ -98,7 +98,7 @@ class RunnableTransformer[F, T](stream:StreamFlow[F], override protected val col
 
       if(src.isDefined && ! lock.withLock( nodes.isEmpty ) ){
         val source = src.get
-        source.next() match {
+        source.apply() match {
           case sv : Some[T] =>
             val n = lock.withLock( nodes.poll() )
             n.apply(sv)

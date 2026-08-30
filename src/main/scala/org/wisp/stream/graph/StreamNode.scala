@@ -1,6 +1,5 @@
 package org.wisp.stream.graph
 
-import org.wisp.stream.Source
 import org.wisp.stream.iterator.{RunnableSink, RunnableTransformer, SplitStream, StreamBuffer, StreamFlow, StreamSink, StreamTransformer}
 
 import scala.concurrent.ExecutionContextExecutor
@@ -44,7 +43,7 @@ class StreamNode[T](graph: StreamGraph, val link: StreamFlow[T]) {
   /** 
    * Builder for [[org.wisp.stream.iterator.StreamTransformer#flatMap]]
    */
-  def flatMap[V](function: T => Source[V]): StreamNode[V] = {
+  def flatMap[V](function: T => () => Option[V]): StreamNode[V] = {
     val r = StreamTransformer.flatMap[T, V](link, function)
     graph.apply(r)
   }
@@ -52,7 +51,7 @@ class StreamNode[T](graph: StreamGraph, val link: StreamFlow[T]) {
   /**
    * Builder for [[org.wisp.stream.iterator.RunnableTransformer#flatMap]]
    */
-  def flatMapTo[V](function: T => Source[V]): RunnableTransformer[T, V] = {
+  def flatMapTo[V](function: T => () => Option[V]): RunnableTransformer[T, V] = {
     RunnableTransformer.flatMap[T, V](link, function)
   }
 
@@ -74,7 +73,7 @@ class StreamNode[T](graph: StreamGraph, val link: StreamFlow[T]) {
   /**
    * Builder for [[org.wisp.stream.iterator.StreamTransformer]]
    */
-  def collect[V](function: Option[T] => Source[V]): StreamNode[V] = {
+  def collect[V](function: Option[T] => () => Option[V]): StreamNode[V] = {
     val r = StreamTransformer[T, V](link, function)
     graph.apply(r)
   }
@@ -82,7 +81,7 @@ class StreamNode[T](graph: StreamGraph, val link: StreamFlow[T]) {
   /**
    * Builder for [[org.wisp.stream.iterator.RunnableTransformer]]
    */
-  def collectTo[V](function: Option[T] => Source[V]): RunnableTransformer[T, V] = {
+  def collectTo[V](function: Option[T] => () => Option[V]): RunnableTransformer[T, V] = {
     RunnableTransformer[T, V](link, function)
   }
 

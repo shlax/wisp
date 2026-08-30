@@ -7,7 +7,7 @@ import java.util.concurrent.locks.ReentrantLock
 import scala.concurrent.ExecutionContextExecutor
 import scala.util.control.NonFatal
 
-class StreamSource[T](src:Source[T])(using ec : ExecutionContextExecutor) extends SourceFlow[T], ExecutionFlow[T] {
+class StreamSource[T](src:() => Option[T])(using ec : ExecutionContextExecutor) extends SourceFlow[T], ExecutionFlow[T] {
 
   protected override val lock:ReentrantLock = new ReentrantLock()
   
@@ -27,7 +27,7 @@ class StreamSource[T](src:Source[T])(using ec : ExecutionContextExecutor) extend
 
       var n: Option[T] = None
       try {
-        n = src.next()
+        n = src.apply()
       } catch {
         case NonFatal(e) =>
           sourceException = Some(e)

@@ -25,7 +25,7 @@ object StreamTransformer {
   /**
    * Creates new stream applying `function`.
    */
-  def flatMap[F, T](stream:StreamFlow[F], function: F => Source[T])(using ExecutionContextExecutor): StreamTransformer[F, T] = {
+  def flatMap[F, T](stream:StreamFlow[F], function: F => () => Option[T])(using ExecutionContextExecutor): StreamTransformer[F, T] = {
     StreamTransformer(stream, { case Some(v) => function(v) case None => Source.empty } )
   }
 
@@ -52,22 +52,22 @@ object StreamTransformer {
  * @param stream source stream
  * @param collect function to apply to each element of the source stream. `End` of stream will be mapped to `None`
  */
-class StreamTransformer[F, T](stream:StreamFlow[F], override protected val collect: Option[F] => Source[T])(using ec : ExecutionContextExecutor)
+class StreamTransformer[F, T](stream:StreamFlow[F], override protected val collect: Option[F] => () => Option[T])(using ec : ExecutionContextExecutor)
   extends StreamHandler[F], SingleNodeFlow[T], ExecutionFlow[T], SourceTransformer[F, T]{
 
   override protected val lock: ReentrantLock = ReentrantLock()
 
   protected override val nodes:util.Queue[Option[T] => Unit] = createNodes()
 
-  protected var source: Option[Source[T]] = None
+  protected var source: Option[() => Option[T]] = None
   protected var ended = false
 
-  protected def send(source:Source[T]):Boolean = {
+  protected def send(source:() => Option[T]):Boolean = {
     var hasNext = true
     while (hasNext && !nodes.isEmpty) {
       var optVal: Option[T] = None
       try {
-        optVal = source.next()
+        optVal = source.apply()
       } catch {
         case NonFatal(ex) =>
           ec.reportFailure(ex)
@@ -127,7 +127,7 @@ class StreamTransformer[F, T](stream:StreamFlow[F], override protected val colle
       var optVal:Option[T] = None
       if(source.isDefined){
         try {
-          optVal = source.get.next()
+          optVal = source.get.apply()
         }catch{
           case NonFatal(ex) =>
             ec.reportFailure(ex)

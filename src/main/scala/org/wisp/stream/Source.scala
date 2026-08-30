@@ -17,7 +17,7 @@ object Source{
   def apply[T](value:T*) : Source[T] = {
     new Source[T] {
       private var cnt:Int = 0
-      override def next(): Option[T] = {
+      override def apply(): Option[T] = {
         if (cnt == value.size) None else {
           val v = Some(value(cnt))
           cnt += 1
@@ -33,12 +33,12 @@ object Source{
  * `Iterator` more suitable for messaging
  */
 @FunctionalInterface
-trait Source[+T]{
+trait Source[+T] extends ( () => Option[T] ){
 
   /**
    * {{{if(hasNext) Some(next()) else None}}}
    */
-  def next():Option[T]
+  override def apply():Option[T]
 
   /**
    * Maps each element of the source stream to a new value using the provided `function`.
@@ -47,8 +47,8 @@ trait Source[+T]{
     val self = this
     new Source[R](){
 
-      def next():Option[R] = {
-        self.next().map( i => function.apply(i) )
+      def apply():Option[R] = {
+        self.apply().map( i => function.apply(i) )
       }
       
     }
@@ -57,17 +57,17 @@ trait Source[+T]{
   /**
    * Returns a new `Source` by applying a function to all elements of this `Source` and using the elements of the resulting `Source`.
    */
-  def flatMap[R](function: T => Source[R]): Source[R] = {
+  def flatMap[R](function: T => () => Option[R]): Source[R] = {
     val self = this
     new Source[R]() {
-      var last:Option[Source[R]] = None
+      var last:Option[() => Option[R]] = None
       var end = false
 
-      def next(): Option[R] = {
+      override def apply(): Option[R] = {
         var r : Option[R] = None
         while(!end && r.isEmpty){
           if(last.isEmpty){
-            self.next() match {
+            self.apply() match {
               case None =>
                 end = true
               case Some(x) =>
@@ -75,7 +75,7 @@ trait Source[+T]{
             }
           }
           for(q <- last){
-            r = q.next()
+            r = q.apply()
             if(r.isEmpty) last = None
           }
         }
@@ -92,10 +92,10 @@ trait Source[+T]{
     val self = this
     new Source[T]() {
 
-      def next(): Option[T] = {
-        var n = self.next()
+      override def apply(): Option[T] = {
+        var n = self.apply()
         while (n.isDefined && !predicate.apply(n.get)){
-          n = self.next()
+          n = self.apply()
         }
         n
       }
@@ -111,10 +111,10 @@ trait Source[+T]{
     new Source[R]() {
       var end = false
       
-      def next(): Option[R] = {
+      override def apply(): Option[R] = {
         var r:Option[R] = None
         while (!end && r.isEmpty){
-          self.next() match {
+          self.apply() match {
             case Some(v) =>
               if(fn.isDefinedAt(v)){
                 r = Some(fn.apply(v))
@@ -145,10 +145,10 @@ trait Source[+T]{
    * Calls `consumer` for each element of the source stream.
    */
   def forEach[E >: T](consumer: E => Unit):Unit = {
-    var v = next()
+    var v = apply()
     while (v.isDefined){
       consumer.apply(v.get)
-      v = next()
+      v = apply()
     }
   }
 
@@ -160,8 +160,8 @@ trait Source[+T]{
     new Source[T](){
       private val lock = new ReentrantLock()
 
-      override def next(): Option[T] = lock.withLock {
-        self.next()
+      override def apply(): Option[T] = lock.withLock {
+        self.apply()
       }
     }
   }

@@ -24,7 +24,7 @@ object extensions {
     def asSource: Source[E] = new Source[E] {
       private val i = it.iterator()
 
-      override def next(): Option[E] = if (i.hasNext) Some(i.next()) else None
+      override def apply(): Option[E] = if (i.hasNext) Some(i.next()) else None
     }
   }
 
@@ -32,7 +32,7 @@ object extensions {
     def asSource: Source[util.Map.Entry[K, V]] = new Source[util.Map.Entry[K, V]] {
       private val i = it.entrySet().iterator()
 
-      override def next(): Option[util.Map.Entry[K, V]] = if (i.hasNext) Some(i.next()) else None
+      override def apply(): Option[util.Map.Entry[K, V]] = if (i.hasNext) Some(i.next()) else None
     }
   }
 
@@ -40,7 +40,7 @@ object extensions {
     def asSource: Source[E] = new Source[E] {
       private val i = it.iterator
 
-      override def next(): Option[E] = if (i.hasNext) Some(i.next()) else None
+      override def apply(): Option[E] = if (i.hasNext) Some(i.next()) else None
     }
   }
 
@@ -48,7 +48,7 @@ object extensions {
     def asSource: Source[E] = new Source[E] {
       private val i = it.iterator
 
-      override def next(): Option[E] = if (i.hasNext) Some(i.next()) else None
+      override def apply(): Option[E] = if (i.hasNext) Some(i.next()) else None
     }
   }
 

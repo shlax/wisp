@@ -97,11 +97,11 @@ trait Sink[-T] extends Consumer[Option[T]]{
   /**
    * Consume [[org.wisp.stream.Source]] and call `complete`
    */
-  def consume(s:Source[T]):Unit = {
-    var v = s.next()
+  def consume(s:() => Option[T]):Unit = {
+    var v = s.apply()
     while(v.isDefined){
       apply(v)
-      v = s.next()
+      v = s.apply()
     }
     complete()
   }
