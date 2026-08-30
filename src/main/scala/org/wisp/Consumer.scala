@@ -112,7 +112,7 @@ trait Consumer[-T] extends ( T => Unit ) {
   /**
    * [[java.util.function.Consumer#andThen(java.util.function.Consumer)]] with added variance
    */
-  def thenTo[S <: T](after: S => Unit): Consumer[S] = {
+  def andThen[S <: T](after: S => Unit): Consumer[S] = {
     val self = this
     (t: S) => {
       self.apply(t)
