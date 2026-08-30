@@ -1,6 +1,5 @@
 package org.wisp
 
-import org.wisp.stream.Source
 import org.wisp.utils.lock.withLock
 
 import java.util.concurrent.locks.ReentrantLock
