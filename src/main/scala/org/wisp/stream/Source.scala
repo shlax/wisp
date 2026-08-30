@@ -48,7 +48,7 @@ trait Source[+T] extends ( () => Option[T] ){
     new Source[R](){
 
       def apply():Option[R] = {
-        self.apply().map( i => function.apply(i) )
+        self.apply().map(function)
       }
       
     }
