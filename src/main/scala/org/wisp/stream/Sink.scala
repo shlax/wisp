@@ -103,7 +103,7 @@ trait Sink[-T] extends Consumer[Option[T]]{
       apply(v)
       v = s.apply()
     }
-    complete()
+    apply(v)
   }
 
 
