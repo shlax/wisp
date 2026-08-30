@@ -1,6 +1,6 @@
 package org.wisp.stream.flow
 
-import org.wisp.stream.iterator.{SingleNodeFlow, StreamFlow, StreamHandler, ExecutionFlow}
+import org.wisp.stream.iterator.{SingleNodeFlow, ExecutionFlow}
 import org.wisp.utils.lock.withLock
 
 import java.util
