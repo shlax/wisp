@@ -1,9 +1,7 @@
 package org.wisp.stream.graph
 
-import org.wisp.Consumer
 import org.wisp.stream.{Sink, Source}
 import org.wisp.stream.iterator.{RunnableSink, RunnableTransformer, SplitStream, StreamBuffer, StreamFlow, StreamSink, StreamTransformer}
-import org.wisp.stream.extensions.*
 import scala.concurrent.ExecutionContextExecutor
 
 /** 
@@ -115,10 +113,6 @@ class StreamNode[T](graph: StreamGraph, val link: StreamFlow[T]) {
 
   def to(c: Sink[T]): StreamSink[T] = {
     StreamSink(link, c)
-  }
-
-  def to(c: Consumer[T]): StreamSink[T] = {
-    StreamSink(link, c.asSink)
   }
 
   /**
