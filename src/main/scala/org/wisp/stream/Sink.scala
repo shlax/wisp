@@ -117,4 +117,11 @@ trait Sink[-T] extends Consumer[Option[T]]{
     }
   }
 
+  override def withSynchronization(): Sink[T] = {
+    val c = super.withSynchronization()
+    new Sink[T] {
+      override def apply(t: Option[T]): Unit = c.apply(t)
+    }
+  }
+  
 }

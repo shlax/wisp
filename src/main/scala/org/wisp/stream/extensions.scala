@@ -1,6 +1,6 @@
 package org.wisp.stream
 
-import org.wisp.Link
+import org.wisp.{Consumer, Link}
 
 import java.{lang, util}
 import scala.concurrent.Promise
@@ -84,6 +84,18 @@ object extensions {
 
         }
 
+      }
+    }
+
+  }
+
+  extension [E](c: Consumer[E]) {
+
+    def asSink: Sink[E] = new Sink[E] {
+      override def apply(t: Option[E]): Unit = {
+        if(t.isDefined){
+          c.apply(t.get)
+        }
       }
     }
 
