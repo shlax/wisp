@@ -123,5 +123,5 @@ trait Sink[-T] extends Consumer[Option[T]]{
       override def apply(t: Option[T]): Unit = c.apply(t)
     }
   }
-  
+
 }
