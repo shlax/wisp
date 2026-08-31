@@ -2,8 +2,6 @@ package org.wisp.stream
 
 import org.wisp.Consumer
 
-import scala.annotation.targetName
-
 object Sink {
 
   /**
