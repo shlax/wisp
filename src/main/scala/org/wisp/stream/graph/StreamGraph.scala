@@ -1,5 +1,6 @@
 package org.wisp.stream.graph
 
+import org.wisp.stream.{Sink, Source}
 import org.wisp.stream.iterator.{RunnableSource, RunnableSourceSink, StreamFlow, StreamSource, ZipStream}
 
 import scala.annotation.targetName
@@ -20,7 +21,7 @@ class StreamGraph(using val system:ExecutionContextExecutor){
   /**
    * Create stream from `source` ussing [[org.wisp.stream.iterator.StreamSource]]
    */
-  def from[T](source:() => Option[T]) : StreamNode[T] = {
+  def from[T](source:Source[T]) : StreamNode[T] = {
     apply(StreamSource(source))
   }
 
@@ -65,7 +66,7 @@ class StreamGraph(using val system:ExecutionContextExecutor){
   /**
    * `source` wil be run inside [[org.wisp.stream.iterator.RunnableSource#run]]
    */
-  def fromRunnable[T, R](source:() => Option[T])(fn : StreamNode[T] => Unit ) : RunnableSource[T] = {
+  def fromRunnable[T, R](source:Source[T])(fn : StreamNode[T] => Unit ) : RunnableSource[T] = {
     val f = RunnableSource(source)
     fn.apply(apply(f))
     f
@@ -74,7 +75,7 @@ class StreamGraph(using val system:ExecutionContextExecutor){
   /**
    * `source` and `sink` wil be run inside [[org.wisp.stream.iterator.RunnableSourceSink#run]]
    */
-  def runnable[T, R](source:() => Option[T], sink:Option[R] => Unit)(fn: StreamNode[T] => StreamNode[R]) : RunnableSourceSink[T, R] = {
+  def runnable[T, R](source:Source[T], sink:Sink[R])(fn: StreamNode[T] => StreamNode[R]) : RunnableSourceSink[T, R] = {
     RunnableSourceSink(source, sink){ prev =>
       fn.apply(apply(prev)).link
     }

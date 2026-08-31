@@ -1,5 +1,7 @@
 package org.wisp.stream.iterator
 
+import org.wisp.stream.Source
+
 import java.util
 import org.wisp.utils.lock.*
 
@@ -8,9 +10,9 @@ import scala.concurrent.ExecutionContextExecutor
 import scala.util.control.NonFatal
 
 /**
- * This class implements a stream source that can be executed on a thread to consume elements from `() => Option[T]`
+ * This class implements a stream source that can be executed on a thread to consume elements from [[Source]]
  */
-class RunnableSource[T](src: () => Option[T])(using ec : ExecutionContextExecutor)
+class RunnableSource[T](src: Source[T])(using ec : ExecutionContextExecutor)
   extends SourceFlow[T], RunnableStream[T], SingleNodeFlow[T], ExecutionFlow[T]{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
@@ -53,7 +55,7 @@ class RunnableSource[T](src: () => Option[T])(using ec : ExecutionContextExecuto
           var n: Option[T] = None
 
           try {
-            n = src.apply()
+            n = src.next()
           } catch {
             case NonFatal(ex) =>
               lock.withLock { sourceException = Some(ex) }

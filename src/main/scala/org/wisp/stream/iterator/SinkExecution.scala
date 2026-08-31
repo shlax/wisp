@@ -1,11 +1,13 @@
 package org.wisp.stream.iterator
 
+import org.wisp.stream.Sink
+
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
 trait SinkExecution[T](using executionContext: ExecutionContext) {
 
-  protected val sink: Option[T] => Unit
+  protected val sink: Sink[T]
 
   protected def onSinkException(e:Throwable):Unit
 
@@ -20,7 +22,7 @@ trait SinkExecution[T](using executionContext: ExecutionContext) {
   }
 
   def complete(): Unit = {
-    sink.apply(None)
+    sink.complete()
   }
 
 }

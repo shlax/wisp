@@ -97,14 +97,24 @@ trait Sink[-T] extends Consumer[Option[T]]{
   /**
    * Consume [[org.wisp.stream.Source]] and call `complete`
    */
-  def consume(s:() => Option[T]):Unit = {
-    var v = s.apply()
+  def consume(s:Source[T]):Unit = {
+    var v = s.next()
     while(v.isDefined){
       apply(v)
-      v = s.apply()
+      v = s.next()
     }
     apply(v)
   }
 
+  /**
+   * [[java.util.function.Consumer#andThen(java.util.function.Consumer)]] with added variance
+   */
+  def andThen[S <: T](after: Sink[S]): Sink[S] = {
+    val self = this
+    (t: Option[S]) => {
+      self.apply(t)
+      after.apply(t)
+    }
+  }
 
 }

@@ -1,12 +1,14 @@
 package org.wisp.stream.iterator
 
+import org.wisp.stream.{Sink, Source}
 import org.wisp.utils.lock.*
+
 import java.util
 import java.util.concurrent.locks.{Condition, ReentrantLock}
 import scala.concurrent.ExecutionContextExecutor
 import scala.util.control.NonFatal
 
-class RunnableSourceSink[F, T](src:() => Option[F], override protected val sink:Option[T] => Unit)(link: RunnableSourceSink[F, T] => StreamFlow[T])(using ec : ExecutionContextExecutor)
+class RunnableSourceSink[F, T](src:Source[F], override protected val sink:Sink[T])(link: RunnableSourceSink[F, T] => StreamFlow[T])(using ec : ExecutionContextExecutor)
   extends SourceFlow[F], RunnableStream[F], SingleNodeFlow[F], SinkExecution[T], StreamHandler[T], ExecutionFlow[F] {
 
   protected override val lock:ReentrantLock = new ReentrantLock()
@@ -82,7 +84,7 @@ class RunnableSourceSink[F, T](src:() => Option[F], override protected val sink:
           var n: Option[F] = None
 
           try {
-            n = src.apply()
+            n = src.next()
           } catch {
             case NonFatal(ex) =>
               lock.withLock{ sourceException = Some(ex) }

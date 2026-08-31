@@ -8,6 +8,7 @@ import scala.concurrent.ExecutionContextExecutor
  *
  * @tparam T The type of elements in the stream.
  */
+@FunctionalInterface
 trait StreamFlow[T] {
 
   /**

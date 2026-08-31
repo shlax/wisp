@@ -1,5 +1,6 @@
 package org.wisp.stream.iterator
 
+import org.wisp.stream.Sink
 import org.wisp.utils.lock.*
 
 import java.util.concurrent.locks.{Condition, ReentrantLock}
@@ -15,7 +16,7 @@ import scala.concurrent.ExecutionContextExecutor
  * @param upstream         the upstream link providing elements
  * @param sink             the underlying sink implementation that processes elements
  */
-class RunnableSink[T](upstream:StreamFlow[T], override protected val sink:Option[T] => Unit)(using ec: ExecutionContextExecutor) extends StreamHandler[T], RunnableStream[T], SinkExecution[T]{
+class RunnableSink[T](upstream:StreamFlow[T], override protected val sink:Sink[T])(using ec: ExecutionContextExecutor) extends StreamHandler[T], RunnableStream[T], SinkExecution[T]{
 
   protected override val lock:ReentrantLock = new ReentrantLock()
 
