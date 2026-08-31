@@ -6,6 +6,10 @@ import java.util.concurrent.locks.ReentrantLock
 
 object Source{
 
+  def apply[T](fn: () => Option[T]): Source[T] = { () =>
+    fn.apply()
+  }
+
   /**
    * empty Source
    */

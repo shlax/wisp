@@ -2,6 +2,8 @@ package org.wisp.stream
 
 import org.wisp.Consumer
 
+import scala.annotation.targetName
+
 object Sink {
 
   /**
@@ -9,11 +11,9 @@ object Sink {
    *
    * Ignores `None` values
    */
-  def apply[T](fn: T => Unit): Sink[T] = {
-    (t: Option[T]) => {
-      if(t.isDefined){
-        fn.apply(t.get)
-      }
+  def apply[T](fn: T => Unit): Sink[T] = { (t: Option[T]) =>
+    if(t.isDefined){
+      fn.apply(t.get)
     }
   }
 

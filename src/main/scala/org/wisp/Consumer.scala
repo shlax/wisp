@@ -10,21 +10,17 @@ object Consumer {
   /**
    * Creates [[Consumer]] from function
    */
-  def apply[T](fn: T => Unit): Consumer[T] = {
-    (t: T) => {
-      fn.apply(t)
-    }
+  def apply[T](fn: T => Unit): Consumer[T] = { (t: T) =>
+    fn.apply(t)
   }
 
   /**
    * Creates [[Consumer]] that sends messages to [[Link]]
    */
-  def apply[T](ref:Link[T, ?]):Consumer[T] = {
-    (t: T) => {
-      ref << t
-    }
+  def apply[T](ref:Link[T, ?]):Consumer[T] = { (t: T) =>
+    ref << t
   }
-  
+
 }
 
 /**
