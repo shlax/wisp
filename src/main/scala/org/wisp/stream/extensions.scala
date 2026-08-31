@@ -91,6 +91,9 @@ object extensions {
 
   extension [E](c: Consumer[E]) {
 
+    /**
+     * @return [[Sink]] that will ignore `None` values
+     */
     def asSink: Sink[E] = new Sink[E] {
       override def apply(t: Option[E]): Unit = {
         if(t.isDefined){
