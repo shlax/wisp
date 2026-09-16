@@ -27,12 +27,16 @@ object Sink {
 @FunctionalInterface
 trait Sink[-T] extends Consumer[Option[T]]{
 
-  def accept(t: T): Unit = {
-    apply(Some(t))
+  /**
+   * Call the `apply` method with the `value` wrapped in `Some`.
+   */
+  def accept(value: T): Unit = {
+    apply(Some(value))
   }
 
   /**
-   * Indicates end of stream
+   * Indicates end of stream.
+   * Call the `apply` method with None.
    */
   def complete(): Unit = {
     apply(None)

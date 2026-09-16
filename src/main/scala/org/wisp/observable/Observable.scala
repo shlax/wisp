@@ -52,6 +52,10 @@ trait Observable[T] extends Consumer[T]{
     n
   }
 
+  def as[U](f: this.type => U): U = {
+    f.apply(this)
+  }
+
 }
 
 object Observable {

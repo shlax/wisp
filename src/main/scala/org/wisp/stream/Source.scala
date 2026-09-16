@@ -3,6 +3,7 @@ package org.wisp.stream
 import org.wisp.utils.lock.withLock
 
 import java.util.concurrent.locks.ReentrantLock
+import scala.annotation.targetName
 
 object Source{
 
@@ -43,6 +44,12 @@ trait Source[+T] { //extends ( () => Option[T] ){
    * {{{if(hasNext) Some(next()) else None}}}
    */
   def next():Option[T]
+
+  /**
+   * Convert this `Source` to `() => Option[T]` function.
+   */
+  @targetName("asFunction")
+  def unary_! : () => Option[T] = { () => this.next() }
 
   /**
    * Maps each element of the source stream to a new value using the provided `function`.

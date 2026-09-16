@@ -3,6 +3,7 @@ package org.wisp
 import org.wisp.utils.lock.withLock
 
 import java.util.concurrent.locks.ReentrantLock
+import scala.annotation.targetName
 import scala.util.{Failure, Success, Try}
 
 object Consumer {
@@ -33,6 +34,12 @@ trait Consumer[-T] { // extends ( T => Unit ) {
    * [[java.util.function.Consumer#accept(java.lang.Object)]]
    */
   def apply(t:T):Unit
+
+  /**
+   * Convert this `Consumer` to `T => Unit` function.
+   */
+  @targetName("asFunction")
+  def unary_! : T => Unit = this.apply
 
   /**
    * Returns `Consumer` that converts values using `function` and then calls `this`

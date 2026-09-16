@@ -41,7 +41,7 @@ class Timer[T](scheduledService:Option[ScheduledExecutorService] = None) extends
   def schedule(delay:Duration, value: => T)(fn: AbstractObservable[T] => Unit): ScheduledFuture[T] = {
     val c = Observable[T]()
     fn.apply(c)
-    schedule(c.apply, delay, value)
+    schedule(!c, delay, value)
   }
 
   def schedule(consumer: T => Unit, delay:Duration, value: => T): ScheduledFuture[T] = {
@@ -71,7 +71,7 @@ class Timer[T](scheduledService:Option[ScheduledExecutorService] = None) extends
   def scheduleAtFixedRate(initialDelay:Duration, period:Duration, callable: => T)(fn: AbstractObservable[T] => Unit): ScheduledFuture[?] = {
     val c = Observable[T]()
     fn.apply(c)
-    scheduleAtFixedRate(c.apply, initialDelay, period, callable)
+    scheduleAtFixedRate(!c, initialDelay, period, callable)
   }
 
   def scheduleAtFixedRate(consumer: T => Unit, initialDelay:Duration, period:Duration, callable: => T): ScheduledFuture[?] = {
@@ -100,7 +100,7 @@ class Timer[T](scheduledService:Option[ScheduledExecutorService] = None) extends
   def scheduleWithFixedDelay(initialDelay: Duration, delay: Duration, callable: => T)(fn: AbstractObservable[T] => Unit): ScheduledFuture[?] = {
     val c = Observable[T]()
     fn.apply(c)
-    scheduleWithFixedDelay(c.apply, initialDelay, delay, callable)
+    scheduleWithFixedDelay(!c, initialDelay, delay, callable)
   }
 
   def scheduleWithFixedDelay(consumer: T => Unit, initialDelay: Duration, delay: Duration, callable: => T): ScheduledFuture[?] = {
