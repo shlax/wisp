@@ -18,7 +18,7 @@ class ActorSystem(inboxCapacity:Int = 3, executionContext:Option[ExecutionContex
   protected val executor: ExecutionContextExecutorService = createExecutor()
 
   /**
-   *  creates virtual thread executor
+   *  Use [[executionContext]] or creates virtual thread executor
    */
   protected def createExecutor() : ExecutionContextExecutorService = {
     executionContext  match {
@@ -30,7 +30,7 @@ class ActorSystem(inboxCapacity:Int = 3, executionContext:Option[ExecutionContex
 
   protected val closed: AtomicBoolean = AtomicBoolean(false)
 
-  protected val lock:ReentrantLock = new ReentrantLock()
+  protected val finalizeLock:ReentrantLock = new ReentrantLock()
   protected var finalizeWith:Option[ExecutionContextExecutor] = None
 
   protected def createFinalizeWith() : ExecutionContextExecutor = {
@@ -43,7 +43,7 @@ class ActorSystem(inboxCapacity:Int = 3, executionContext:Option[ExecutionContex
     }catch{
       case e : RejectedExecutionException =>
         if(closed.get()) {
-          val ex = lock.withLock {
+          val ex = finalizeLock.withLock {
             finalizeWith match {
               case Some(ec) => ec
               case None =>
@@ -123,11 +123,11 @@ class ActorSystem(inboxCapacity:Int = 3, executionContext:Option[ExecutionContex
   }
 
   /**
-   * Close executor only in case it was created by this ActorSystem
+   * Close [[executor]] only in case it was created by this ActorSystem
    */
   override def close(): Unit = {
+    closed.set(true)
     if(executionContext.isEmpty) {
-      closed.set(true)
       executor.close()
     }
   }

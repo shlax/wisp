@@ -6,11 +6,19 @@ import org.wisp.Link
 import java.util.concurrent.{Callable, Executors, ScheduledExecutorService, ScheduledFuture, TimeUnit}
 import scala.concurrent.duration.Duration
 
-class Timer[T] extends AutoCloseable{
+class Timer[T](scheduledService:Option[ScheduledExecutorService] = None) extends AutoCloseable{
 
   protected val service: ScheduledExecutorService = createService()
+
+  /**
+   * Use provided [[scheduledService]] or creates a single-threaded executor
+   */
   protected def createService(): ScheduledExecutorService = {
-    Executors.newSingleThreadScheduledExecutor()
+    scheduledService match {
+      case Some(s) => s
+      case None =>
+        Executors.newSingleThreadScheduledExecutor()
+    }
   }
 
   /**
@@ -102,8 +110,13 @@ class Timer[T] extends AutoCloseable{
     }, initialDelay.toNanos, delay.toNanos, TimeUnit.NANOSECONDS)
   }
 
+  /**
+   * Closes [[service]] only in case it was created by this Timer
+   */
   override def close(): Unit = {
-    service.close()
+    if(scheduledService.isEmpty) {
+      service.close()
+    }
   }
 
 }
