@@ -1,6 +1,6 @@
 package org.wisp.remote
 
-import org.wisp.remote.exceptions.RemoteAskException
+import org.wisp.remote.exceptions.RemoteCallException
 import org.wisp.{Link, Message}
 
 import java.net.SocketAddress
@@ -20,7 +20,7 @@ class RemoteLink[-T, +R](client: UdpClient[T], address:SocketAddress) extends Li
   }
 
   override def call(v:T) : Future[Message[R, T]] = {
-    throw RemoteAskException(v)
+    throw RemoteCallException(v)
   }
   
 }
