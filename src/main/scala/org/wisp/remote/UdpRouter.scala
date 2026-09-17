@@ -1,6 +1,7 @@
 package org.wisp.remote
 
-import org.wisp.Link
+import org.wisp.remote.exceptions.RemoteAskException
+import org.wisp.{Link, Message}
 import org.wisp.serializer.*
 import org.wisp.utils.bytesToUnsignedInt
 
@@ -33,36 +34,56 @@ class UdpRouter[K, M <: RemoteMessage[K], R](address: SocketAddress, capacity: I
   /**
    * Map that associates path keys with actor references for message routing.
    */
-  protected val bindMap: ConcurrentMap[K, M => Unit] = createBindMap()
+  protected val bindMap: ConcurrentMap[K, (M, SocketAddress) => Unit] = createBindMap()
 
-  protected def createBindMap(): ConcurrentMap[K, M => Unit] = {
-    ConcurrentHashMap[K, M => Unit]()
+  protected def createBindMap(): ConcurrentMap[K, (M, SocketAddress) => Unit] = {
+    ConcurrentHashMap[K, (M, SocketAddress) => Unit]()
+  }
+
+  /**
+   * Registers a consumer for a given path.
+   *
+   * @param path the path key to register
+   * @param consumer consumer reference to associate with the path
+   * @return true if a mapping already existed
+   */
+  def register(path: K, consumer: M => Unit): Boolean = {
+    bindMap.put(path, (rm: M, ?) => consumer(rm)) != null
   }
 
   /**
    * Registers an actor reference for a given path.
    *
    * @param path the path key to register
-   * @param link  the actor reference to associate with the path
-   * @return Some(previousActorLink) if a mapping already existed, None otherwise
+   * @param link the actor reference to associate with the path
+   * @return true if a mapping already existed
    */
-  def register(path: K, link: M => Unit): Option[M => Unit] = {
-    Option(bindMap.put(path, link))
-  }
+  def register(path: K, link: Link[M, R]): Boolean = {
+    val fn = { (rm: M, adr: SocketAddress) =>
+      link.apply(Message[M, R](rm, new Link[R, M] {
+        override def apply(t: Message[R, M]): Unit = {
+          t.process(UdpRouter.this.getClass) {
+            send(adr, t.value)
+          }
+        }
 
-  def register(path: K, link: Link[M, R]): Option[M => Unit] = {
-    register(path, link.send)
-  }
+        override def call(v: R): Future[Message[M, R]] = {
+          throw RemoteAskException(v)
+        }
+      }))
+    }
 
+    bindMap.put(path, fn) != null
+  }
 
   /**
    * Removes an actor registration for a given path.
    *
    * @param path the path to remove
-   * @return Some(removedActorLink) if a mapping existed, None otherwise
+   * @return true if a mapping already existed
    */
-  def remove(path: K): Option[M => Unit] = {
-    Option(bindMap.remove(path))
+  def remove(path: K): Boolean = {
+    bindMap.remove(path) != null
   }
 
   protected val closed: AtomicBoolean = new AtomicBoolean(false)
@@ -142,7 +163,7 @@ class UdpRouter[K, M <: RemoteMessage[K], R](address: SocketAddress, capacity: I
       throw new IllegalStateException("not found: " + rm.path)
     }
 
-    ref.apply(rm)
+    ref.apply(rm, adr)
   }
 
   /**

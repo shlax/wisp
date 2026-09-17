@@ -10,17 +10,11 @@ import scala.concurrent.{ExecutionContextExecutor, Future, Promise}
 @FunctionalInterface
 trait Link[-T, +R] extends Consumer[Message[T, R]]{
 
-
-  /**
-   * operator for `send`
-   */
-  @targetName("sendOperator")
-  def << (v:T) : Unit = send(v)
-
   /**
    * Sends a one-way asynchronous message
    */
-  def send(v:T) : Unit = {
+  @targetName("send")
+  def << (v:T) : Unit = {
     val msg = Message[T, R]( v, t => { throw UndeliveredException(t) })
     apply(msg)
   }

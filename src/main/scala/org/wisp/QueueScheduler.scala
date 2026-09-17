@@ -48,7 +48,8 @@ class QueueScheduler[V, R, T <: Actor[V, R]](inboxCapacity:Int, fn: ActorSchedul
             n.process(actor.getClass) {
               try {
                 actor.apply(new Link[R, V] {
-                  override def send(v: R): Unit = apply(Message(v, actor))
+                  @targetName("send")
+                  override def <<(v: R): Unit = apply(Message(v, actor))
 
                   override def apply(t: Message[R, V]): Unit = {
                     n.sender.apply(t)
