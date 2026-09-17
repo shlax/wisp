@@ -6,7 +6,7 @@ import org.wisp.Link
 import java.util.concurrent.{Callable, Executors, ScheduledExecutorService, ScheduledFuture, TimeUnit}
 import scala.concurrent.duration.Duration
 
-class Timer[T](scheduledService:Option[ScheduledExecutorService] = None) extends AutoCloseable{
+class Timer(scheduledService:Option[ScheduledExecutorService] = None) extends AutoCloseable{
 
   protected val service: ScheduledExecutorService = createService()
 
@@ -26,7 +26,7 @@ class Timer[T](scheduledService:Option[ScheduledExecutorService] = None) extends
    * The value is computed lazily, and once the delay elapses, it is sent via the `<<` operator
    * of the provided `Link`. The scheduled task returns the computed value.
    */
-  def schedule(link:Link[T, ?], delay:Duration, value: => T): ScheduledFuture[T] = {
+  def schedule[T](link:Link[T, ?], delay:Duration, value: => T): ScheduledFuture[T] = {
     service.schedule( () => {
       val v:T = value
       link << v
@@ -38,13 +38,13 @@ class Timer[T](scheduledService:Option[ScheduledExecutorService] = None) extends
    * Schedules a task to execute after a specified delay with a given value. The value is lazily evaluated,
    * and the provided function is executed on an `AbstractObservable` for additional subscriptions or behavior.
    */
-  def schedule(delay:Duration, value: => T)(fn: Observable[T] => Unit): ScheduledFuture[T] = {
+  def schedule[T](delay:Duration, value: => T)(fn: Observable[T] => Unit): ScheduledFuture[T] = {
     val c = Observable[T]()
     fn.apply(c)
     schedule(!c, delay, value)
   }
 
-  def schedule(consumer: T => Unit, delay:Duration, value: => T): ScheduledFuture[T] = {
+  def schedule[T](consumer: T => Unit, delay:Duration, value: => T): ScheduledFuture[T] = {
     service.schedule( () => {
       val v:T = value
       consumer.apply(v)
@@ -57,7 +57,7 @@ class Timer[T](scheduledService:Option[ScheduledExecutorService] = None) extends
    * The task computes a value of type `T` using the provided `callable` function
    * and sends it asynchronously to the specified `Link` using the `<<` operator.
    */
-  def scheduleAtFixedRate(link:Link[T, ?], initialDelay:Duration, period:Duration, callable: => T): ScheduledFuture[?] = {
+  def scheduleAtFixedRate[T](link:Link[T, ?], initialDelay:Duration, period:Duration, callable: => T): ScheduledFuture[?] = {
     service.scheduleAtFixedRate( () => {
       val v:T = callable
       link << v
@@ -68,13 +68,13 @@ class Timer[T](scheduledService:Option[ScheduledExecutorService] = None) extends
    * Schedules a task to execute at a fixed rate after an initial delay. The value is lazily evaluated,
    * and the provided function is executed on an [[Observable]] for additional subscriptions or behavior.
    */
-  def scheduleAtFixedRate(initialDelay:Duration, period:Duration, callable: => T)(fn: Observable[T] => Unit): ScheduledFuture[?] = {
+  def scheduleAtFixedRate[T](initialDelay:Duration, period:Duration, callable: => T)(fn: Observable[T] => Unit): ScheduledFuture[?] = {
     val c = Observable[T]()
     fn.apply(c)
     scheduleAtFixedRate(!c, initialDelay, period, callable)
   }
 
-  def scheduleAtFixedRate(consumer: T => Unit, initialDelay:Duration, period:Duration, callable: => T): ScheduledFuture[?] = {
+  def scheduleAtFixedRate[T](consumer: T => Unit, initialDelay:Duration, period:Duration, callable: => T): ScheduledFuture[?] = {
     service.scheduleAtFixedRate( () => {
       val v:T = callable
       consumer.apply(v)
@@ -86,7 +86,7 @@ class Timer[T](scheduledService:Option[ScheduledExecutorService] = None) extends
    * execution and the start of the next. The task computes a value of type `T` using the provided
    * `callable` function and sends it asynchronously to the given `Link` using the `<<` operator.
    */
-  def scheduleWithFixedDelay(link: Link[T, ?], initialDelay: Duration, delay: Duration, callable: => T): ScheduledFuture[?] = {
+  def scheduleWithFixedDelay[T](link: Link[T, ?], initialDelay: Duration, delay: Duration, callable: => T): ScheduledFuture[?] = {
     service.scheduleWithFixedDelay(() => {
       val v:T = callable
       link << v
@@ -97,13 +97,13 @@ class Timer[T](scheduledService:Option[ScheduledExecutorService] = None) extends
    * Schedules a task to execute at a fixed delay an initial delay. The value is lazily evaluated,
    * and the provided function is executed on an [[Observable]] for additional subscriptions or behavior.
    */
-  def scheduleWithFixedDelay(initialDelay: Duration, delay: Duration, callable: => T)(fn: Observable[T] => Unit): ScheduledFuture[?] = {
+  def scheduleWithFixedDelay[T](initialDelay: Duration, delay: Duration, callable: => T)(fn: Observable[T] => Unit): ScheduledFuture[?] = {
     val c = Observable[T]()
     fn.apply(c)
     scheduleWithFixedDelay(!c, initialDelay, delay, callable)
   }
 
-  def scheduleWithFixedDelay(consumer: T => Unit, initialDelay: Duration, delay: Duration, callable: => T): ScheduledFuture[?] = {
+  def scheduleWithFixedDelay[T](consumer: T => Unit, initialDelay: Duration, delay: Duration, callable: => T): ScheduledFuture[?] = {
     service.scheduleWithFixedDelay(() => {
       val v:T = callable
       consumer.apply(v)
