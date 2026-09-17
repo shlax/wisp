@@ -1,6 +1,6 @@
 package org.wisp.timer
 
-import org.wisp.observable.{AbstractObservable, Observable}
+import org.wisp.observable.Observable
 import org.wisp.Link
 
 import java.util.concurrent.{Callable, Executors, ScheduledExecutorService, ScheduledFuture, TimeUnit}
@@ -38,7 +38,7 @@ class Timer[T](scheduledService:Option[ScheduledExecutorService] = None) extends
    * Schedules a task to execute after a specified delay with a given value. The value is lazily evaluated,
    * and the provided function is executed on an `AbstractObservable` for additional subscriptions or behavior.
    */
-  def schedule(delay:Duration, value: => T)(fn: AbstractObservable[T] => Unit): ScheduledFuture[T] = {
+  def schedule(delay:Duration, value: => T)(fn: Observable[T] => Unit): ScheduledFuture[T] = {
     val c = Observable[T]()
     fn.apply(c)
     schedule(!c, delay, value)
@@ -66,9 +66,9 @@ class Timer[T](scheduledService:Option[ScheduledExecutorService] = None) extends
 
   /**
    * Schedules a task to execute at a fixed rate after an initial delay. The value is lazily evaluated,
-   * and the provided function is executed on an `AbstractObservable` for additional subscriptions or behavior.
+   * and the provided function is executed on an [[Observable]] for additional subscriptions or behavior.
    */
-  def scheduleAtFixedRate(initialDelay:Duration, period:Duration, callable: => T)(fn: AbstractObservable[T] => Unit): ScheduledFuture[?] = {
+  def scheduleAtFixedRate(initialDelay:Duration, period:Duration, callable: => T)(fn: Observable[T] => Unit): ScheduledFuture[?] = {
     val c = Observable[T]()
     fn.apply(c)
     scheduleAtFixedRate(!c, initialDelay, period, callable)
@@ -95,9 +95,9 @@ class Timer[T](scheduledService:Option[ScheduledExecutorService] = None) extends
 
   /**
    * Schedules a task to execute at a fixed delay an initial delay. The value is lazily evaluated,
-   * and the provided function is executed on an `AbstractObservable` for additional subscriptions or behavior.
+   * and the provided function is executed on an [[Observable]] for additional subscriptions or behavior.
    */
-  def scheduleWithFixedDelay(initialDelay: Duration, delay: Duration, callable: => T)(fn: AbstractObservable[T] => Unit): ScheduledFuture[?] = {
+  def scheduleWithFixedDelay(initialDelay: Duration, delay: Duration, callable: => T)(fn: Observable[T] => Unit): ScheduledFuture[?] = {
     val c = Observable[T]()
     fn.apply(c)
     scheduleWithFixedDelay(!c, initialDelay, delay, callable)
