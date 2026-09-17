@@ -59,18 +59,8 @@ class UdpRouter[K, M <: RemoteMessage[K], R](address: SocketAddress, capacity: I
    * @return true if a mapping already existed
    */
   def register(path: K, link: Link[M, R]): Boolean = {
-    val fn = { (rm: M, adr: SocketAddress) =>
-      link.apply(Message[M, R](rm, new Link[R, M] {
-        override def apply(t: Message[R, M]): Unit = {
-          t.process(UdpRouter.this.getClass) {
-            send(adr, t.value)
-          }
-        }
-
-        override def call(v: R): Future[Message[M, R]] = {
-          throw RemoteAskException(v)
-        }
-      }))
+    val fn = { (value: M, address: SocketAddress) =>
+      link.apply( Message(value, RemoteLink(this, address)) )
     }
 
     bindMap.put(path, fn) != null
