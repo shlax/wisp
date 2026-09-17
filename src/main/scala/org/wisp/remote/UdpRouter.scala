@@ -1,7 +1,6 @@
 package org.wisp.remote
 
-import org.wisp.remote.exceptions.RemoteAskException
-import org.wisp.{Link, Message}
+import org.wisp.Link
 import org.wisp.serializer.*
 import org.wisp.utils.bytesToUnsignedInt
 
@@ -34,10 +33,10 @@ class UdpRouter[K, M <: RemoteMessage[K], R](address: SocketAddress, capacity: I
   /**
    * Map that associates path keys with actor references for message routing.
    */
-  protected val bindMap: ConcurrentMap[K, Link[M, R]] = createBindMap()
+  protected val bindMap: ConcurrentMap[K, M => Unit] = createBindMap()
 
-  protected def createBindMap(): ConcurrentMap[K, Link[M, R]] = {
-    ConcurrentHashMap[K, Link[M, R]]()
+  protected def createBindMap(): ConcurrentMap[K, M => Unit] = {
+    ConcurrentHashMap[K, M => Unit]()
   }
 
   /**
@@ -47,9 +46,14 @@ class UdpRouter[K, M <: RemoteMessage[K], R](address: SocketAddress, capacity: I
    * @param link  the actor reference to associate with the path
    * @return Some(previousActorLink) if a mapping already existed, None otherwise
    */
-  def register(path: K, link: Link[M, R]): Option[Link[M, R]] = {
+  def register(path: K, link: M => Unit): Option[M => Unit] = {
     Option(bindMap.put(path, link))
   }
+
+  def register(path: K, link: Link[M, R]): Option[M => Unit] = {
+    register(path, link.send)
+  }
+
 
   /**
    * Removes an actor registration for a given path.
@@ -57,7 +61,7 @@ class UdpRouter[K, M <: RemoteMessage[K], R](address: SocketAddress, capacity: I
    * @param path the path to remove
    * @return Some(removedActorLink) if a mapping existed, None otherwise
    */
-  def remove(path: K): Option[Link[M, R]] = {
+  def remove(path: K): Option[M => Unit] = {
     Option(bindMap.remove(path))
   }
 
@@ -138,16 +142,7 @@ class UdpRouter[K, M <: RemoteMessage[K], R](address: SocketAddress, capacity: I
       throw new IllegalStateException("not found: " + rm.path)
     }
 
-    ref.apply( Message[M, R]( rm, new Link[R, M]{
-        override def apply(t: Message[R, M]): Unit = {
-          t.process(UdpRouter.this.getClass) {
-            send(adr, t.value)
-          }
-        }
-        override def call(v:R) : Future[Message[M, R]] = {
-          throw RemoteAskException(v)
-        }
-      }) )
+    ref.apply(rm)
   }
 
   /**

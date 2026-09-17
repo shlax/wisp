@@ -19,6 +19,7 @@ import java.util.zip.CRC32C
 class UdpClient[T](address: Option[SocketAddress] = None)(using ReadWrite[T]) extends AutoCloseable {
 
   protected val channel: DatagramChannel = createDatagramChannel(address)
+  
   protected def createDatagramChannel(adr: Option[SocketAddress]): DatagramChannel = {
     val dc = DatagramChannel.open()
     for(a <- adr) dc.bind(a)

@@ -217,12 +217,15 @@ class BasicTests {
       import IdName.given
 
       val r = use(UdpRouter[Int, IdName, IdName](adr, 2024))
-      r.register(1, ec.create( (i:ActorScheduler[IdName, IdName]) => new AbstractActor[IdName, IdName](i) {
+      
+      val actor = ec.create( (i:ActorScheduler[IdName, IdName]) => new AbstractActor[IdName, IdName](i) {
         override def apply(from: Link[IdName, IdName]): IdName => Unit = { x =>
           res.add(x)
           cd.countDown()
         }
-      }))
+      })
+      
+      r.register(1, actor)
       ec.execute(r)
 
       val c = use(UdpClient())
