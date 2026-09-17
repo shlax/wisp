@@ -1,6 +1,5 @@
 package org.wisp.remote
 
-import org.wisp.remote.exceptions.RemoteAskException
 import org.wisp.{Link, Message}
 import org.wisp.serializer.*
 import org.wisp.utils.bytesToUnsignedInt
@@ -48,7 +47,7 @@ class UdpRouter[K, M <: RemoteMessage[K], R](address: SocketAddress, capacity: I
    * @return true if a mapping already existed
    */
   def register(path: K, consumer: M => Unit): Boolean = {
-    bindMap.put(path, (rm: M, ?) => consumer(rm)) != null
+    bindMap.put(path, (v: M, ?) => consumer(v) ) != null
   }
 
   /**
