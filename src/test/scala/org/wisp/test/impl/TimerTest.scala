@@ -19,7 +19,7 @@ class TimerTest {
     Timer()|{ t =>
 
       t.scheduleAtFixedRate[Int](50.millis, 50.millis, i.incrementAndGet()){ o =>
-        o.map( _ * 2 ).to{ v =>
+        o.mapTo( _ * 2 ).to{ v =>
           println(v)
           if( s.addAndGet(v) > 3) {
             cd.countDown()

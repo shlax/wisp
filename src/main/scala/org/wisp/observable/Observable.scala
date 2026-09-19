@@ -15,7 +15,7 @@ trait Observable[T] extends Consumer[T]{
 
   def to(subscriber: T => Unit): Subscription
 
-  def map[U](f: T => U): Observable[U] = {
+  def mapTo[U](f: T => U): Observable[U] = {
     val n = Observable[U]()
     to{ (v: T) =>
       val y = f.apply(v)
@@ -24,7 +24,7 @@ trait Observable[T] extends Consumer[T]{
     n
   }
 
-  def flatMap[U](f: (T, Observable[U]) => Unit): Observable[U] = {
+  def flatMapTo[U](f: (T, Observable[U]) => Unit): Observable[U] = {
     val n = Observable[U]()
     to { (v: T) =>
       f.apply(v, n)
@@ -32,7 +32,7 @@ trait Observable[T] extends Consumer[T]{
     n
   }
 
-  def filter(f: T => Boolean): Observable[T] = {
+  def filterTo(f: T => Boolean): Observable[T] = {
     val n = Observable[T]()
     to{ (v: T) =>
       if(f.apply(v)){
@@ -42,7 +42,7 @@ trait Observable[T] extends Consumer[T]{
     n
   }
 
-  def collect[U](f:PartialFunction[T, U]): Observable[U] = {
+  def collectTo[U](f:PartialFunction[T, U]): Observable[U] = {
     val n = Observable[U]()
     to{ (v: T) =>
       if(f.isDefinedAt(v)){
