@@ -2,19 +2,25 @@ package org.wisp.utils
 
 import java.util.UUID
 import java.util.concurrent.ThreadLocalRandom
+import java.util.concurrent.atomic.AtomicInteger
 
 object uuid {
+
+  private val counter = AtomicInteger(ThreadLocalRandom.current().nextInt(4096))
 
   /**
    * generate random UUID using ThreadLocalRandom
    */
   def generateUUID():UUID = {
-    val timestamp = System.currentTimeMillis()
-    val random = ThreadLocalRandom.current()
+
+    val acc = counter.getAndUpdate{ i =>
+      val j = i + 1
+      if(j >= 4096) 0 else j
+    }
 
     // mask to ensure it fits in 12 bits
-    var mostSigBits = (timestamp << 16) | (random.nextInt(4096) & 0xFFFL)
-    var leastSigBits = random.nextLong()
+    var mostSigBits = ( System.currentTimeMillis() << 16 ) | ( acc & 0xFFFL )
+    var leastSigBits = ThreadLocalRandom.current().nextLong()
 
     // Set version to 7 (0111 in bits 48-51)
     mostSigBits = (mostSigBits & 0xFFFFFFFFFFFF0FFFL) | 0x0000000000007000L
