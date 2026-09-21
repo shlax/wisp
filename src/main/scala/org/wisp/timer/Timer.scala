@@ -66,7 +66,7 @@ class Timer(scheduledService:Option[ScheduledExecutorService] = None) extends Au
 
   /**
    * Schedules a task to execute at a fixed rate after an initial delay. The value is lazily evaluated,
-   * and the provided function is executed on an [[Observable]] for additional subscriptions or behavior.
+   * and the provided function is executed on an [[org.wisp.observable.Observable]] for additional subscriptions or behavior.
    */
   def scheduleAtFixedRate[T](initialDelay:Duration, period:Duration, callable: => T)(fn: Observable[T] => Unit): ScheduledFuture[?] = {
     val c = Observable[T]()
@@ -84,7 +84,7 @@ class Timer(scheduledService:Option[ScheduledExecutorService] = None) extends Au
   /**
    * Schedules a task to execute repeatedly with a fixed delay between the completion of one
    * execution and the start of the next. The task computes a value of type `T` using the provided
-   * `callable` function and sends it asynchronously to the given `Link` using the `<<` operator.
+   * `callable` function and sends it asynchronously to the given [[org.wisp.Link]] using the `<<` operator.
    */
   def scheduleWithFixedDelay[T](link: Link[T, ?], initialDelay: Duration, delay: Duration, callable: => T): ScheduledFuture[?] = {
     service.scheduleWithFixedDelay(() => {
@@ -95,7 +95,7 @@ class Timer(scheduledService:Option[ScheduledExecutorService] = None) extends Au
 
   /**
    * Schedules a task to execute at a fixed delay an initial delay. The value is lazily evaluated,
-   * and the provided function is executed on an [[Observable]] for additional subscriptions or behavior.
+   * and the provided function is executed on an [[org.wisp.observable.Observable]] for additional subscriptions or behavior.
    */
   def scheduleWithFixedDelay[T](initialDelay: Duration, delay: Duration, callable: => T)(fn: Observable[T] => Unit): ScheduledFuture[?] = {
     val c = Observable[T]()
