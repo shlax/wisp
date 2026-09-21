@@ -733,7 +733,7 @@ class BasicTests {
       val b: StreamBuffer[Int] = new StreamBuffer[Int](f.link, 3) {
         
         def check():Unit = {
-          if(max.updateAndGet { i => if( queue.size() > i) queue.size() else i } >= 3) cd2.countDown()
+          if(max.updateAndGet(queue.size().max) >= 3) cd2.countDown()
         }
 
         override def nextWithLock(sender: Option[Int] => Unit): Unit = {
