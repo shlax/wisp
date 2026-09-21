@@ -18,6 +18,8 @@ jobs:
 
     runs-on: ubuntu-latest
     permissions:
+      pages: write
+      id-token: write
       packages: write
       contents: read
 
