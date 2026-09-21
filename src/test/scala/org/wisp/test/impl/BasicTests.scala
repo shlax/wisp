@@ -716,4 +716,50 @@ class BasicTests {
 
   }
 
+  @Test
+  def buffer(): Unit = {
+    val l1 = Collections.synchronizedList(new util.ArrayList[Int]())
+
+    ActorSystem() || { sys =>
+      val graph = StreamGraph()
+
+      val cd2 = new CountDownLatch(1)
+
+      val data = Seq(0, 1, 2, 3, 4).asSource
+
+      val f = graph.from(data)
+      val max = new AtomicInteger(0)
+
+      val b: StreamBuffer[Int] = new StreamBuffer[Int](f.link, 3) {
+        
+        def check():Unit = {
+          if(max.updateAndGet { i => if( queue.size() > i) queue.size() else i } >= 3) cd2.countDown()
+        }
+
+        override def nextWithLock(sender: Option[Int] => Unit): Unit = {
+          check(); super.nextWithLock(sender); check()
+        }
+
+        override def applyWithLock(t: Option[Int]): Unit = {
+          check(); super.applyWithLock(t); check()
+        }
+      }
+
+      val res = graph(b).to(new Sink[Int]() {
+        override def apply(t: Option[Int]): Unit = {
+          for(x <- t) l1.add(x)
+          cd2.await()
+        }
+      })
+
+      Await.result(res.start, 5.second)
+
+      Assertions.assertEquals(max.get(), 3)
+
+    }
+
+    Assertions.assertEquals(List(0, 1, 2, 3, 4), l1.asScala.toList)
+
+  }
+
 }
