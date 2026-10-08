@@ -40,13 +40,15 @@ object reactive {
     /**
      * Holder for last observed value
      */
-    class Variable[V] {
+    class Variable[V](o: Observable[V]) {
       private[reactive] var value:Option[V] = None
 
-      private[reactive] val setter : V => Unit = { v =>
-        if (!value.contains(v)) {
-          value = Some(v)
-          trigger()
+      val subscription: Observable[V]#Subscription = {
+        o.to { v =>
+          if (!value.contains(v)) {
+            value = Some(v)
+            trigger()
+          }
         }
       }
 
@@ -66,9 +68,8 @@ object reactive {
       if (fn.isDefined) {
         throw new IllegalStateException("Function is already defined")
       }
-      val v = new Variable[V]()
+      val v = new Variable[V](o)
       variables = v :: variables
-      o.to(v.setter)
       v
     }
 
