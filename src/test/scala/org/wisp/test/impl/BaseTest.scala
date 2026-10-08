@@ -2,10 +2,12 @@ package org.wisp.test.impl
 
 import org.junit.jupiter.api.{Assertions, Test}
 import org.wisp.exceptions.UndeliveredException
+import org.wisp.observable.{Observable, reactive}
 import org.wisp.stream.SinkSource
 import org.wisp.stream.extensions.asSource
 import org.wisp.{Link, Message}
 
+import java.util.concurrent.atomic.AtomicInteger
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, Future}
 
@@ -104,5 +106,29 @@ class BaseTest {
 
   }
 
+  @Test
+  def rx():Unit = {
+
+    val a = Observable[Int]()
+    val b = Observable[Int]()
+
+    val r:Observable[Int] = reactive[Int] { rx =>
+      val va = rx(a)
+      val vb = rx(b)
+
+      rx{ va() + vb() }
+    }
+
+    val i = new AtomicInteger(0)
+
+    r.to(j => i.set(j))
+
+    a(1); b(2)
+    Assertions.assertEquals(i.get, 3)
+
+    a(2)
+    Assertions.assertEquals(i.get, 4)
+
+  }
 
 }
