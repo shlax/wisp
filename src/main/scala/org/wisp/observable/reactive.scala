@@ -1,5 +1,8 @@
 package org.wisp.observable
 
+import org.wisp.utils.lock.withLock
+import java.util.concurrent.locks.ReentrantLock
+
 /**
  * The `reactive` object provides a mechanism to create observables that react to changes in their dependencies.
  * {{{
@@ -37,18 +40,22 @@ object reactive {
       }
     }
 
+    protected def subscribe[V](o: Observable[V], v: Variable[V]): Observable[V]#Subscription = {
+      o.to(v.set)
+    }
+
     /**
      * Holder for last observed value
      */
     class Variable[V](o: Observable[V]) {
+      val subscription: Observable[V]#Subscription = subscribe(o, this)
+
       private[reactive] var value:Option[V] = None
 
-      val subscription: Observable[V]#Subscription = {
-        o.to { v =>
-          if (!value.contains(v)) {
-            value = Some(v)
-            trigger()
-          }
+      private[reactive] def set(v:V): Unit = {
+        if (!value.contains(v)) {
+          value = Some(v)
+          trigger()
         }
       }
 
@@ -90,13 +97,29 @@ object reactive {
 
   }
 
+  private class SynchronizedBuilder[T] extends Builder[T] {
+    private val lock = new ReentrantLock()
+
+    override protected def subscribe[V](o: Observable[V], v: Variable[V]): Observable[V]#Subscription = {
+      o.to{ x =>
+        lock.withLock{
+          v.set(x)
+        }
+      }
+    }
+  }
+
+  def apply[T](function: Builder[T] => Observable[T]): Observable[T] = {
+    apply(false)(function)
+  }
+
   /**
    * Returned [[Observable]] will be triggered only when the value is changed.
    * @return [[Observable]] computed by function defined in [[Builder]].
    */
-  def apply[T](fn: Builder[T] => Observable[T]): Observable[T] = {
-    val b = new Builder[T]
-    val res = fn(b)
+  def apply[T](synchronized: Boolean)(function: Builder[T] => Observable[T]): Observable[T] = {
+    val b = if(synchronized) new SynchronizedBuilder[T] else new Builder[T]
+    val res = function(b)
     if (b.variables.isEmpty) {
       throw new IllegalStateException("Variables are not defined")
     }
