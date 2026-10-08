@@ -3,13 +3,14 @@ package org.wisp.observable
 /**
  * The `reactive` object provides a mechanism to create observables that react to changes in their dependencies.
  * {{{
- * val a = Observable[Int]()
- * val b = Observable[Int]()
+ * val a = Observable[Int](); val b = Observable[Int]()
+ *
  * reactive[Int] { rx =>
  *   val va = rx(a) // register Observable as Variable
  *   val vb = rx(b) // register Observable as Variable
  *   rx{ va() + vb() } // register function
  * }.to(println)
+ *
  * a(1); b(2)
  * }}}
  */
@@ -78,11 +79,12 @@ object reactive {
      *
      * `function` wil not be called before all variables are set.
      */
-    def apply(function: => T): Unit = {
+    def apply(function: => T): Observable[T] = {
       if(fn.isDefined){
         throw new IllegalStateException("Function is already defined")
       }
       fn = Some(() => { function })
+      observable
     }
 
   }
@@ -91,16 +93,16 @@ object reactive {
    * Returned [[Observable]] will be triggered only when the value is changed.
    * @return [[Observable]] computed by function defined in [[Builder]].
    */
-  def apply[T](fn: Builder[T] => Unit): Observable[T] = {
+  def apply[T](fn: Builder[T] => Observable[T]): Observable[T] = {
     val b = new Builder[T]
-    fn(b)
+    val res = fn(b)
     if (b.variables.isEmpty) {
       throw new IllegalStateException("Variables are not defined")
     }
     if (b.fn.isEmpty) {
       throw new IllegalStateException("Function is not defined")
     }
-    b.observable
+    res
   }
 
 }
