@@ -116,7 +116,7 @@ class BaseTest {
       val va = rx(a)
       val vb = rx(b)
 
-      rx{ ~va + ~vb }
+      rx{ !va + !vb }
     }
 
     val i = new AtomicInteger(0)

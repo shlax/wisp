@@ -8,7 +8,7 @@ package org.wisp.observable
  * reactive[Int] { rx =>
  *   val va = rx(a) // register Observable as Variable
  *   val vb = rx(b) // register Observable as Variable
- *   rx{ ~va + ~vb } // register function
+ *   rx{ !va + !vb } // register function
  * }.to(println)
  *
  * a(1); b(2)
@@ -55,7 +55,7 @@ object reactive {
       /**
        * get last observed value
        */
-      def unary_~ : V = {
+      def unary_! : V = {
         value.get
       }
 
