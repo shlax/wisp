@@ -41,6 +41,23 @@ object StreamGraph {
     g.runnable(source, sink)(fn)
   }
 
+  /**
+   * Alias for [[StreamGraph#zip]]
+   */
+  def apply[T](streams: Iterable[StreamFlow[T]])(using system: ExecutionContextExecutor): StreamNode[T] = {
+    val g = new StreamGraph()
+    g.zip(streams)
+  }
+
+  /**
+   * Alias for [[StreamGraph#zip]]
+   */
+  @targetName("zip")
+  def apply[T](streams: Iterable[StreamFlow[T]])(using system: ExecutionContextExecutor): StreamNode[T] = {
+    val g = new StreamGraph()
+    g.zip(streams)
+  }
+
 }
 
 /**
