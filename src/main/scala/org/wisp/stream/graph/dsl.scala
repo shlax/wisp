@@ -8,11 +8,11 @@ import scala.concurrent.ExecutionContextExecutor
 object dsl {
 
   /**
-   * Alias for [[StreamGraph#wrapNode]]
+   * Alias for [[StreamGraph#wrapStream]]
    */
-  def wrapNode[T](link: StreamFlow[T])(using ExecutionContextExecutor): StreamNode[T] = {
+  def wrapStream[T](link: StreamFlow[T])(using ExecutionContextExecutor): StreamNode[T] = {
     val g = new StreamGraph()
-    g.wrapNode(link)
+    g.wrapStream(link)
   }
 
   /**

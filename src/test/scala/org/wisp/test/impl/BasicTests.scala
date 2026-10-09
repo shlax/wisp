@@ -749,7 +749,7 @@ class BasicTests {
         }
       }
 
-      val res = graph.wrapNode(b).to(new Sink[Int]() {
+      val res = graph.wrapStream(b).to(new Sink[Int]() {
         override def apply(t: Option[Int]): Unit = {
           for(x <- t) l1.add(x)
           cd2.await()

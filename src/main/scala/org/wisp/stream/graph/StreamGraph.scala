@@ -20,7 +20,7 @@ class StreamGraph(using val system:ExecutionContextExecutor){
   /**
    * Create node from `link`
    */
-  def wrapNode[T](link: StreamFlow[T]): StreamNode[T] = {
+  def wrapStream[T](link: StreamFlow[T]): StreamNode[T] = {
     StreamNode(this, link)
   }
 
@@ -28,7 +28,7 @@ class StreamGraph(using val system:ExecutionContextExecutor){
    * Create stream from `source` ussing [[org.wisp.stream.iterator.StreamSource]]
    */
   def fromSource[T](source:Source[T]) : StreamNode[T] = {
-    wrapNode(StreamSource(source))
+    wrapStream(StreamSource(source))
   }
 
   /**
@@ -43,7 +43,7 @@ class StreamGraph(using val system:ExecutionContextExecutor){
    */
   def zipStreams[T](streams: Iterable[StreamFlow[T]]): StreamNode[T] = {
     val r = ZipStream[T]( streams )
-    wrapNode(r)
+    wrapStream(r)
   }
 
   /**
@@ -72,7 +72,7 @@ class StreamGraph(using val system:ExecutionContextExecutor){
    */
   def fromRunnable[T, R](source:Source[T])(fn : StreamNode[T] => Unit ) : RunnableSource[T] = {
     val f = RunnableSource(source)
-    fn.apply(wrapNode(f))
+    fn.apply(wrapStream(f))
     f
   }
 
@@ -81,7 +81,7 @@ class StreamGraph(using val system:ExecutionContextExecutor){
    */
   def runnable[T, R](source:Source[T], sink:Sink[R])(fn: StreamNode[T] => StreamNode[R]) : RunnableSourceSink[T, R] = {
     RunnableSourceSink(source, sink){ prev =>
-      fn.apply(wrapNode(prev)).link
+      fn.apply(wrapStream(prev)).link
     }
   }
 
