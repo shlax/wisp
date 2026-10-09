@@ -8,11 +8,11 @@ import scala.concurrent.ExecutionContextExecutor
 
 object StreamGraph {
 
-  def apply()(using system: ExecutionContextExecutor): StreamGraph = {
+  def apply()(using ExecutionContextExecutor): StreamGraph = {
     new StreamGraph()
   }
 
-  def apply[T](link: StreamFlow[T])(using system: ExecutionContextExecutor): StreamNode[T] = {
+  def apply[T](link: StreamFlow[T])(using ExecutionContextExecutor): StreamNode[T] = {
     val g = new StreamGraph()
     g.apply(link)
   }
@@ -20,7 +20,7 @@ object StreamGraph {
   /**
    * Alias for [[StreamGraph#from]]
    */
-  def apply[T](source: Source[T])(using system: ExecutionContextExecutor): StreamNode[T] = {
+  def apply[T](source: Source[T])(using ExecutionContextExecutor): StreamNode[T] = {
     val g = new StreamGraph()
     g.from(source)
   }
@@ -28,7 +28,7 @@ object StreamGraph {
   /**
    * Alias for [[StreamGraph#fromRunnable]]
    */
-  def apply[T, R](source:Source[T])(fn : StreamNode[T] => Unit )(using system: ExecutionContextExecutor) : RunnableSource[T] = {
+  def apply[T, R](source:Source[T])(fn : StreamNode[T] => Unit )(using ExecutionContextExecutor) : RunnableSource[T] = {
     val g = new StreamGraph()
     g.fromRunnable(source)(fn)
   }
@@ -36,7 +36,7 @@ object StreamGraph {
   /**
    * Alias for [[StreamGraph#runnable]]
    */
-  def apply[T, R](source:Source[T], sink:Sink[R])(fn: StreamNode[T] => StreamNode[R])(using system: ExecutionContextExecutor) : RunnableSourceSink[T, R] = {
+  def apply[T, R](source:Source[T], sink:Sink[R])(fn: StreamNode[T] => StreamNode[R])(using ExecutionContextExecutor) : RunnableSourceSink[T, R] = {
     val g = new StreamGraph()
     g.runnable(source, sink)(fn)
   }
@@ -44,7 +44,7 @@ object StreamGraph {
   /**
    * Alias for [[StreamGraph#zip]]
    */
-  def apply[T](streams: Iterable[StreamFlow[T]])(using system: ExecutionContextExecutor): StreamNode[T] = {
+  def apply[T](streams: Iterable[StreamFlow[T]])(using  ExecutionContextExecutor): StreamNode[T] = {
     val g = new StreamGraph()
     g.zip(streams)
   }
@@ -53,7 +53,24 @@ object StreamGraph {
    * Alias for [[StreamGraph#zip]]
    */
   @targetName("zip")
-  def apply[T](streams: Iterable[StreamFlow[T]])(using system: ExecutionContextExecutor): StreamNode[T] = {
+  def apply[T](streams: Iterable[StreamFlow[T]])(using ExecutionContextExecutor): StreamNode[T] = {
+    val g = new StreamGraph()
+    g.zip(streams)
+  }
+
+  /**
+   * Alias for [[StreamGraph#zip]]
+   */
+  def apply[T](streams: StreamNode[T]*)(using ExecutionContextExecutor): StreamNode[T] = {
+    val g = new StreamGraph()
+    g.zip(streams)
+  }
+
+  /**
+   * Alias for [[StreamGraph#zip]]
+   */
+  @targetName("zip")
+  def apply[T](streams: StreamFlow[T]*)(using ExecutionContextExecutor): StreamNode[T] = {
     val g = new StreamGraph()
     g.zip(streams)
   }
@@ -105,7 +122,7 @@ class StreamGraph(using val system:ExecutionContextExecutor){
    *   graph.zip(source1, source2).to(println).start // println (0 until 10)
    * }}}
    */
-  def zip[T](streams:StreamNode[T]*): StreamNode[T] = {
+  def zip[T](streams: StreamNode[T]*): StreamNode[T] = {
     zip(streams)
   }
 
@@ -113,7 +130,7 @@ class StreamGraph(using val system:ExecutionContextExecutor){
    * Combine multiple `streams` into one using [[org.wisp.stream.iterator.ZipStream]]
    */
   @targetName("zipStreams")
-  def zip[T](streams:StreamFlow[T]*): StreamNode[T] = {
+  def zip[T](streams: StreamFlow[T]*): StreamNode[T] = {
     zip(streams)
   }
 
