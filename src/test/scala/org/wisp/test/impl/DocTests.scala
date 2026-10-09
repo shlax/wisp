@@ -28,7 +28,7 @@ class DocTests {
 
       val sink = Sink[Int]{ i => res.add(i) }
 
-      val future:Future[Unit] = graph.zipNodes(source1, source2).to(sink).start
+      val future:Future[Unit] = graph.zipStreams(source1, source2).to(sink).start
       Await.ready(future, 1.second)
     }
     Assertions.assertEquals((0 until 10).toSet, res.asScala.toSet)

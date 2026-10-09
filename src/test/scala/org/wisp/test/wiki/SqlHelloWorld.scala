@@ -78,7 +78,7 @@ class SqlHelloWorld {
             // create 3 workers for calculation
             val workers = for(_ <- 1 to 3) yield src.map{ i => (i._1, i._2, i._1 + i._2) }
             // combine results from workers to single stream
-            graph.zipNodes(workers)
+            graph.zipStreams(workers)
           }
           // run calculation
           r.run()

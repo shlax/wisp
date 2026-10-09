@@ -2,6 +2,8 @@ package org.wisp.stream.graph
 
 import org.wisp.stream.{Sink, Source}
 import org.wisp.stream.iterator.{RunnableSource, RunnableSourceSink, StreamFlow, StreamSource, ZipStream}
+
+import scala.annotation.targetName
 import scala.concurrent.ExecutionContextExecutor
 
 object StreamGraph {
@@ -34,7 +36,8 @@ class StreamGraph(using val system:ExecutionContextExecutor){
   /**
    * Combine multiple `streams` into one using [[org.wisp.stream.iterator.ZipStream]]
    */
-  def zipNodes[T](streams: Iterable[StreamNode[T]]): StreamNode[T] = {
+  @targetName("zipNodes")
+  def zipStreams[T](streams: Iterable[StreamNode[T]]): StreamNode[T] = {
     zipStreams(streams.map(_.link))
   }
 
@@ -56,8 +59,9 @@ class StreamGraph(using val system:ExecutionContextExecutor){
    *   graph.zip(source1, source2).to(println).start // println (0 until 10)
    * }}}
    */
-  def zipNodes[T](streams: StreamNode[T]*): StreamNode[T] = {
-    zipNodes(streams)
+  @targetName("zipNodes")
+  def zipStreams[T](streams: StreamNode[T]*): StreamNode[T] = {
+    zipStreams(streams)
   }
 
   /**

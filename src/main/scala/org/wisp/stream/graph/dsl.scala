@@ -3,6 +3,7 @@ package org.wisp.stream.graph
 import org.wisp.stream.{Sink, Source}
 import org.wisp.stream.iterator.{RunnableSource, RunnableSourceSink, StreamFlow}
 
+import scala.annotation.targetName
 import scala.concurrent.ExecutionContextExecutor
 
 object dsl {
@@ -40,15 +41,16 @@ object dsl {
   }
 
   /**
-   * Alias for [[StreamGraph#zipNodes]]
+   * Alias for [[StreamGraph#zipStreams]]
    */
-  def zipNodes[T](streams: Iterable[StreamNode[T]])(using ExecutionContextExecutor): StreamNode[T] = {
+  @targetName("zipNodes")
+  def zipStreams[T](streams: Iterable[StreamNode[T]])(using ExecutionContextExecutor): StreamNode[T] = {
     val g = new StreamGraph()
-    g.zipNodes(streams)
+    g.zipStreams(streams)
   }
 
   /**
-   * Alias for [[StreamGraph#zipNodes]]
+   * Alias for [[StreamGraph#zipStreams]]
    */
   def zipStreams[T](streams: Iterable[StreamFlow[T]])(using ExecutionContextExecutor): StreamNode[T] = {
     val g = new StreamGraph()
@@ -56,11 +58,12 @@ object dsl {
   }
 
   /**
-   * Alias for [[StreamGraph#zipNodes]]
+   * Alias for [[StreamGraph#zipStreams]]
    */
-  def zipNodes[T](streams: StreamNode[T]*)(using ExecutionContextExecutor): StreamNode[T] = {
+  @targetName("zipNodes")
+  def zipStreams[T](streams: StreamNode[T]*)(using ExecutionContextExecutor): StreamNode[T] = {
     val g = new StreamGraph()
-    g.zipNodes(streams)
+    g.zipStreams(streams)
   }
 
   /**

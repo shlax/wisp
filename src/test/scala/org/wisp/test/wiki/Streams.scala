@@ -91,7 +91,7 @@ class Streams {
         })
 
         // zip streams
-        graph.zipNodes(Seq(w1, w2)).to(println)
+        graph.zipStreams(Seq(w1, w2)).to(println)
       }
       // start execution and wait for completion
       Await.ready(stream.start, 1.second)
