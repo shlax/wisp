@@ -113,9 +113,7 @@ class BaseTest {
     val b = Observable[Int]()
 
     val r:Observable[Int] = reactive[Int] { rx =>
-      val va = rx(a)
-      val vb = rx(b)
-
+      val (va, vb) = (rx(a), rx(b))
       rx{ !va + !vb }
     }
 

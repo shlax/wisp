@@ -9,8 +9,7 @@ import java.util.concurrent.locks.ReentrantLock
  * val a = Observable[Int](); val b = Observable[Int]()
  *
  * reactive[Int] { rx =>
- *   val va = rx(a) // register Observable as Variable
- *   val vb = rx(b) // register Observable as Variable
+ *   val (va, vb) = ( rx(a), rx(b) )
  *   rx{ !va + !vb } // register function
  * }.to(println)
  *
