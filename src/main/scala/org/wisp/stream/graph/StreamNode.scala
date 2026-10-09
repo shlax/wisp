@@ -15,7 +15,7 @@ class StreamNode[T](graph: StreamGraph, val link: StreamFlow[T]) {
    */
   def map[V](function: T => V): StreamNode[V] = {
     val r = StreamTransformer.map[T, V](link, function)
-    graph.apply(r)
+    graph.wrapNode(r)
   }
 
   /**
@@ -30,7 +30,7 @@ class StreamNode[T](graph: StreamGraph, val link: StreamFlow[T]) {
    */
   def filter(predicate: T => Boolean): StreamNode[T] = {
     val r = StreamTransformer.filter[T](link, predicate)
-    graph.apply(r)
+    graph.wrapNode(r)
   }
 
   /**
@@ -45,7 +45,7 @@ class StreamNode[T](graph: StreamGraph, val link: StreamFlow[T]) {
    */
   def flatMap[V](function: T => Source[V]): StreamNode[V] = {
     val r = StreamTransformer.flatMap[T, V](link, function)
-    graph.apply(r)
+    graph.wrapNode(r)
   }
 
   /**
@@ -60,7 +60,7 @@ class StreamNode[T](graph: StreamGraph, val link: StreamFlow[T]) {
    */
   def fold[V](zero:V)(fold: (V, T) => V): StreamNode[V] = {
     val r = StreamTransformer.fold[T, V](link, zero, fold)
-    graph.apply(r)
+    graph.wrapNode(r)
   }
 
   /**
@@ -75,7 +75,7 @@ class StreamNode[T](graph: StreamGraph, val link: StreamFlow[T]) {
    */
   def collect[V](function: Option[T] => Source[V]): StreamNode[V] = {
     val r = StreamTransformer[T, V](link, function)
-    graph.apply(r)
+    graph.wrapNode(r)
   }
 
   /**
@@ -127,7 +127,7 @@ class StreamNode[T](graph: StreamGraph, val link: StreamFlow[T]) {
    */
   def buffer(size:Int) : StreamNode[T] = {
     val r = StreamBuffer(link, size)
-    graph.apply(r)
+    graph.wrapNode(r)
   }
 
   /**

@@ -171,11 +171,13 @@ class BasicTests {
 
   @Test
   def typedStreamGraph():Unit = {
+    import org.wisp.stream.graph.dsl.*
+    
     val data = Seq(0, 1, 2, 3, 4, 5).asSource
     val l = Collections.synchronizedList(new util.ArrayList[Int]())
 
     ActorSystem() || { sys =>
-      val p = StreamGraph(data).map(i => i + 1).to(Sink(l.add)).start
+      val p = fromSource(data).map(i => i + 1).to(Sink(l.add)).start
       Await.result(p, 1.second)
     }
 
@@ -191,12 +193,13 @@ class BasicTests {
     val l2 = Collections.synchronizedList(new util.ArrayList[String]())
 
     ActorSystem() || { sys =>
-
+      import org.wisp.stream.graph.dsl.*
+      
       val s1 = Sink[String](l1.add).mapValues[Int]("a:" + _).mapValues[Int](i => i * 2 + 0)
       val s2 = Sink[String](l2.add).mapValues[Int]("b:" + _).mapValues[Int](i => i * 2 + 1)
       val t = s1.andThen(s2)
 
-      val p = StreamGraph(data).map(i => i + 1).to(t).start
+      val p = fromSource(data).map(i => i + 1).to(t).start
       Await.result(p, 1.second)
     }
 
@@ -703,8 +706,9 @@ class BasicTests {
     val l2 = Collections.synchronizedList(new util.ArrayList[Int]())
 
     ActorSystem() || { sys =>
-
-      val p = StreamGraph(data).split{ n =>
+      import org.wisp.stream.graph.dsl.*
+      
+      val p = fromSource(data).split{ n =>
         Seq( n.copy.to(Sink(l1.add)), n.copy.to(Sink(l2.add)) )
       }
 
@@ -727,7 +731,7 @@ class BasicTests {
 
       val data = Seq(0, 1, 2, 3, 4).asSource
 
-      val f = graph.from(data)
+      val f = graph.fromSource(data)
       val max = new AtomicInteger(0)
 
       val b: StreamBuffer[Int] = new StreamBuffer[Int](f.link, 3) {
@@ -745,7 +749,7 @@ class BasicTests {
         }
       }
 
-      val res = graph(b).to(new Sink[Int]() {
+      val res = graph.wrapNode(b).to(new Sink[Int]() {
         override def apply(t: Option[Int]): Unit = {
           for(x <- t) l1.add(x)
           cd2.await()

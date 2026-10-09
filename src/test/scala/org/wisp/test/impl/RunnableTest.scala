@@ -79,7 +79,7 @@ class RunnableTest {
         futures = w1.start :: futures
         futures = w2.start :: futures
 
-        futures = g.zip(w1, w2).toRunnable(sink).start :: futures
+        futures = g.zipStreams(w1, w2).toRunnable(sink).start :: futures
 
       }
 

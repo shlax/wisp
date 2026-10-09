@@ -15,14 +15,14 @@ class FlowTests {
 
     ActorSystem() || { sys =>
       val graph = StreamGraph()
-      val src = graph.from((1 to 10).asSource)
+      val src = graph.fromSource((1 to 10).asSource)
 
       val publisher = FlowPublisher(src.link)
       val proc = FlowProcessor(publisher, identity)
       val subscriber = FlowSubscriber(proc)
 
       var res: List[Int] = Nil
-      graph(subscriber).toRunnable(Sink{ v =>
+      graph.wrapNode(subscriber).toRunnable(Sink{ v =>
         res = v :: res
       }).run()
 
