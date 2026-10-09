@@ -40,7 +40,7 @@ class RunnableTest {
     }
 
     ActorSystem() || { sys =>
-      val r = StreamGraph().runnable(data, sink)(identity)
+      val r = StreamGraph().runnableStream(data, sink)(identity)
       r.run()
     }
 

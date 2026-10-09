@@ -33,11 +33,11 @@ object dsl {
   }
 
   /**
-   * Alias for [[StreamGraph#runnable]]
+   * Alias for [[StreamGraph#runnableStream]]
    */
-  def runnable[T, R](source: Source[T], sink: Sink[R])(fn: StreamNode[T] => StreamNode[R])(using ExecutionContextExecutor): RunnableSourceSink[T, R] = {
+  def runnableStream[T, R](source: Source[T], sink: Sink[R])(fn: StreamNode[T] => StreamNode[R])(using ExecutionContextExecutor): RunnableSourceSink[T, R] = {
     val g = new StreamGraph()
-    g.runnable(source, sink)(fn)
+    g.runnableStream(source, sink)(fn)
   }
 
   /**

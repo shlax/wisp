@@ -83,7 +83,7 @@ class StreamGraph(using val system:ExecutionContextExecutor){
   /**
    * `source` and `sink` wil be run inside [[org.wisp.stream.iterator.RunnableSourceSink#run]]
    */
-  def runnable[T, R](source:Source[T], sink:Sink[R])(fn: StreamNode[T] => StreamNode[R]) : RunnableSourceSink[T, R] = {
+  def runnableStream[T, R](source:Source[T], sink:Sink[R])(fn: StreamNode[T] => StreamNode[R]) : RunnableSourceSink[T, R] = {
     RunnableSourceSink(source, sink){ prev =>
       fn.apply(wrapStream(prev)).link
     }
