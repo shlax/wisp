@@ -23,7 +23,7 @@ class Streams {
       // convert data to Source
       val source = data.asSource
       // create stream from source then add 1 and print result
-      val stream = graph.apply(source).map(_ + 1).to(println)
+      val stream = graph.from(source).map(_ + 1).to(println)
       // start execution and wait for completion
       Await.ready(stream.start, 1.second)
     }
@@ -42,7 +42,7 @@ class Streams {
       val source = data.asSource
 
       // create stream
-      val stream = graph.apply(source).as{ src =>
+      val stream = graph.from(source).as{ src =>
 
         // create worker 1
         val w1 = src.map(i => {
@@ -76,7 +76,7 @@ class Streams {
       val source = data.asSource
 
       // create stream
-      val stream = graph.apply(source).as { src =>
+      val stream = graph.from(source).as { src =>
 
         // create worker 1
         val w1 = src.map(i => {
@@ -111,7 +111,7 @@ class Streams {
       val source = data.asSource
 
       // create stream
-      val stream = graph.apply(source).as { src =>
+      val stream = graph.from(source).as { src =>
 
         // duplicate stream so each worker will receive each item
         src.split{ split =>

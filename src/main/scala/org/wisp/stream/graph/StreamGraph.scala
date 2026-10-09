@@ -8,9 +8,8 @@ import scala.concurrent.ExecutionContextExecutor
 
 object StreamGraph {
 
-  def apply[T](source:Source[T])(using system:ExecutionContextExecutor) : StreamNode[T] = {
-    val g = new StreamGraph()
-    g.apply(source)
+  def apply()(using system: ExecutionContextExecutor): StreamGraph = {
+    new StreamGraph()
   }
 
   def apply[T](link: StreamFlow[T])(using system: ExecutionContextExecutor): StreamNode[T] = {
@@ -18,8 +17,19 @@ object StreamGraph {
     g.apply(link)
   }
 
-  def apply()(using system: ExecutionContextExecutor): StreamGraph ={
-    new StreamGraph()
+  def apply[T](source: Source[T])(using system: ExecutionContextExecutor): StreamNode[T] = {
+    val g = new StreamGraph()
+    g.from(source)
+  }
+
+  def apply[T, R](source:Source[T])(fn : StreamNode[T] => Unit )(using system: ExecutionContextExecutor) : RunnableSource[T] = {
+    val g = new StreamGraph()
+    g.fromRunnable(source)(fn)
+  }
+
+  def apply[T, R](source:Source[T], sink:Sink[R])(fn: StreamNode[T] => StreamNode[R])(using system: ExecutionContextExecutor) : RunnableSourceSink[T, R] = {
+    val g = new StreamGraph()
+    g.runnable(source, sink)(fn)
   }
 
 }
@@ -39,7 +49,7 @@ class StreamGraph(using val system:ExecutionContextExecutor){
   /**
    * Create stream from `source` ussing [[org.wisp.stream.iterator.StreamSource]]
    */
-  def apply[T](source:Source[T]) : StreamNode[T] = {
+  def from[T](source:Source[T]) : StreamNode[T] = {
     apply(StreamSource(source))
   }
 

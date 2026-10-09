@@ -21,8 +21,8 @@ class DocTests {
     val res = Collections.synchronizedSet(util.HashSet[Int]())
     new ActorSystem() || { as =>
       val graph = new StreamGraph()
-      val source1 = graph.apply( (0 until 5).asSource.map(i => i * 2) )
-      val source2 = graph.apply( (0 until 5).asSource.map(i => i * 2 + 1) )
+      val source1 = graph.from( (0 until 5).asSource.map(i => i * 2) )
+      val source2 = graph.from( (0 until 5).asSource.map(i => i * 2 + 1) )
 
       val sink = Sink[Int]{ i => res.add(i) }
 
@@ -37,7 +37,7 @@ class DocTests {
     val res1 = Collections.synchronizedSet(util.HashSet[Int]())
     val res2 = Collections.synchronizedSet(util.HashSet[Int]())
     new ActorSystem() || { as =>
-      val source = new StreamGraph().apply((0 until 5).asSource)
+      val source = new StreamGraph().from((0 until 5).asSource)
       val future = source.split{ s =>
 
         val sink1 = Sink[Int]{ i => res1.add(i) }

@@ -727,7 +727,7 @@ class BasicTests {
 
       val data = Seq(0, 1, 2, 3, 4).asSource
 
-      val f = graph.apply(data)
+      val f = graph.from(data)
       val max = new AtomicInteger(0)
 
       val b: StreamBuffer[Int] = new StreamBuffer[Int](f.link, 3) {
