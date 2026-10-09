@@ -6,6 +6,24 @@ import org.wisp.stream.iterator.{RunnableSource, RunnableSourceSink, StreamFlow,
 import scala.annotation.targetName
 import scala.concurrent.ExecutionContextExecutor
 
+object StreamGraph {
+
+  def apply[T](source:Source[T])(using system:ExecutionContextExecutor) : StreamNode[T] = {
+    val g = new StreamGraph()
+    g.apply(source)
+  }
+
+  def apply[T](link: StreamFlow[T])(using system: ExecutionContextExecutor): StreamNode[T] = {
+    val g = new StreamGraph()
+    g.apply(link)
+  }
+
+  def apply()(using system: ExecutionContextExecutor): StreamGraph ={
+    new StreamGraph()
+  }
+
+}
+
 /**
  * Api for creating stream graphs.
  */
@@ -21,7 +39,7 @@ class StreamGraph(using val system:ExecutionContextExecutor){
   /**
    * Create stream from `source` ussing [[org.wisp.stream.iterator.StreamSource]]
    */
-  def from[T](source:Source[T]) : StreamNode[T] = {
+  def apply[T](source:Source[T]) : StreamNode[T] = {
     apply(StreamSource(source))
   }
 

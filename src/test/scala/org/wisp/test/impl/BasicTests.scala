@@ -175,7 +175,7 @@ class BasicTests {
     val l = Collections.synchronizedList(new util.ArrayList[Int]())
 
     ActorSystem() || { sys =>
-      val p = StreamGraph().from(data).map(i => i + 1).to(Sink(l.add)).start
+      val p = StreamGraph(data).map(i => i + 1).to(Sink(l.add)).start
       Await.result(p, 1.second)
     }
 
@@ -196,7 +196,7 @@ class BasicTests {
       val s2 = Sink[String](l2.add).mapValues[Int]("b:" + _).mapValues[Int](i => i * 2 + 1)
       val t = s1.andThen(s2)
 
-      val p = StreamGraph().from(data).map(i => i + 1).to(t).start
+      val p = StreamGraph(data).map(i => i + 1).to(t).start
       Await.result(p, 1.second)
     }
 
@@ -704,7 +704,7 @@ class BasicTests {
 
     ActorSystem() || { sys =>
 
-      val p = StreamGraph().from(data).split{ n =>
+      val p = StreamGraph(data).split{ n =>
         Seq( n.copy.to(Sink(l1.add)), n.copy.to(Sink(l2.add)) )
       }
 
@@ -727,7 +727,7 @@ class BasicTests {
 
       val data = Seq(0, 1, 2, 3, 4).asSource
 
-      val f = graph.from(data)
+      val f = graph.apply(data)
       val max = new AtomicInteger(0)
 
       val b: StreamBuffer[Int] = new StreamBuffer[Int](f.link, 3) {

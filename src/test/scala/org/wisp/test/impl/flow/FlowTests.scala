@@ -15,7 +15,7 @@ class FlowTests {
 
     ActorSystem() || { sys =>
       val graph = StreamGraph()
-      val src = graph.from((1 to 10).asSource)
+      val src = graph.apply((1 to 10).asSource)
 
       val publisher = FlowPublisher(src.link)
       val proc = FlowProcessor(publisher, identity)
